@@ -1,0 +1,27 @@
+{
+  "name": "zx-bulk-release",
+  "version": "0.0.0",
+  "description": "zx-based alternative for multi-semantic-release",
+  "exports": "./src/main/js/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "c8 uvu ./src/test/* && c8 report -r lcov"
+  },
+  "dependencies": {
+    "zx": "^5.2.0"
+  },
+  "devDependencies": {
+    "c8": "^7.11.0",
+    "uvu": "^0.5.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/semrel-extra/zx-bulk-release.git"
+  },
+  "author": "Anton Golub <antongolub@antongolub.com>",
+  "license": "MIT"
+}
