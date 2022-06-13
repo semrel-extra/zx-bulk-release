@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import {fileURLToPath} from "node:url"
 import {tempy, path, fs, ctx} from 'zx-extra'
 
-import {getPkgCommits, run, topo} from '../../main/js/index.js'
+import {getPkgCommits, run, topo, parseTag, formatTag} from '../../main/js/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
@@ -132,6 +132,21 @@ test('obtains commits for each package', async () => {
     a: ['refactor(a): a refactoring'],
     b: ['fix(b): add some file', 'feat: init pkg b']
   })
+})
+
+test('formatTag() / parseTag()', () => {
+  const tagMeta = {
+    name: '@qiwi/pijma-native',
+    version: 'v1.0.0-beta.0+foo.bar',
+    date: new Date(Date.UTC(2022, 5, 22))
+  }
+  const tagStr = '2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar'
+
+  assert.is(formatTag(tagMeta), tagStr)
+  assert.equal(parseTag('2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar'), tagMeta)
+  assert.equal(parseTag('2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar+broken'), null)
+  assert.equal(parseTag('2022.6.22-@qiwi/pijma-native.v1.0.0'), null)
+  assert.equal(parseTag('2022.6.22'), null)
 })
 
 test.run()
