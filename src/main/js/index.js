@@ -1,18 +1,9 @@
-import {$, fs, path} from 'zx'
+import {$, ctx} from 'zx-extra'
 
-import {topo as _topo} from '@semrel-extra/topo'
-import {ctx} from "zx/experimental";
+export { topo } from '@semrel-extra/topo'
 
 export const run = async (env = process.env) => {
   await $`echo "hello"`
-}
-
-export const topo = async ({cwd = process.cwd()} = {}) => {
-  const workspaces = (await fs.readJson(path.resolve(cwd, 'package.json'))).workspaces
-  return _topo({
-    cwd,
-    workspaces
-  })
 }
 
 export const getPkgCommits = async (cwd, since) => ctx(async ($) => {

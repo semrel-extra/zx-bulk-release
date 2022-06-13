@@ -1,8 +1,7 @@
 import {test} from 'uvu'
 import * as assert from 'uvu/assert'
 import {fileURLToPath} from "node:url"
-import {tempy, path, fs} from 'zx-extra'
-import {ctx} from 'zx/experimental'
+import {tempy, path, fs, ctx} from 'zx-extra'
 
 import {getPkgCommits, run, topo} from '../../main/js/index.js'
 
@@ -123,10 +122,9 @@ test('obtains commits for each package', async () => {
   ]})
 
   const {queue, packages} = await topo({cwd})
-
   const results = {}
   for (let pkg of queue) {
-    results[pkg] = (await getPkgCommits(path.dirname(packages[pkg].manifestPath), 'v1.0.0+pkg-a'))
+    results[pkg] = (await getPkgCommits(packages[pkg].absPath, 'v1.0.0+pkg-a'))
       .map(({subj}) => subj)
   }
 
