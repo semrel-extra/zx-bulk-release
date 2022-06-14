@@ -45,5 +45,9 @@ export const createFakeRepo = async ({cwd = tempy.temporaryDirectory(), commits 
       }
     }
 
+    const bare = tempy.temporaryDirectory()
+    await $`git init --bare ${bare}`
+    await $`git remote add origin ${bare}`
+
     return cwd
   })
