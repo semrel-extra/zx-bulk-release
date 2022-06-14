@@ -1,5 +1,29 @@
-import {ctx, fs, path, tempy} from 'zx-extra'
+import {ctx, fs, path, tempy, $, sleep} from 'zx-extra'
 import {fileURLToPath} from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+export const fixtures = path.resolve(__dirname, '../fixtures')
+
+export const createNpmRegistry = () => {
+  let p
+
+  return {
+    address: 'http://localhost:4873/',
+    async start() {
+      fs.removeSync(path.resolve(__dirname, '../../../storage'))
+      const config = path.resolve(__dirname, '../../../verdaccio.config.yaml')
+      ctx(($) => {
+        $.preferLocal = true
+        p = $`verdaccio --config ${config}`
+      })
+
+      return sleep(1000)
+    },
+    async stop() {
+      return p?.kill()
+    }
+  }
+}
 
 export const createFakeRepo = async ({cwd = tempy.temporaryDirectory(), commits = []} = {}) =>
   ctx(async ($) => {
@@ -23,6 +47,3 @@ export const createFakeRepo = async ({cwd = tempy.temporaryDirectory(), commits 
 
     return cwd
   })
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-export const fixtures = path.resolve(__dirname, '../fixtures')
