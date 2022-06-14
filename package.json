@@ -5,7 +5,7 @@
   "exports": "./src/main/js/index.js",
   "type": "module",
   "scripts": {
-    "test": "c8 uvu ./src/test -i fixtures && c8 report -r lcov"
+    "test": "c8 uvu ./src/test -i fixtures -i utils && c8 report -r lcov"
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.4.1",
