@@ -109,7 +109,6 @@ test('run()', async () => {
     assert.is(digestB.dist.tarball, 'http://localhost:4873/b/-/b-1.0.0.tgz')
   })
 
-
   await registry.stop()
 })
 

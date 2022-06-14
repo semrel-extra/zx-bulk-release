@@ -11,12 +11,12 @@ or just copy-paste, tweak a bit and run with [zx-extra](https://github.com/qiwi/
 GH_TOKEN=foo NPM_TOKEN=bar zx-extra zx-bulk-release.mjs
 ```
 
-## Key features
-* [Semantic commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger releases.
-* Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
-* No blocking (no release commits).
-* Changelogs, docs, bundles go to: release assets and/or metabranch.
-* No extra builds. Required deps are fetched from registry / metabranch / release assets.
+## Roadmap
+* [x] [Semantic commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger releases.
+* [x] Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
+* [x] No blocking (no release commits).
+* [ ] Changelogs, docs, bundles go to: release assets and/or metabranch.
+* [ ] No extra builds. Required deps are fetched from registry / metabranch / release assets.
 
 ## Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract: 
