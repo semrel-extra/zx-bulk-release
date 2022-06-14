@@ -4,10 +4,11 @@ import * as assert from 'uvu/assert'
 import {parseTag, formatTag, getTags} from '../../main/js/index.js'
 import {createFakeRepo} from './test-utils.js'
 import {semver} from 'zx-extra'
+import {getLastTag, getLastTaggedVersion} from "../../main/js/tag.js";
 
 const test = suite('tag')
 
-test('gets tags', async () => {
+test('getting tags', async () => {
   const cwd = await createFakeRepo({commits: [
     {
       msg: 'chore: initial commit',
@@ -53,7 +54,8 @@ test('gets tags', async () => {
           relpath: './packages/a/foo.txt',
           contents: 'foobarbaz'
         }
-      ]
+      ],
+      tags: ['2022.6.14-a.v1.1.0-f0']
     },
     {
       msg: 'feat: init pkg b',
@@ -90,10 +92,18 @@ test('gets tags', async () => {
     format: 'f1'
   },{
     name: 'a',
+    version: 'v1.1.0',
+    date: new Date(Date.UTC(2022, 5, 14)),
+    format: 'f0'
+  },{
+    name: 'a',
     version: 'v1.0.0',
     date: new Date(Date.UTC(2022, 5, 13)),
     format: 'f0'
   }])
+
+  assert.is(await getLastTaggedVersion(cwd, 'a'), 'v1.1.0')
+  assert.is(await getLastTaggedVersion(cwd, 'b'), 'v2.0.0-beta.0')
 })
 
 
