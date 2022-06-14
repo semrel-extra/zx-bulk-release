@@ -106,7 +106,6 @@ test('getting tags', async () => {
   assert.is(await getLastPkgTaggedVersion(cwd, 'b'), 'v2.0.0-beta.0')
 })
 
-
 test('formatTag() / parseTag()', () => {
   const cases = [
     [

@@ -72,7 +72,7 @@ test('run()', async () => {
             contents: {
               name: 'b',
               dependencies: {
-                a: '*'
+                a: '1.0.0'
               }
             }
           }

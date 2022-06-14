@@ -11,13 +11,11 @@ export { topo }
 export const run = async ({cwd = process.cwd(), env = process.env}) => {
   const {packages, queue} = await topo({cwd})
 
-  console.log('packages', packages)
-
   for (let name of queue) {
     const pkg = packages[name]
-    const lastTag = getLastPkgTag(pkg.absPath, name)
-    const semanticChanges = getSemanticChanges(pkg.absPath, lastTag?.ref)
-    const depsChanges = updateDeps(pkg, packages)
+    const lastTag = await getLastPkgTag(pkg.absPath, name)
+    const semanticChanges = await getSemanticChanges(pkg.absPath, lastTag?.ref)
+    const depsChanges = await updateDeps(pkg, packages)
     const changes = [...semanticChanges, ...depsChanges]
 
     pkg.version = resolvePkgVersion(changes, lastTag?.version)
@@ -25,6 +23,6 @@ export const run = async ({cwd = process.cwd(), env = process.env}) => {
 
     if (changes.length === 0) continue
 
-    console.log('semantic changes', changes)
+    console.log(`semantic changes of '${name}'`, changes)
   }
 }

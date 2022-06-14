@@ -55,10 +55,11 @@ export const getNextVersion = (changes, prevVersion) => {
   if (!prevVersion) return '1.0.0'
 
   const releaseType = getNextReleaseType(changes)
-  return semver.inc(releaseType, prevVersion)
+
+  return semver.inc(prevVersion, releaseType)
 }
 
 export const resolvePkgVersion = (changes, prevVersion) =>
-  changes.length === 0
-    ? prevVersion || null
-    : getNextVersion(changes, prevVersion)
+  changes.length > 0
+    ? getNextVersion(changes, prevVersion)
+    : prevVersion || null
