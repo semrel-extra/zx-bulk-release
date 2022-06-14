@@ -16,7 +16,7 @@ const f0 = {
     const date = parseDateTag(_date)
     const name = _name.includes('.') ? `@${_name.replace('.', '/')}` : _name
 
-    return {date, name, version, format: 'f0'}
+    return {date, name, version, format: 'f0', ref: tag}
   },
   format({name, date = new Date(), version}) {
     if (!/^(@?[a-z0-9-]+\/)?[a-z0-9-]+$/.test(name) || !semver.valid(version)) return null
@@ -41,7 +41,7 @@ const f1 = {
     const date = parseDateTag(_date)
     const name = Buffer.from(b64, 'base64url').toString('utf8')
 
-    return {date, name, version, format: 'f1'}
+    return {date, name, version, format: 'f1', ref: tag}
   },
   format({name, date = new Date(), version}) {
     if (!semver.valid(version)) return null
@@ -78,12 +78,11 @@ export const getTags = (cwd) => ctx(async ($) => {
     .filter(Boolean)
 })
 
-export const getLastTag = async (cwd, name) =>
+export const getLastPkgTag = async (cwd, name) =>
   (await getTags(cwd)).find(tag => tag.name === name) || null
 
-
-export const getLastTaggedVersion = async (cwd, name) =>
-  (await getLastTag(cwd, name))?.version || null
+export const getLastPkgTaggedVersion = async (cwd, name) =>
+  (await getLastPkgTag(cwd, name))?.version || null
 
 const formatDateTag = (date) => `${date.getUTCFullYear()}.${date.getUTCMonth() + 1}.${date.getUTCDate()}`
 

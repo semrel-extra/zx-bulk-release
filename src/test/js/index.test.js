@@ -1,18 +1,19 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
-import {getPkgCommits, run, topo} from '../../main/js/index.js'
+import {run, topo} from '../../main/js/index.js'
+import {getPkgCommits} from '../../main/js/analyzer.js'
 import {createFakeRepo} from './test-utils.js'
 
 const test = suite('index')
 
-test('index has proper exports', () => {
-  assert.instance(run, Function)
-})
-
-test('run: dry-run', async () => {
-  await run()
-})
+// test('index has proper exports', () => {
+//   assert.instance(run, Function)
+// })
+//
+// test('run: dry-run', async () => {
+//   await run()
+// })
 
 {
   const cwd = await createFakeRepo({commits: [
