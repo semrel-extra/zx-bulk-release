@@ -84,6 +84,6 @@ export const getLastPkgTag = async (cwd, name) =>
 export const getLastPkgTaggedVersion = async (cwd, name) =>
   (await getLastPkgTag(cwd, name))?.version || null
 
-const formatDateTag = (date) => `${date.getUTCFullYear()}.${date.getUTCMonth() + 1}.${date.getUTCDate()}`
+export const formatDateTag = (date = new Date()) => `${date.getUTCFullYear()}.${date.getUTCMonth() + 1}.${date.getUTCDate()}`
 
-const parseDateTag = (date) => new Date(date.replaceAll('.', '-')+'Z')
+export const parseDateTag = (date) => new Date(date.replaceAll('.', '-')+'Z')

@@ -2,6 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
 import {run} from '../../main/js/index.js'
+import {formatTag} from '../../main/js/tag.js'
 import {createFakeRepo, createNpmRegistry} from './test-utils.js'
 
 const test = suite('integration')
@@ -107,6 +108,9 @@ test('run()', async () => {
 
     assert.is(digestB['dist-tags'].latest, '1.0.0')
     assert.is(digestB.dist.tarball, 'http://localhost:4873/b/-/b-1.0.0.tgz')
+
+    const tag = formatTag({name: 'a', version: '1.0.1'})
+    assert.is((await $`git for-each-ref refs/tags/${tag} --format='%(contents)'`).toString().trim(), tag)
   })
 
   await registry.stop()

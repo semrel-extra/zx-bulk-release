@@ -20,14 +20,13 @@ const prepare = async ({branch, origin}) => ctx(async ($) => {
 })
 
 export const copy = async ({cwd, from, to, branch = 'meta', origin, msg = 'updated'}) => ctx(async ($) => {
-  $.cwd = cwd
-
   const _origin = origin || (await $`git remote get-url origin`).toString().trim()
   const _cwd = await prepare({branch, origin: _origin})
   await fs.copy(path.resolve(cwd, from), path.resolve(_cwd, to), {overwrite: true})
 
+  $.cwd = _cwd
+
   await $`git add .`
   await $`git commit -m ${msg}`
-  await $.raw`git push origin HEAD:origin/${branch}`
-
+  await $.raw`git push origin HEAD:refs/heads/${branch}`
 })
