@@ -29,14 +29,15 @@ export const run = async ({cwd = process.cwd(), env = process.env} = {}) => {
 
     await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
 
-    await copy({cwd: _cwd, from: 'package.json', to: 'package.json', branch: 'meta'})
-    // await publish({cwd: pkg.absPath, env})
+    await publish({cwd: _cwd, env, version: pkg.version, name})
   }
 }
 
-export const publish = async ({cwd, env, registry = 'http://localhost:4873/'}) => ctx(async ($) => {
+export const publish = async ({cwd, env, registry = 'http://localhost:4873/', version, name}) => ctx(async ($) => {
   $.cwd = cwd
   $.env = env
+
+  await copy({cwd, from: 'package.json', to: 'package.json', branch: 'meta', msg: `chore: publish artifact ${name} ${version}`})
 
   await $`npm publish --no-git-tag-version --registry=${registry}`
 })

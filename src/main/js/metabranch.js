@@ -1,4 +1,4 @@
-import {$, tempy, globby, ctx, path, fs} from 'zx-extra'
+import {$, tempy, ctx, path, fs} from 'zx-extra'
 
 const branches = {}
 
@@ -19,8 +19,15 @@ const prepare = async ({branch, origin}) => ctx(async ($) => {
   return cwd
 })
 
-export const copy = async ({cwd, from, to, branch = 'meta', origin}) => {
+export const copy = async ({cwd, from, to, branch = 'meta', origin, msg = 'updated'}) => ctx(async ($) => {
+  $.cwd = cwd
+
   const _origin = origin || (await $`git remote get-url origin`).toString().trim()
-  const _cwd = prepare({branch, origin: _origin})
+  const _cwd = await prepare({branch, origin: _origin})
   await fs.copy(path.resolve(cwd, from), path.resolve(_cwd, to), {overwrite: true})
-}
+
+  await $`git add .`
+  await $`git commit -m ${msg}`
+  await $.raw`git push origin HEAD:origin/${branch}`
+
+})
