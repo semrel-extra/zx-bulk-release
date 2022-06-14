@@ -1,13 +1,10 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {fileURLToPath} from "node:url"
-import {path} from 'zx-extra'
 
 import {parseTag, formatTag, getTags} from '../../main/js/index.js'
 import {createFakeRepo} from './test-utils.js'
+import {semver} from 'zx-extra'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const fixtures = path.resolve(__dirname, '../fixtures')
 const test = suite('tag')
 
 test('gets tags', async () => {
@@ -111,8 +108,8 @@ test('formatTag() / parseTag()', () => {
         format: 'f0'
       }
     ],
-    ['2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar+broken', null],
-    ['2022.6.22-@qiwi/pijma-native.v1.0.0', null],
+    ['2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar+broken-f0', null],
+    ['2022.6.22-@qiwi/pijma-native.v1.0.0-f0', null],
     ['2022.6.22', null],
     [
       '2022.6.13-a.v1.0.0-f0',
@@ -140,6 +137,7 @@ test('formatTag() / parseTag()', () => {
 
     if (meta !== null && !parseonly) {
       assert.is(formatTag(meta), tag)
+      assert.ok(semver.valid(tag))
     }
   })
 })

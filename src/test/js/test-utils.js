@@ -1,4 +1,5 @@
 import {ctx, fs, path, tempy} from 'zx-extra'
+import {fileURLToPath} from 'node:url'
 
 export const createFakeRepo = async ({cwd = tempy.temporaryDirectory(), commits = []} = {}) =>
   ctx(async ($) => {
@@ -22,3 +23,6 @@ export const createFakeRepo = async ({cwd = tempy.temporaryDirectory(), commits 
 
     return cwd
   })
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+export const fixtures = path.resolve(__dirname, '../fixtures')

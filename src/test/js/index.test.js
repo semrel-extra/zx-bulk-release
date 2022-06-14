@@ -1,13 +1,8 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {fileURLToPath} from 'node:url'
-import {path} from 'zx-extra'
 
 import {getPkgCommits, run, topo} from '../../main/js/index.js'
 import {createFakeRepo} from './test-utils.js'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const fixtures = path.resolve(__dirname, '../fixtures')
 
 const test = suite('index')
 

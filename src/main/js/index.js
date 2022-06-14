@@ -1,4 +1,4 @@
-import {$, ctx, semver} from 'zx-extra'
+import {$, ctx} from 'zx-extra'
 
 export {parseTag, formatTag, getTags} from './tag.js'
 
