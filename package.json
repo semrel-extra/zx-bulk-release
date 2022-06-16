@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.4.1",
-    "git-glob-cp": "^1.4.2",
+    "git-glob-cp": "^1.5.0",
     "zx-extra": "^1.7.0"
   },
   "devDependencies": {

@@ -21,7 +21,7 @@ const prepare = async ({branch, origin}) => ctx(async ($) => {
   return cwd
 })
 
-export const copy = async ({cwd, from, to, branch = 'meta', origin, msg = 'updated'}) => ctx(async ($) => {
+export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles}) => ctx(async ($) => {
   const _origin = origin || (await $`git remote get-url origin`).toString().trim()
   const _cwd = await prepare({branch, origin: _origin})
   await copydir({baseFrom: cwd, from, baseTo: _cwd, to})
@@ -33,16 +33,23 @@ export const copy = async ({cwd, from, to, branch = 'meta', origin, msg = 'updat
   await $.raw`git push origin HEAD:refs/heads/${branch}`
 })
 
-export const publish = async ({cwd, env, registry = 'http://localhost:4873/', version, name}) => ctx(async ($) => {
+export const publish = async (pkg, env, registry = 'http://localhost:4873/') => ctx(async ($) => {
+  const {name, version, files} = pkg.manifest
+  const cwd = pkg.absPath
   $.cwd = cwd
   $.env = env
 
   const tag = formatTag({name, version})
+  const from = files ? [...files, 'package.json'] : ['!node_modules', '*']
+  const to = tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
+  console.log(`push release tag ${tag}`)
   await $`git tag -m ${tag} ${tag}`
   await $`git push origin ${tag}`
 
-  await copy({cwd, from: 'package.json', to: 'package.json', branch: 'meta', msg: `chore: publish artifact ${name} ${version}`})
+  console.log('push artifact to branch `meta`')
+  await push({cwd, from, to, branch: 'meta', msg: `chore: publish artifact ${name} ${version}`, ignoreFiles: '.npmignore'})
 
+  console.log(`publish npm package to ${registry}`)
   await $`npm publish --no-git-tag-version --registry=${registry}`
 })

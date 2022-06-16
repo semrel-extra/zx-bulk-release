@@ -31,6 +31,6 @@ export const run = async ({cwd = process.cwd(), env = process.env} = {}) => {
 
     await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
 
-    await publish({cwd: _cwd, env, version: pkg.version, name})
+    await publish(pkg, env)
   }
 }

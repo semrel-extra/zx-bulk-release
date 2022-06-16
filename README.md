@@ -15,8 +15,8 @@ GH_TOKEN=foo NPM_TOKEN=bar zx-extra zx-bulk-release.mjs
 * [x] [Semantic commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger releases.
 * [x] Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
 * [x] No blocking (no release commits).
-* [ ] Changelogs, docs, bundles go to: release assets and/or metabranch.
-* [ ] No extra builds. Required deps are fetched from registry / metabranch / release assets.
+* [ ] Changelogs, docs, bundles go to: release assets and/or meta branch.
+* [ ] No extra builds. Required deps are fetched from registry / meta branch / release assets.
 
 ## Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract: 
