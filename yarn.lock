@@ -1167,6 +1167,13 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
+git-glob-cp@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/git-glob-cp/-/git-glob-cp-1.4.2.tgz#e993719df33fe83b88f3f7fe68bbe008f9a5d4af"
+  integrity sha512-wbVvfy5iho8T6VxVojCRDauarK2CIDzBHN3mvE7e6/hDCcxt+AFjsU5JBBxTDFmxLiZrRGwMbXJ84hPxsdBGng==
+  dependencies:
+    zx-extra "^1.7.0"
+
 glob-parent@^5.1.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-5.1.2.tgz#869832c58034fe68a4093c17dc15e8340d8401c4"

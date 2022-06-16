@@ -89,17 +89,20 @@ test('getting tags', async () => {
     name: 'b',
     version: 'v2.0.0-beta.0',
     date: new Date(Date.UTC(2022, 5, 14)),
-    format: 'f1'
+    format: 'f1',
+    ref: '2022.6.14-b.v2.0.0-beta.0.Yg-f1'
   },{
     name: 'a',
     version: 'v1.1.0',
     date: new Date(Date.UTC(2022, 5, 14)),
-    format: 'f0'
+    format: 'f0',
+    ref: '2022.6.14-a.v1.1.0-f0'
   },{
     name: 'a',
     version: 'v1.0.0',
     date: new Date(Date.UTC(2022, 5, 13)),
-    format: 'f0'
+    format: 'f0',
+    ref: '2022.6.13-a.v1.0.0-f0'
   }])
 
   assert.is(await getLastPkgTaggedVersion(cwd, 'a'), 'v1.1.0')
@@ -114,7 +117,8 @@ test('formatTag() / parseTag()', () => {
         name: '@qiwi/pijma-native',
         version: 'v1.0.0-beta.0+foo.bar',
         date: new Date(Date.UTC(2022, 5, 22)),
-        format: 'f0'
+        format: 'f0',
+        ref: '2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar-f0'
       }
     ],
     ['2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar+broken-f0', null],
@@ -126,7 +130,8 @@ test('formatTag() / parseTag()', () => {
         name: 'a',
         version: 'v1.0.0',
         date: new Date(Date.UTC(2022, 5, 13)),
-        format: 'f0'
+        format: 'f0',
+        ref: '2022.6.13-a.v1.0.0-f0'
       }
     ],
     [
@@ -135,7 +140,8 @@ test('formatTag() / parseTag()', () => {
         name: 'example.com',
         version: 'v1.0.0',
         date: new Date(Date.UTC(2022, 5, 13)),
-        format: 'f1'
+        format: 'f1',
+        ref: '2022.6.13-examplecom.v1.0.0.ZXhhbXBsZS5jb20-f1'
       }
     ]
   ]

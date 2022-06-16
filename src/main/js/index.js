@@ -3,7 +3,8 @@ import {getLastPkgTag} from './tag.js'
 import {updateDeps} from './deps.js'
 import {getSemanticChanges, resolvePkgVersion} from './analyzer.js'
 import { topo } from '@semrel-extra/topo'
-import {copy} from './metabranch.js'
+
+import {publish} from './publish.js'
 import {formatTag} from './tag.js'
 
 export {parseTag, formatTag, getTags} from './tag.js'
@@ -33,17 +34,3 @@ export const run = async ({cwd = process.cwd(), env = process.env} = {}) => {
     await publish({cwd: _cwd, env, version: pkg.version, name})
   }
 }
-
-export const publish = async ({cwd, env, registry = 'http://localhost:4873/', version, name}) => ctx(async ($) => {
-  $.cwd = cwd
-  $.env = env
-
-  const tag = formatTag({name, version})
-
-  await $`git tag -m ${tag} ${tag}`
-  await $`git push origin ${tag}`
-
-  await copy({cwd, from: 'package.json', to: 'package.json', branch: 'meta', msg: `chore: publish artifact ${name} ${version}`})
-
-  await $`npm publish --no-git-tag-version --registry=${registry}`
-})
