@@ -1,12 +1,12 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
+import {ctx, tempy, fs} from 'zx-extra'
 import {run} from '../../main/js/index.js'
 import {formatTag} from '../../main/js/tag.js'
 import {createFakeRepo, createNpmRegistry} from './test-utils.js'
 
 const test = suite('integration')
-import {ctx} from 'zx-extra'
 
 test('run()', async () => {
   const registry = createNpmRegistry()
@@ -111,6 +111,12 @@ test('run()', async () => {
 
     const tag = formatTag({name: 'a', version: '1.0.1'})
     assert.is((await $`git for-each-ref refs/tags/${tag} --format='%(contents)'`).toString().trim(), tag)
+
+    const origin = (await $`git remote get-url origin`).toString().trim()
+    const meta = tempy.temporaryDirectory()
+
+    await $`git clone --single-branch --branch meta --depth 1 ${origin} ${meta}`
+    assert.is((await fs.readJson(`${meta}/${tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')}/package.json`)).version, '1.0.1')
   })
 
   await registry.stop()
