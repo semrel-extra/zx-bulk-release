@@ -1,11 +1,11 @@
-import {test} from 'uvu'
+import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {fileURLToPath} from "node:url"
 import path from "node:path"
 
 import {topo} from '../../main/js/index.js'
 
-
+const test = suite('topo')
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
 

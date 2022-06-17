@@ -1,6 +1,6 @@
 {
   "name": "b",
   "dependencies": {
-    "a": "*"
+    "a": "workspace:*"
   }
 }

@@ -4,7 +4,7 @@ import * as assert from 'uvu/assert'
 import {parseTag, formatTag, getTags} from '../../main/js/index.js'
 import {createFakeRepo} from './test-utils.js'
 import {semver} from 'zx-extra'
-import {getLastPkgTaggedVersion} from "../../main/js/tag.js";
+import {getLatestTaggedVersion} from "../../main/js/tag.js";
 
 const test = suite('tag')
 
@@ -105,8 +105,8 @@ test('getting tags', async () => {
     ref: '2022.6.13-a.v1.0.0-f0'
   }])
 
-  assert.is(await getLastPkgTaggedVersion(cwd, 'a'), 'v1.1.0')
-  assert.is(await getLastPkgTaggedVersion(cwd, 'b'), 'v2.0.0-beta.0')
+  assert.is(await getLatestTaggedVersion(cwd, 'a'), 'v1.1.0')
+  assert.is(await getLatestTaggedVersion(cwd, 'b'), 'v2.0.0-beta.0')
 })
 
 test('formatTag() / parseTag()', () => {

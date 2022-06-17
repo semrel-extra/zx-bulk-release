@@ -1,7 +1,7 @@
 {
   "name": "c",
   "dependencies": {
-    "a": "*",
-    "d": "*"
+    "a": "workspace:^",
+    "d": "workspace:~"
   }
 }

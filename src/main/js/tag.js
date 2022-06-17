@@ -78,11 +78,11 @@ export const getTags = (cwd) => ctx(async ($) => {
     .filter(Boolean)
 })
 
-export const getLastPkgTag = async (cwd, name) =>
+export const getLatestTag = async (cwd, name) =>
   (await getTags(cwd)).find(tag => tag.name === name) || null
 
-export const getLastPkgTaggedVersion = async (cwd, name) =>
-  (await getLastPkgTag(cwd, name))?.version || null
+export const getLatestTaggedVersion = async (cwd, name) =>
+  (await getLatestTag(cwd, name))?.version || null
 
 export const formatDateTag = (date = new Date()) => `${date.getUTCFullYear()}.${date.getUTCMonth() + 1}.${date.getUTCDate()}`
 
