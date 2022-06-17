@@ -57,7 +57,7 @@ jobs:
         run: yarn install
 
       - name: Run tests
-        timeout-minutes: 1
+        timeout-minutes: 3
         run: yarn test
 
   release:

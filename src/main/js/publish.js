@@ -20,6 +20,9 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
     await $`git remote add origin ${origin}`
   }
 
+  await $`git config user.name ${$.env.GIT_COMMITTER_NAME || 'Semrel Extra Bot'}`
+  await $`git config user.email ${$.env.GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com'}`
+
   branches[branch] = cwd
 
   return cwd
