@@ -5,13 +5,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const fixtures = path.resolve(__dirname, '../fixtures')
 
 export const createNpmRegistry = () => {
-  const VERDACCIO_TOKEN = 'mRv6eIuiaggXGb9ZDFCtBA=='
-  $.cwd = path.resolve(__dirname, '../../../')
-  $.raw`echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc`
-
   let p
+
   return {
-    address: 'http://localhost:4873/',
+    address: $.env.NPM_REGISTRY,
     async start() {
       fs.removeSync(path.resolve(__dirname, '../../../storage'))
       const config = path.resolve(__dirname, '../../../verdaccio.config.yaml')

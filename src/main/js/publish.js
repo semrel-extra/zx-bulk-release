@@ -1,5 +1,5 @@
 import {formatTag, getLatestTag} from './tag.js'
-import {tempy, ctx, fs, path} from 'zx-extra'
+import {tempy, ctx, fs, path, $} from 'zx-extra'
 import {copydir} from 'git-glob-cp'
 
 const branches = {}
@@ -38,7 +38,7 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles}) =>
   await $.raw`git push origin HEAD:refs/heads/${branch}`
 })
 
-export const publish = async (pkg, env, registry = 'http://localhost:4873/') => ctx(async ($) => {
+export const publish = async (pkg, env) => ctx(async ($) => {
   const {name, version, files} = pkg.manifest
   const cwd = pkg.absPath
   $.cwd = cwd
@@ -57,8 +57,12 @@ export const publish = async (pkg, env, registry = 'http://localhost:4873/') => 
   console.log('push artifact to branch `meta`')
   await push({cwd, from, to, branch: 'meta', msg: `chore: publish artifact ${name} ${version}`, ignoreFiles: '.npmignore'})
 
+  const registry = env.NPM_REGISTRY || 'https://registry.npmjs.org'
+  const npmrc = path.resolve(cwd, '.npmrc')
   console.log(`publish npm package to ${registry}`)
-  await $`npm publish --no-git-tag-version --registry=${registry}`
+
+  await $.raw`echo ${registry.replace(/https?:/, '')}/:_authToken=${$.env.NPM_TOKEN} >> ${npmrc}`
+  await $`npm publish --no-git-tag-version --registry=${registry} --userconfig ${npmrc} --no-workspaces`
 })
 
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
