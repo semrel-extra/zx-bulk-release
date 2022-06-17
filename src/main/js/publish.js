@@ -4,12 +4,22 @@ import {copydir} from 'git-glob-cp'
 
 const branches = {}
 
+export const getOrigin = (cwd) => ctx(async ($) => {
+  $.cwd = cwd
+  const gitAuth = `${$.env.GH_USER}:${$.env.GITHUB_TOKEN}`
+  const originUrl = (await $`git config --get remote.origin.url`).toString().trim()
+  const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
+
+  return repoHost ?
+    `https://${gitAuth}@${repoHost}/${repoName}`
+    : originUrl
+})
+
 export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
   let cwd = branches[branch]
   if (cwd) return cwd
 
-  $.cwd = _cwd
-  const origin = _origin || (await $`git remote get-url origin`).toString().trim()
+  const origin = _origin || await getOrigin(_cwd)
 
   cwd = tempy.temporaryDirectory()
   $.cwd = cwd
