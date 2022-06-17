@@ -33,7 +33,11 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 2
-        run: yarn test
+        env:
+          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
+        run: |
+          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
+          yarn test
 
   test_pr:
     if: ${{ needs.init.outputs.skip == 'false' && github.event_name == 'pull_request' }}
@@ -59,7 +63,11 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 2
-        run: yarn test
+        env:
+          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
+        run: |
+          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
+          yarn test
 
   release:
     name: Release
@@ -87,9 +95,21 @@ jobs:
       - name: Install deps
         run: yarn install
 
+      - name: Create .npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
+
       - name: Run tests
         timeout-minutes: 2
-        run: yarn test
+        run: |
+          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
+          yarn test
 
       - name: Docs
         run: yarn docs
@@ -101,18 +121,6 @@ jobs:
 #        with:
 #          coverageLocations: |
 #            ${{github.workspace}}/coverage/*.lcov:lcov
-
-      - name: Create .npmrc
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
-          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
-          echo "email=test@example.com" >> .npmrc
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
 
       - name: Release
         env:
