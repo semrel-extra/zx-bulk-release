@@ -20,9 +20,6 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
     await $`git remote add origin ${origin}`
   }
 
-  await $`git config user.name ${$.env.GIT_COMMITTER_NAME || 'Semrel Extra Bot'}`
-  await $`git config user.email ${$.env.GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com'}`
-
   branches[branch] = cwd
 
   return cwd
@@ -34,6 +31,8 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles}) =>
 
   $.cwd = _cwd
 
+  await $`git config user.name ${$.env.GIT_COMMITTER_NAME || 'Semrel Extra Bot'}`
+  await $`git config user.email ${$.env.GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com'}`
   await $`git add .`
   await $`git commit -m ${msg}`
   await $.raw`git push origin HEAD:refs/heads/${branch}`
@@ -50,6 +49,8 @@ export const publish = async (pkg, env, registry = 'http://localhost:4873/') => 
   const to = getArtifactPath(tag)
 
   console.log(`push release tag ${tag}`)
+  await $`git config user.name ${$.env.GIT_COMMITTER_NAME || 'Semrel Extra Bot'}`
+  await $`git config user.email ${$.env.GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com'}`
   await $`git tag -m ${tag} ${tag}`
   await $`git push origin ${tag}`
 
