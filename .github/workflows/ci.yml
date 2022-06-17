@@ -104,9 +104,12 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
           echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
+          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
 
       - name: Release
         env:
