@@ -1,3 +1,8 @@
+## [1.0.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.2...v1.0.3) (2022-06-17)
+
+### Fixes & improvements
+* refactor: separate git url builder ([1f07a97](https://github.com/semrel-extra/zx-bulk-release/commit/1f07a978e7f731047403ba3f40a72c5cd8275b07))
+
 ## [1.0.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.1...v1.0.2) (2022-06-17)
 
 ### Fixes & improvements
