@@ -21,6 +21,8 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 *.lcov
+cc-reporter
+cc-reporter.*
 
 # nyc test coverage
 .nyc_output
@@ -40,6 +42,11 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+
+# npm creds
+.npmrc
+.yarnrc
+.pnpmrc
 
 # TypeScript v1 declaration files
 typings/
@@ -105,3 +112,12 @@ dist
 
 # Verdaccio
 storage
+
+# Creds
+*.asc
+*.key
+*.pem
+*.cert
+
+# Docs
+docs

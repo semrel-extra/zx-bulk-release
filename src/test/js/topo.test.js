@@ -1,7 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {fileURLToPath} from "node:url"
-import path from "node:path"
+import path from 'node:path'
 
 import {topo} from '../../main/js/index.js'
 
