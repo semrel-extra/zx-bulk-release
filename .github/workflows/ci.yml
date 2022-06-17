@@ -33,11 +33,7 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 2
-        env:
-          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
-        run: |
-          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
-          yarn test
+        run: yarn test
 
   test_pr:
     if: ${{ needs.init.outputs.skip == 'false' && github.event_name == 'pull_request' }}
@@ -63,11 +59,7 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 2
-        env:
-          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
-        run: |
-          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
-          yarn test
+        run: yarn test
 
   release:
     name: Release
@@ -103,13 +95,10 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
           echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc
-          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
 
       - name: Run tests
         timeout-minutes: 2
-        run: |
-          echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc
-          yarn test
+        run: yarn test
 
       - name: Docs
         run: yarn docs

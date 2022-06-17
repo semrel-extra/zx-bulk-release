@@ -5,8 +5,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const fixtures = path.resolve(__dirname, '../fixtures')
 
 export const createNpmRegistry = () => {
-  let p
+  const VERDACCIO_TOKEN = 'mRv6eIuiaggXGb9ZDFCtBA=='
+  $.cwd = path.resolve(__dirname, '../../../')
+  $.raw`echo "//localhost:4873/:_authToken=${VERDACCIO_TOKEN}" >> .npmrc`
 
+  let p
   return {
     address: 'http://localhost:4873/',
     async start() {
