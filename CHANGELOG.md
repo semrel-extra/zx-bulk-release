@@ -1,3 +1,8 @@
+## [1.0.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.0...v1.0.1) (2022-06-17)
+
+### Fixes & improvements
+* fix: add bin path ([29ae3c4](https://github.com/semrel-extra/zx-bulk-release/commit/29ae3c4896c9e46edffc776356fc4388412a19ee))
+
 ## [1.0.0](https://github.com/semrel-extra/zx-bulk-release/compare/undefined...v1.0.0) (2022-06-17)
 
 ### Features
@@ -13,5 +18,3 @@
 * refactor: separate publish utils ([48d756b](https://github.com/semrel-extra/zx-bulk-release/commit/48d756badf57012b7ae97ae8f4bd4ccbc0dd473d))
 * docs: add refs ([c937fce](https://github.com/semrel-extra/zx-bulk-release/commit/c937fce4472f68c5d8e92e8970a15fca017dc656))
 * docs: add basic description ([bb4d0f4](https://github.com/semrel-extra/zx-bulk-release/commit/bb4d0f4e33cfae78868400e8bf17f488d5d4a2de))
-
-
