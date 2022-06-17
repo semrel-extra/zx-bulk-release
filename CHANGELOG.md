@@ -1,3 +1,8 @@
+## [1.0.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.1...v1.0.2) (2022-06-17)
+
+### Fixes & improvements
+* fix: add missing shebang ([90ebf45](https://github.com/semrel-extra/zx-bulk-release/commit/90ebf459b4e4bdea099ca75c6572101845fea7c6))
+
 ## [1.0.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.0...v1.0.1) (2022-06-17)
 
 ### Fixes & improvements
