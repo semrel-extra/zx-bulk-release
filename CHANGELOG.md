@@ -1,3 +1,8 @@
+## [1.1.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.3...v1.1.0) (2022-06-18)
+
+### Features
+* feat: add dry-run flag ([1c61ea4](https://github.com/semrel-extra/zx-bulk-release/commit/1c61ea4da0a0f6bac8f6135a285335a150c51e9b))
+
 ## [1.0.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.2...v1.0.3) (2022-06-17)
 
 ### Fixes & improvements
