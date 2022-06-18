@@ -1,3 +1,8 @@
+## [1.1.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.1.0...v1.1.1) (2022-06-18)
+
+### Fixes & improvements
+* docs: mention js api ([06cda98](https://github.com/semrel-extra/zx-bulk-release/commit/06cda9869b96fc2aca5d278f45d5e733e2cc23ab))
+
 ## [1.1.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.0.3...v1.1.0) (2022-06-18)
 
 ### Features
