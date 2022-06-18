@@ -8,93 +8,98 @@ import {createFakeRepo, createNpmRegistry} from './test-utils.js'
 
 const test = suite('integration')
 
+const cwd = await createFakeRepo({
+  commits: [
+    {
+      msg: 'chore: initial commit',
+      files: [
+        {
+          relpath: './README.md',
+          contents: '#Readme'
+        },
+        {
+          relpath: './package.json',
+          contents: {
+            name: 'root',
+            workspaces: ['packages/*']
+          }
+        }
+      ]
+    },
+    {
+      msg: 'feat: init pkg a',
+      files: [
+        {
+          relpath: './packages/a/package.json',
+          contents: {
+            name: 'a'
+          }
+        }
+      ]
+    },
+    {
+      msg: 'chore(a): some a update',
+      files: [
+        {
+          relpath: './packages/a/foo.txt',
+          contents: 'foo'
+        }
+      ]
+    },
+    {
+      msg: 'chore(a): another a update',
+      files: [
+        {
+          relpath: './packages/a/foo.txt',
+          contents: 'foobar'
+        }
+      ],
+      tags: ['2022.6.13-a.v1.0.0-f0']
+    },
+    {
+      msg: 'refactor(a): a refactoring',
+      files: [
+        {
+          relpath: './packages/a/foo.txt',
+          contents: 'foobarbaz'
+        }
+      ]
+    },
+    {
+      msg: 'feat: init pkg b',
+      files: [
+        {
+          relpath: './packages/b/package.json',
+          contents: {
+            name: 'b',
+            dependencies: {
+              a: '1.0.0'
+            }
+          }
+        }
+      ]
+    },
+    {
+      msg: 'fix(b): add some file',
+      files: [
+        {
+          relpath: './packages/b/file.txt',
+          contents: 'foo bar'
+        }
+      ]
+    }
+  ]
+})
+
+
+test('run() dry-run', async () => {
+  await run({cwd, flags: {dryRun: true}})
+})
+
 test('run()', async () => {
   const registry = createNpmRegistry()
 
   await registry.start()
-
-  const cwd = await createFakeRepo({
-    commits: [
-      {
-        msg: 'chore: initial commit',
-        files: [
-          {
-            relpath: './README.md',
-            contents: '#Readme'
-          },
-          {
-            relpath: './package.json',
-            contents: {
-              name: 'root',
-              workspaces: ['packages/*']
-            }
-          }
-        ]
-      },
-      {
-        msg: 'feat: init pkg a',
-        files: [
-          {
-            relpath: './packages/a/package.json',
-            contents: {
-              name: 'a'
-            }
-          }
-        ]
-      },
-      {
-        msg: 'chore(a): some a update',
-        files: [
-          {
-            relpath: './packages/a/foo.txt',
-            contents: 'foo'
-          }
-        ]
-      },
-      {
-        msg: 'chore(a): another a update',
-        files: [
-          {
-            relpath: './packages/a/foo.txt',
-            contents: 'foobar'
-          }
-        ],
-        tags: ['2022.6.13-a.v1.0.0-f0']
-      },
-      {
-        msg: 'refactor(a): a refactoring',
-        files: [
-          {
-            relpath: './packages/a/foo.txt',
-            contents: 'foobarbaz'
-          }
-        ]
-      },
-      {
-        msg: 'feat: init pkg b',
-        files: [
-          {
-            relpath: './packages/b/package.json',
-            contents: {
-              name: 'b',
-              dependencies: {
-                a: '1.0.0'
-              }
-            }
-          }
-        ]
-      },
-      {
-        msg: 'fix(b): add some file',
-        files: [
-          {
-            relpath: './packages/b/file.txt',
-            contents: 'foo bar'
-          }
-        ]
-      }
-    ]
-  })
 
   await run({cwd})
 

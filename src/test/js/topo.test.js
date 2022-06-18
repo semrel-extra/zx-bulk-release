@@ -2,8 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {fileURLToPath} from "node:url"
 import path from 'node:path'
-
-import {topo} from '../../main/js/index.js'
+import {topo} from '@semrel-extra/topo'
 
 const test = suite('topo')
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

@@ -7,7 +7,4 @@ const test = suite('index')
 test('index has proper exports', () => {
   assert.instance(run, Function)
 })
-//
-// test('run: dry-run', async () => {
-//   await run()
-// })
+

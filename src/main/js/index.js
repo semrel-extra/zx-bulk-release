@@ -4,8 +4,9 @@ import {updateDeps} from './deps.js'
 import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
 import {publish, getLatest} from './publish.js'
 
-export const run = async ({cwd = process.cwd(), env = process.env} = {}) => {
+export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
   const {packages, queue} = await topo({cwd})
+  const dryRun = flags['dry-run'] || flags.dryRun
 
   for (let name of queue) {
     const pkg = packages[name]
@@ -19,11 +20,11 @@ export const run = async ({cwd = process.cwd(), env = process.env} = {}) => {
     pkg.manifest.version = pkg.version
 
     if (changes.length === 0) continue
-
     console.log(`semantic changes of '${name}'`, changes)
 
-    await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
+    if (dryRun) continue
 
+    await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
     await publish(pkg, env)
   }
 }
