@@ -8,11 +8,6 @@
 GH_TOKEN=foo NPM_TOKEN=bar npx zx-bulk-release [opts]
 ```
 
-or just copy-paste, tweak a bit and run with [zx-extra](https://github.com/qiwi/zx-extra):
-```shell
-GH_TOKEN=foo NPM_TOKEN=bar zx-extra zx-bulk-release.mjs
-```
-
 ## Roadmap
 * [x] [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger semantic releases.
 * [x] Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
