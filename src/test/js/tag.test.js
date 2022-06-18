@@ -1,7 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
-import {parseTag, formatTag, getTags} from '../../main/js/index.js'
+import {parseTag, formatTag, getTags} from '../../main/js/tag.js'
 import {createFakeRepo} from './test-utils.js'
 import {semver} from 'zx-extra'
 import {getLatestTaggedVersion} from "../../main/js/tag.js";

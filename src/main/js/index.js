@@ -1,14 +1,8 @@
 import {fs} from 'zx-extra'
+import {topo} from '@semrel-extra/topo'
 import {updateDeps} from './deps.js'
-import {getSemanticChanges, resolvePkgVersion} from './analyzer.js'
-import { topo } from '@semrel-extra/topo'
-
+import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
 import {publish, getLatest} from './publish.js'
-import {formatTag} from './tag.js'
-
-export {parseTag, formatTag, getTags} from './tag.js'
-
-export { topo }
 
 export const run = async ({cwd = process.cwd(), env = process.env} = {}) => {
   const {packages, queue} = await topo({cwd})

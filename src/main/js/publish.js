@@ -6,11 +6,11 @@ const branches = {}
 
 export const getOrigin = (cwd) => ctx(async ($) => {
   $.cwd = cwd
-  const gitAuth = `${$.env.GH_USER}:${$.env.GITHUB_TOKEN}`
+  const gitAuth = `${$.env.GH_USER}:${$.env.GITHUB_TOKEN || $.env.GH_TOKEN}`
   const originUrl = (await $`git config --get remote.origin.url`).toString().trim()
   const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
 
-  return repoHost ?
+  return repoHost && $.env.GH_USER?
     `https://${gitAuth}@${repoHost}/${repoName}`
     : originUrl
 })

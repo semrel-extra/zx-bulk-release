@@ -1,6 +1,8 @@
 # zx-bulk-release
 > [zx](https://github.com/google/zx)-based alternative for [multi-semantic-release](https://github.com/dhoulb/multi-semantic-release)
 
+🚧 Work in progress. Early access preview
+
 ## Usage
 ```shell
 GH_TOKEN=foo NPM_TOKEN=bar npx zx-bulk-release [opts]
