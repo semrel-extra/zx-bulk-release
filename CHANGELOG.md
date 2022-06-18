@@ -1,3 +1,8 @@
+## [1.1.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.1.1...v1.1.2) (2022-06-18)
+
+### Fixes & improvements
+* docs: fix usage example ([d18c169](https://github.com/semrel-extra/zx-bulk-release/commit/d18c1691c8447ffa1cde3dc5aa52fadf307d359a))
+
 ## [1.1.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.1.0...v1.1.1) (2022-06-18)
 
 ### Fixes & improvements
