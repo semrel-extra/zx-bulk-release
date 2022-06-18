@@ -14,7 +14,7 @@ GH_TOKEN=foo NPM_TOKEN=bar zx-extra zx-bulk-release.mjs
 ```
 
 ## Roadmap
-* [x] [Semantic commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger releases.
+* [x] [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger semantic releases.
 * [x] Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
 * [x] No blocking (no release commits).
 * [ ] Changelogs, docs, bundles go to: release assets and/or meta branch.
@@ -24,9 +24,24 @@ GH_TOKEN=foo NPM_TOKEN=bar zx-extra zx-bulk-release.mjs
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract: 
 ```js
 '2022.6.13-optional-org.pkg-name.v1.0.0-beta.1+sha.1-f0'
-// date    name                  version             format                              
+// date    name                  version             format
 ```
-Note, [npm-package-name charset](https://www.npmjs.com/package/validate-npm-package-name) is wider than [semver](https://semver.org/spec/v2.0.0.html#spec-item-4), so we need a pinch of [base64url magic](https://stackoverflow.com/questions/55389211/string-based-data-encoding-base64-vs-base64url).
+Note, [npm-package-name charset](https://www.npmjs.com/package/validate-npm-package-name) is wider than [semver](https://semver.org/spec/v2.0.0.html#spec-item-4), so we need a pinch of [base64url magic](https://stackoverflow.com/questions/55389211/string-based-data-encoding-base64-vs-base64url) for some cases.
+```js
+'2022.6.13-examplecom.v1.0.0.ZXhhbXBsZS5jb20-f1'
+// date    name       ver    b64             format
+```
+
+## JS API
+```js
+import { run } from 'zx-bulk-release'
+
+const cwd = '/foo/bar' // Defaults to process.cwd()
+const env = { GH_TOKEN: 'foo', NPM_TOKEN: 'bar' } // Defaults to process.env
+const flags = {dryRun: true}
+
+await run({cwd, flags, env})
+```
 
 ## References
 * [semrel-extra/zx-semrel](https://github.com/semrel-extra/zx-semrel)
