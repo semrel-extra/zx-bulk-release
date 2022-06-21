@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.1.2...v1.2.0) (2022-06-21)
+
+### Features
+* feat: parse legacy lerna tags ([c130191](https://github.com/semrel-extra/zx-bulk-release/commit/c130191f192b185937286730b8c3505d5674c7c1))
+* feat: introduce meta.json to store release details ([a20c348](https://github.com/semrel-extra/zx-bulk-release/commit/a20c34809e29d772a44f71990fdb11921a49ca9f))
+
 ## [1.1.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.1.1...v1.1.2) (2022-06-18)
 
 ### Fixes & improvements
