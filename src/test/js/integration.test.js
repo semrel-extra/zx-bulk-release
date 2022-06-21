@@ -121,7 +121,7 @@ test('run()', async () => {
     const meta = tempy.temporaryDirectory()
 
     await $`git clone --single-branch --branch meta --depth 1 ${origin} ${meta}`
-    assert.is((await fs.readJson(`${meta}/${tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')}/package.json`)).version, '1.0.1')
+    assert.is((await fs.readJson(`${meta}/${tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')}/meta.json`)).version, '1.0.1')
   })
 
   await registry.stop()

@@ -11,7 +11,14 @@ export const updateDeps = async (pkg, packages) => {
     if (!deps) continue
 
     for (let [name, version] of Object.entries(deps)) {
-      const next = resolveVersion(version, packages[name]?.version, pkg.latest.manifest?.[scope]?.[name])
+      if (!packages[name]) continue
+
+      const prev = pkg.latest.meta?.[scope]?.[name]
+      const actual = packages[name]?.version
+      const next = resolveVersion(version, actual, prev)
+
+      pkg[scope] = {...pkg[scope], [name]: next || version}
+
       if (!next) continue
 
       deps[name] = next

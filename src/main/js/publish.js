@@ -3,6 +3,7 @@ import {tempy, ctx, fs, path, $} from 'zx-extra'
 import {copydir} from 'git-glob-cp'
 
 const branches = {}
+const META_VERSION = '1'
 
 export const getOrigin = (cwd) => ctx(async ($) => {
   $.cwd = cwd
@@ -35,9 +36,14 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
   return cwd
 })
 
-export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles}) => ctx(async ($) => {
+export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = []}) => ctx(async ($) => {
   const _cwd = await fetch({cwd, branch, origin})
-  await copydir({baseFrom: cwd, from, baseTo: _cwd, to})
+
+  for (let {relpath, contents} of files) {
+    const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
+    await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
+  }
+  if (from) await copydir({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles})
 
   $.cwd = _cwd
 
@@ -49,14 +55,12 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles}) =>
 })
 
 export const publish = async (pkg, env) => ctx(async ($) => {
-  const {name, version, files} = pkg.manifest
+  const {name, version} = pkg.manifest
+  const tag = formatTag({name, version})
   const cwd = pkg.absPath
+
   $.cwd = cwd
   $.env = env
-
-  const tag = formatTag({name, version})
-  const from = files ? [...files, 'package.json'] : ['!node_modules', '*']
-  const to = getArtifactPath(tag)
 
   console.log(`push release tag ${tag}`)
   await $`git config user.name ${$.env.GIT_COMMITTER_NAME || 'Semrel Extra Bot'}`
@@ -65,7 +69,7 @@ export const publish = async (pkg, env) => ctx(async ($) => {
   await $`git push origin ${tag}`
 
   console.log('push artifact to branch `meta`')
-  await push({cwd, from, to, branch: 'meta', msg: `chore: publish artifact ${name} ${version}`, ignoreFiles: '.npmignore'})
+  await pushMeta(pkg)
 
   const registry = env.NPM_REGISTRY || 'https://registry.npmjs.org'
   const npmrc = path.resolve(cwd, '.npmrc')
@@ -77,23 +81,44 @@ export const publish = async (pkg, env) => ctx(async ($) => {
 
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
-export const getLatestManifest = async (cwd, tag) => {
+export const getLatestMeta = async (cwd, tag) => {
   if (!tag) return null
 
   try {
-    const meta = await fetch({cwd, branch: 'meta'})
-    return await fs.readJson(path.resolve(meta, getArtifactPath(tag), 'package.json'))
+    const _cwd = await fetch({cwd, branch: 'meta'})
+    return await fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
   } catch {}
 
   return null
 }
 
+export const pushMeta = async (pkg) => ctx(async ($) => {
+  const cwd = pkg.absPath
+  const {name, version} = pkg
+  const tag = formatTag({name, version})
+  const to = getArtifactPath(tag)
+  const branch =  'meta'
+  const msg =  `chore: release meta ${name} ${version}`
+  const meta = {
+    META_VERSION,
+    name: pkg.name,
+    version: pkg.version,
+    dependencies: pkg.dependencies,
+    devDependencies: pkg.devDependencies,
+    peerDependencies: pkg.peerDependencies,
+    optionalDependencies: pkg.optionalDependencies,
+  }
+  const files = [{relpath: 'meta.json', contents: meta}]
+
+  await push({cwd, to, branch, msg, files})
+})
+
 export const getLatest = async (cwd, name) => {
   const tag = await getLatestTag(cwd, name)
-  const manifest = await getLatestManifest(cwd, tag?.ref)
+  const meta = await getLatestMeta(cwd, tag?.ref)
 
   return {
     tag,
-    manifest
+    meta
   }
 }
