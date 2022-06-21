@@ -7,14 +7,12 @@ const META_VERSION = '1'
 
 export const getOrigin = (cwd) => ctx(async ($) => {
   $.cwd = cwd
-  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN} = $.env
-  const username = GH_USER || GITHUB_USER || GH_USERNAME || GITHUB_USERNAME
-  const token = GH_TOKEN || GITHUB_TOKEN
+  const {ghToken, ghUser} = parseEnv($.env)
   const originUrl = (await $`git config --get remote.origin.url`).toString().trim()
   const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
 
-  return token && username && repoHost && repoName?
-    `https://${username}:${token}@${repoHost}/${repoName}`
+  return ghToken && ghUser && repoHost && repoName?
+    `https://${ghUser}:${ghToken}@${repoHost}/${repoName}`
     : originUrl
 })
 
@@ -40,6 +38,7 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
 
 export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = []}) => ctx(async ($) => {
   const _cwd = await fetch({cwd, branch, origin})
+  const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
 
   for (let {relpath, contents} of files) {
     const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
@@ -49,8 +48,8 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, fil
 
   $.cwd = _cwd
 
-  await $`git config user.name ${$.env.GIT_COMMITTER_NAME || 'Semrel Extra Bot'}`
-  await $`git config user.email ${$.env.GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com'}`
+  await $`git config user.name ${gitCommitterEmail}`
+  await $`git config user.email ${gitCommitterName}`
   await $`git add .`
   await $`git commit -m ${msg}`
   await $.raw`git push origin HEAD:refs/heads/${branch}`
@@ -60,25 +59,26 @@ export const publish = async (pkg, env) => ctx(async ($) => {
   const {name, version} = pkg.manifest
   const tag = formatTag({name, version})
   const cwd = pkg.absPath
+  const {gitCommitterEmail, gitCommitterName, npmRegistry} = parseEnv(env)
 
   $.cwd = cwd
   $.env = env
 
   console.log(`push release tag ${tag}`)
-  await $`git config user.name ${$.env.GIT_COMMITTER_NAME || 'Semrel Extra Bot'}`
-  await $`git config user.email ${$.env.GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com'}`
+  await $`git config user.name ${gitCommitterName}`
+  await $`git config user.email ${gitCommitterEmail}`
   await $`git tag -m ${tag} ${tag}`
   await $`git push origin ${tag}`
 
   console.log('push artifact to branch `meta`')
   await pushMeta(pkg)
 
-  const registry = env.NPM_REGISTRY || 'https://registry.npmjs.org'
+  console.log(`publish npm package to ${npmRegistry}`)
   const npmrc = path.resolve(cwd, '.npmrc')
-  console.log(`publish npm package to ${registry}`)
+  await $.raw`echo ${npmRegistry.replace(/https?:/, '')}/:_authToken=${$.env.NPM_TOKEN} >> ${npmrc}`
+  await $`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
 
-  await $.raw`echo ${registry.replace(/https?:/, '')}/:_authToken=${$.env.NPM_TOKEN} >> ${npmrc}`
-  await $`npm publish --no-git-tag-version --registry=${registry} --userconfig ${npmrc} --no-workspaces`
+  // console.log('create gh release')
 })
 
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
@@ -122,5 +122,18 @@ export const getLatest = async (cwd, name) => {
   return {
     tag,
     meta
+  }
+}
+
+export const parseEnv = (env = process.env) => {
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTY, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
+
+  return {
+    ghUser: GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
+    ghToken: GH_TOKEN || GITHUB_TOKEN,
+    npmToken: NPM_TOKEN,
+    npmRegistry: NPM_REGISTY || 'https://registry.npmjs.org',
+    gitCommitterName: GIT_COMMITTER_NAME || 'Semrel Extra Bot',
+    gitCommitterEmail: GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
   }
 }
