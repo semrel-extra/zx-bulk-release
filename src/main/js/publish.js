@@ -1,5 +1,5 @@
 import {formatTag, getLatestTag} from './tag.js'
-import {tempy, ctx, fs, path, $} from 'zx-extra'
+import {tempy, ctx, fs, path} from 'zx-extra'
 import {copydir} from 'git-glob-cp'
 
 const branches = {}
@@ -7,12 +7,14 @@ const META_VERSION = '1'
 
 export const getOrigin = (cwd) => ctx(async ($) => {
   $.cwd = cwd
-  const gitAuth = `${$.env.GH_USER}:${$.env.GITHUB_TOKEN || $.env.GH_TOKEN}`
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN} = $.env
+  const username = GH_USER || GITHUB_USER || GH_USERNAME || GITHUB_USERNAME
+  const token = GH_TOKEN || GITHUB_TOKEN
   const originUrl = (await $`git config --get remote.origin.url`).toString().trim()
   const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
 
-  return repoHost && $.env.GH_USER?
-    `https://${gitAuth}@${repoHost}/${repoName}`
+  return token && username && repoHost && repoName?
+    `https://${username}:${token}@${repoHost}/${repoName}`
     : originUrl
 })
 
