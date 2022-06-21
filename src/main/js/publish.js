@@ -78,7 +78,8 @@ export const publish = async (pkg, env) => ctx(async ($) => {
   await $.raw`echo ${npmRegistry.replace(/https?:/, '')}/:_authToken=${$.env.NPM_TOKEN} >> ${npmrc}`
   await $`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
 
-  // console.log('create gh release')
+  console.log('create gh release')
+  await createGhRelease(pkg)
 })
 
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
@@ -94,7 +95,7 @@ export const getLatestMeta = async (cwd, tag) => {
   return null
 }
 
-export const pushMeta = async (pkg) => ctx(async ($) => {
+export const pushMeta = async (pkg) => {
   const cwd = pkg.absPath
   const {name, version} = pkg
   const tag = formatTag({name, version})
@@ -113,7 +114,7 @@ export const pushMeta = async (pkg) => ctx(async ($) => {
   const files = [{relpath: 'meta.json', contents: meta}]
 
   await push({cwd, to, branch, msg, files})
-})
+}
 
 export const getLatest = async (cwd, name) => {
   const tag = await getLatestTag(cwd, name)
@@ -126,14 +127,61 @@ export const getLatest = async (cwd, name) => {
 }
 
 export const parseEnv = (env = process.env) => {
-  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTY, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
 
   return {
     ghUser: GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
     ghToken: GH_TOKEN || GITHUB_TOKEN,
     npmToken: NPM_TOKEN,
-    npmRegistry: NPM_REGISTY || 'https://registry.npmjs.org',
+    npmRegistry: NPM_REGISTRY || 'https://registry.npmjs.org',
     gitCommitterName: GIT_COMMITTER_NAME || 'Semrel Extra Bot',
     gitCommitterEmail: GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
   }
 }
+
+export const parseRepo = (cwd, origin) => ctx(async ($) => {
+  $.cwd = cwd
+  const originUrl = origin || (await $`git config --get remote.origin.url`).toString().trim()
+  const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
+
+  const repoPublicUrl = `https://${repoHost}/${repoName}`
+  return {
+    repoName,
+    repoHost,
+    repoPublicUrl
+  }
+})
+
+export const createGhRelease = (pkg) => ctx(async ($) => {
+  const cwd = pkg.absPath
+  const {name, version} = pkg
+  const {ghUser, ghToken} = parseEnv($.env)
+  const {repoName, repoPublicUrl} = await parseRepo(cwd)
+
+  if (!ghToken || !ghUser) return null
+
+  const tag = formatTag({name, version})
+  const releaseDiffRef = `## [${name}@${version}](${repoPublicUrl}/compare/${pkg.latest.tag?.ref}...${tag}) (${new Date().toISOString().slice(0, 10)})`
+  const releaseDetails = Object.values(pkg.changes
+    .reduce((acc, {group, change, short, hash}) => {
+      const {commits} = acc[group] || (acc[group] = {commits: [], group})
+      const commitRef = `* ${change} ([${short}](${repoPublicUrl}/commit/${hash}))`
+
+      commits.push(commitRef)
+
+      return acc
+    }, {}))
+    .map(({group, commits}) => `
+### ${group}
+${commits.join('\n')}`).join('\n')
+
+  const releaseNotes = releaseDiffRef + '\n' + releaseDetails + '\n'
+  const releaseData = JSON.stringify({
+    name: tag,
+    tag_name: tag,
+    body: releaseNotes
+  })
+
+  $.cwd = cwd
+  await $`curl -u ${ghUser}:${ghToken} -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
+})

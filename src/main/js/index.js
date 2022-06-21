@@ -16,6 +16,7 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     const depsChanges = await updateDeps(pkg, packages)
     const changes = [...semanticChanges, ...depsChanges]
 
+    pkg.changes = changes
     pkg.version = resolvePkgVersion(changes, pkg.latest.tag?.version || pkg.manifest.version)
     pkg.manifest.version = pkg.version
 

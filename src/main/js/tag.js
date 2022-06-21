@@ -62,7 +62,12 @@ const lerna = {
     if (!semver.valid(version)) return null
 
     return {name, version, format: 'lerna', ref: tag}
-  }
+  },
+  // format({name, version}) {
+  //   if (!semver.valid(version)) return null
+  //
+  //   return `${name}@${version}`
+  // }
 }
 
 // TODO
