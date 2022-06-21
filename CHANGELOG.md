@@ -1,3 +1,11 @@
+## [1.4.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.3.0...v1.4.0) (2022-06-21)
+
+### Features
+* feat: add gh release ([df43fca](https://github.com/semrel-extra/zx-bulk-release/commit/df43fca694668a838f287d38b4f298aa9da2acdd))
+
+### Fixes & improvements
+* refactor: add parseEnv util ([936b5ed](https://github.com/semrel-extra/zx-bulk-release/commit/936b5edaf3472f66dba2f9c60bb9745096fda729))
+
 ## [1.3.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.2.0...v1.3.0) (2022-06-21)
 
 ### Features
