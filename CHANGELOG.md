@@ -1,3 +1,8 @@
+## [1.4.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.4.0...v1.4.1) (2022-06-21)
+
+### Fixes & improvements
+* fix: fix commits refs in release data ([1ddd2e9](https://github.com/semrel-extra/zx-bulk-release/commit/1ddd2e99e88e245bf5d6b477adb6fca0d2c4c663))
+
 ## [1.4.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.3.0...v1.4.0) (2022-06-21)
 
 ### Features
