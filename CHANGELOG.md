@@ -1,3 +1,8 @@
+## [1.4.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.4.1...v1.4.2) (2022-06-21)
+
+### Fixes & improvements
+* refactor: use common iface for push internals ([e614e42](https://github.com/semrel-extra/zx-bulk-release/commit/e614e42d8b323749082b94611f4552fdacebe1f5))
+
 ## [1.4.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.4.0...v1.4.1) (2022-06-21)
 
 ### Fixes & improvements
