@@ -1,3 +1,8 @@
+## [1.3.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.2.0...v1.3.0) (2022-06-21)
+
+### Features
+* feat: add gh username and token env aliases ([892bfdc](https://github.com/semrel-extra/zx-bulk-release/commit/892bfdc86215a0532939f24ca4a2690d69e8d59e))
+
 ## [1.2.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.1.2...v1.2.0) (2022-06-21)
 
 ### Features
