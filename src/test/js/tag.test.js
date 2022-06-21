@@ -143,6 +143,16 @@ test('formatTag() / parseTag()', () => {
         format: 'f1',
         ref: '2022.6.13-examplecom.v1.0.0.ZXhhbXBsZS5jb20-f1'
       }
+    ],
+    [
+      '@qiwi/pijma-ssr@1.1.12',
+      {
+        name: '@qiwi/pijma-ssr',
+        version: '1.1.12',
+        format: 'lerna',
+        ref: '@qiwi/pijma-ssr@1.1.12'
+      },
+      true
     ]
   ]
 

@@ -8,8 +8,8 @@ const f0 = {
     if (!tag.endsWith('-f0')) return null
 
     const pattern = /^(\d{4}\.(?:[1-9]|1[012])\.(?:0[1-9]|[12]\d|30|31))-((?:[a-z0-9-]+\.)?[a-z0-9-]+)\.(v?\d+\.\d+\.\d+.*)-f0$/
-    const matched = pattern.exec(tag)
-    const [, _date, _name, version] = matched || []
+    const matched = pattern.exec(tag) || []
+    const [, _date, _name, version] = matched
 
     if (!semver.valid(version)) return null
 
@@ -33,8 +33,8 @@ const f1 = {
     if (!tag.endsWith('-f1')) return null
 
     const pattern = /^(\d{4}\.(?:[1-9]|1[012])\.(?:0[1-9]|[12]\d|30|31))-[a-z0-9-]+\.(v?\d+\.\d+\.\d+.*)\.([^.]+)-f1$/
-    const matched = pattern.exec(tag)
-    const [, _date, version, b64] = matched || []
+    const matched = pattern.exec(tag) || []
+    const [, _date, version, b64] = matched
 
     if (!semver.valid(version)) return null
 
@@ -54,6 +54,17 @@ const f1 = {
   }
 }
 
+const lerna = {
+  parse(tag) {
+    const pattern = /^(@?[a-z0-9-]+(?:\/[a-z0-9-]+)?)@(v?\d+\.\d+\.\d+.*)/
+    const [, name, version] = pattern.exec(tag) || []
+
+    if (!semver.valid(version)) return null
+
+    return {name, version, format: 'lerna', ref: tag}
+  }
+}
+
 // TODO
 // const variants = [f0, f1]
 // export const parseTag = (tag) => {
@@ -65,7 +76,7 @@ const f1 = {
 //   return null
 // }
 
-export const parseTag = (tag) => f0.parse(tag) || f1.parse(tag) || null
+export const parseTag = (tag) => f0.parse(tag) || f1.parse(tag) || lerna.parse(tag) || null
 
 export const formatTag = (tag) => f0.format(tag) || f1.format(tag) || null
 
