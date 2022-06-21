@@ -163,9 +163,9 @@ export const createGhRelease = (pkg) => ctx(async ($) => {
   const tag = formatTag({name, version})
   const releaseDiffRef = `## [${name}@${version}](${repoPublicUrl}/compare/${pkg.latest.tag?.ref}...${tag}) (${new Date().toISOString().slice(0, 10)})`
   const releaseDetails = Object.values(pkg.changes
-    .reduce((acc, {group, change, short, hash}) => {
+    .reduce((acc, {group, subj, short, hash}) => {
       const {commits} = acc[group] || (acc[group] = {commits: [], group})
-      const commitRef = `* ${change} ([${short}](${repoPublicUrl}/commit/${hash}))`
+      const commitRef = `* ${subj}${short ? ` [${short}](${repoPublicUrl}/commit/${hash})` : ''}`
 
       commits.push(commitRef)
 
