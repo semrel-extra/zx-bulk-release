@@ -1,3 +1,8 @@
+## [1.5.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.4.2...v1.5.0) (2022-06-21)
+
+### Features
+* feat: add commit-ish to meta ([9092a4d](https://github.com/semrel-extra/zx-bulk-release/commit/9092a4d41f51fb58a9d7cb1696bb9ee3f07c9133))
+
 ## [1.4.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.4.1...v1.4.2) (2022-06-21)
 
 ### Fixes & improvements
