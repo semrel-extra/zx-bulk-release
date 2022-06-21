@@ -2,8 +2,6 @@ import {formatTag, getLatestTag} from './tag.js'
 import {tempy, ctx, fs, path} from 'zx-extra'
 import {copydir} from 'git-glob-cp'
 
-const META_VERSION = '1'
-
 export const publish = async (pkg) => {
   await pushTag(pkg)
   await pushMeta(pkg)
@@ -25,28 +23,32 @@ export const pushTag = (pkg) => ctx(async ($) => {
   await $`git push origin ${tag}`
 })
 
-export const pushMeta = async (pkg) => {
+export const pushMeta = (pkg) => ctx(async ($) => {
   console.log('push artifact to branch `meta`')
 
   const cwd = pkg.absPath
   const {name, version} = pkg
   const tag = formatTag({name, version})
-  const to = getArtifactPath(tag)
+  const to = '.'
   const branch =  'meta'
   const msg =  `chore: release meta ${name} ${version}`
+
+  $.cwd = cwd
+  const hash = (await $`git rev-parse HEAD`).toString().trim()
   const meta = {
-    META_VERSION,
+    META_VERSION: '1',
     name: pkg.name,
+    hash,
     version: pkg.version,
     dependencies: pkg.dependencies,
     devDependencies: pkg.devDependencies,
     peerDependencies: pkg.peerDependencies,
     optionalDependencies: pkg.optionalDependencies,
   }
-  const files = [{relpath: 'meta.json', contents: meta}]
+  const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
   await push({cwd, to, branch, msg, files})
-}
+})
 
 export const npmPublish = ({absPath: cwd}) => ctx(async ($) => {
   const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
@@ -154,7 +156,10 @@ export const getLatestMeta = async (cwd, tag) => {
 
   try {
     const _cwd = await fetch({cwd, branch: 'meta'})
-    return await fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
+    return await Promise.any([
+      fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
+      fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
+    ])
   } catch {}
 
   return null
