@@ -1,3 +1,8 @@
+## [1.7.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.6.0...v1.7.0) (2022-06-25)
+
+### Features
+* feat: add optional `test` step ([6caa0ab](https://github.com/semrel-extra/zx-bulk-release/commit/6caa0ab4ddd8b464893e430a0a99fa7472f859ed))
+
 ## [1.6.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.5.0...v1.6.0) (2022-06-25)
 
 ### Features
