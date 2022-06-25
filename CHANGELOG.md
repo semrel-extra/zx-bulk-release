@@ -1,3 +1,8 @@
+## [1.7.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.1...v1.7.2) (2022-06-25)
+
+### Fixes & improvements
+* fix: fix npm token path for npm fetching ([33e9b59](https://github.com/semrel-extra/zx-bulk-release/commit/33e9b599f77e0fc77d8964df9da6df2a75e9d227))
+
 ## [1.7.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.0...v1.7.1) (2022-06-25)
 
 ### Fixes & improvements
