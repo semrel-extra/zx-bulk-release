@@ -12,40 +12,32 @@ export const traverseDeps = async (pkg, packages, fn) => {
     for (let [name, version] of Object.entries(deps)) {
       if (!packages[name]) continue
 
-      await fn(pkg, {name, version, scope, pkg: packages[name]})
+      await fn(pkg, {name, version, deps, scope, pkg: packages[name]})
     }
   }
 }
 
 export const updateDeps = async (pkg, packages) => {
-  const {manifest} = pkg
   const changes = []
 
-  for (let scope of depScopes) {
-    const deps = manifest[scope]
-    if (!deps) continue
+  await traverseDeps(pkg, packages, async (_, {name, version, deps, scope, pkg: dep}) => {
+    const prev = pkg.latest.meta?.[scope]?.[name]
+    const actual = dep?.version
+    const next = resolveVersion(version, actual, prev)
 
-    for (let [name, version] of Object.entries(deps)) {
-      if (!packages[name]) continue
+    pkg[scope] = {...pkg[scope], [name]: next || version}
 
-      const prev = pkg.latest.meta?.[scope]?.[name]
-      const actual = packages[name]?.version
-      const next = resolveVersion(version, actual, prev)
+    if (!next) return
 
-      pkg[scope] = {...pkg[scope], [name]: next || version}
+    deps[name] = next
 
-      if (!next) continue
-
-      deps[name] = next
-
-      changes.push({
-        group: 'Dependencies',
-        releaseType: 'patch',
-        change: 'perf',
-        subj: `perf: ${name} updated to ${next}`,
-      })
-    }
-  }
+    changes.push({
+      group: 'Dependencies',
+      releaseType: 'patch',
+      change: 'perf',
+      subj: `perf: ${name} updated to ${next}`,
+    })
+  })
 
   return changes
 }
