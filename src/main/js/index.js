@@ -6,6 +6,7 @@ import {publish, getLatest} from './publish.js'
 import {build} from './build.js'
 
 export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
+  console.log('Run zx bulk release')
   const {packages, queue} = await topo({cwd})
   const dryRun = flags['dry-run'] || flags.dryRun
 

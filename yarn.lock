@@ -1174,10 +1174,10 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-git-glob-cp@^1.6.2:
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/git-glob-cp/-/git-glob-cp-1.6.2.tgz#1cf9831b2377cdca21007fa0ea8183896ac231b1"
-  integrity sha512-XUgdmBDHC6v5m3mt9LB5prldOYLMZG5tPRacxIN256xhFh6O3ltGebWmpad9Julm7LAawI+sTa/FEUte7Hq0sg==
+git-glob-cp@^1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/git-glob-cp/-/git-glob-cp-1.7.1.tgz#9019b574e8e5908bed5af46e7efcf07b0a3dfd3b"
+  integrity sha512-UmcMdJMOzGa/mV7zdU2wHjZ3Yz0SWYyAmEZ+Z3K4mA+DHFWd+rBgOid4vGQ/jbSjHKodLx8BMxOHawdUrlYMCw==
   dependencies:
     tar "^6.1.11"
     zx-extra "^1.7.0"
@@ -1379,6 +1379,11 @@ inherits@2, inherits@2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
+
+ini@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/ini/-/ini-3.0.0.tgz#2f6de95006923aa75feed8894f5686165adc08f1"
+  integrity sha512-TxYQaeNW/N8ymDvwAxPyRbhMBtnEwuvaTYpOQkFx1nSeusgezHniEc/l35Vo4iCq/mMiTJbpD7oYxN98hFlfmw==
 
 ip-regex@^2.1.0:
   version "2.1.0"
