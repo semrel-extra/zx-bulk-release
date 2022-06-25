@@ -1,10 +1,10 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
-import {ctx, tempy, fs} from 'zx-extra'
+import {ctx, tempy, fs, path, $} from 'zx-extra'
 import {run} from '../../main/js/index.js'
 import {formatTag} from '../../main/js/tag.js'
-import {addCommits, createFakeRepo, createNpmRegistry} from './test-utils.js'
+import {addCommits, createFakeRepo, createNpmRegistry, fixtures} from './test-utils.js'
 
 const test = suite('integration')
 
@@ -23,7 +23,16 @@ const cwd = await createFakeRepo({
             name: 'root',
             workspaces: ['packages/*'],
             private: true,
+            packageManager: 'yarn@4.0.0-rc.9'
           }
+        },
+        {
+          relpath: '.yarnrc.yml',
+          contents: 'yarnPath: .yarn/releases/yarn-4.0.0-rc.9.cjs'
+        },
+        {
+          relpath: '.yarn/releases/yarn-4.0.0-rc.9.cjs',
+          contents: fs.readFileSync(path.resolve(fixtures, 'regular-monorepo/.yarn/releases/yarn-4.0.0-rc.9.cjs'), 'utf8')
         }
       ]
     },
@@ -34,14 +43,27 @@ const cwd = await createFakeRepo({
           relpath: './packages/a/package.json',
           contents: {
             name: 'a',
+            version: '0.0.1',
             scripts: {
-              build: 'echo "building a"'
+              build: 'cp index.js bundle.js',
+              test: "node ./index.js"
             },
             release: {
               build: true,
-              fetch: true
-            }
+              fetch: true,
+              test: true
+            },
+            exports: {
+              '.': {
+                import: './bundle.js'
+              }
+            },
+            type: 'module'
           }
+        },
+        {
+          relpath: './packages/a/index.js',
+          contents: 'export const a = "a"'
         }
       ]
     },
@@ -80,14 +102,33 @@ const cwd = await createFakeRepo({
           relpath: './packages/b/package.json',
           contents: {
             name: 'b',
+            version: '',
             dependencies: {
-              a: '1.0.0'
+              a: 'workspace:^'
+            },
+            scripts: {
+              build: 'cp index.js bundle.js',
+              test: "node ./index.js"
             },
             release: {
               build: true,
-              fetch: true
-            }
+              fetch: true,
+              test: true
+            },
+            exports: {
+              '.': {
+                import: './bundle.js'
+              }
+            },
+            type: 'module'
           }
+        },
+        {
+          relpath: './packages/b/index.js',
+          contents: `
+             export {a} from 'a'
+             export const b = 'b'
+`
         }
       ]
     },
@@ -103,6 +144,7 @@ const cwd = await createFakeRepo({
   ]
 })
 
+await $.o({cwd})`yarn install`
 
 test('run() dry-run', async () => {
   await run({cwd, flags: {dryRun: true}})
