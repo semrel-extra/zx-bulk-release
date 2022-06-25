@@ -1,3 +1,8 @@
+## [1.7.6](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.5...v1.7.6) (2022-06-25)
+
+### Fixes & improvements
+* fix: fix fallback version on cross-update ([d757329](https://github.com/semrel-extra/zx-bulk-release/commit/d7573299793d03b334f47640e61c7efa2d03e911))
+
 ## [1.7.5](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.4...v1.7.5) (2022-06-25)
 
 ### Fixes & improvements
