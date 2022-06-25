@@ -32,10 +32,11 @@ export const build = (pkg, packages) => ctx(async ($) => {
 const fetchPkg = (pkg) => ctx(async ($) => {
   try {
     const cwd = pkg.absPath
-    const {npmRegistry} = parseEnv($.env)
+    const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
     const temp = tempy.temporaryDirectory()
-    const npmrc = ini.parse(await fs.readFile(`${cwd}/.npmrc`, 'utf8'))
-    const token = getAuthToken(npmRegistry, npmrc)
+    const token = npmToken
+      ? npmToken
+      : getAuthToken(npmRegistry, ini.parse(await fs.readFile(npmConfig, 'utf8')))
     const auth = `Authorization: Bearer ${token}`
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
 
