@@ -1,3 +1,8 @@
+## [1.7.4](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.3...v1.7.4) (2022-06-25)
+
+### Fixes & improvements
+* fix: fix yarn install ([4f12b80](https://github.com/semrel-extra/zx-bulk-release/commit/4f12b80a016ea11bedaba5292517d1c329acae80))
+
 ## [1.7.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.2...v1.7.3) (2022-06-25)
 
 ### Fixes & improvements
