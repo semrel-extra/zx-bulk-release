@@ -1,13 +1,12 @@
-import {fs} from 'zx-extra'
+import {fs, ctx} from 'zx-extra'
 import {topo} from '@semrel-extra/topo'
 import {updateDeps} from './deps.js'
 import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
 import {publish, getLatest} from './publish.js'
 import {build} from './build.js'
 
-export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
-  console.log('Run zx bulk release')
-  const {packages, queue} = await topo({cwd})
+export const run = ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => ctx(async ($) => {
+  const {packages, queue, root} = await topo({cwd})
   const dryRun = flags['dry-run'] || flags.dryRun
 
   for (let name of queue) {
@@ -26,9 +25,13 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     console.log(`semantic changes of '${name}'`, changes)
 
     pkg.build = await build(pkg, packages)
+
+    $.cwd = cwd
+    await $`yarn`
+
     if (dryRun) continue
 
     await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
     await publish(pkg, env)
   }
-}
+})

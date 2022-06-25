@@ -22,8 +22,6 @@ export const build = (pkg, packages) => ctx(async ($) => {
         console.log(`tested '${pkg.name}'`)
       }
     }
-
-    await $`yarn`
   }
 
   pkg.built = true

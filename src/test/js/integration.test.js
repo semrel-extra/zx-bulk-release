@@ -21,7 +21,8 @@ const cwd = await createFakeRepo({
           relpath: './package.json',
           contents: {
             name: 'root',
-            workspaces: ['packages/*']
+            workspaces: ['packages/*'],
+            private: true,
           }
         }
       ]
