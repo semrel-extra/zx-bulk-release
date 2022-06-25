@@ -144,7 +144,8 @@ const cwd = await createFakeRepo({
   ]
 })
 
-await $.o({cwd})`yarn install`
+$.cwd = cwd
+await $`yarn install`
 
 test('run() dry-run', async () => {
   await run({cwd, flags: {dryRun: true}})
