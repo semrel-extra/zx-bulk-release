@@ -1,3 +1,12 @@
+## [1.6.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.5.0...v1.6.0) (2022-06-25)
+
+### Features
+* feat: add lazy builder ([4c59a0e](https://github.com/semrel-extra/zx-bulk-release/commit/4c59a0e61aea19cccd66228f34100d733bc3d3d8))
+* feat: provide pkg building ([04ac6ce](https://github.com/semrel-extra/zx-bulk-release/commit/04ac6cee878aa8cfa329b16348735ba809544bea))
+
+### Fixes & improvements
+* refactor: reuse `traverseDeps` ([626de1c](https://github.com/semrel-extra/zx-bulk-release/commit/626de1c9250bce831aa9ec6298077bd5b91e06b0))
+
 ## [1.5.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.4.2...v1.5.0) (2022-06-21)
 
 ### Features
