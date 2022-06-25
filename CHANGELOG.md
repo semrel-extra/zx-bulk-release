@@ -1,3 +1,9 @@
+## [1.7.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.0...v1.7.1) (2022-06-25)
+
+### Fixes & improvements
+* fix: fix yarn install cwd ([c6f0ae3](https://github.com/semrel-extra/zx-bulk-release/commit/c6f0ae3e0e9e8feca251a567e273380e278fe2a9))
+* fix: update yarn assets after build/fetch ([b2958c4](https://github.com/semrel-extra/zx-bulk-release/commit/b2958c4d3de768bf993faad4816bbb7116d7bd78))
+
 ## [1.7.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.6.0...v1.7.0) (2022-06-25)
 
 ### Features
