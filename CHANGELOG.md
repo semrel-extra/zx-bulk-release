@@ -1,3 +1,8 @@
+## [1.7.5](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.4...v1.7.5) (2022-06-25)
+
+### Fixes & improvements
+* fix: rm redundant build try-catch ([ffaa845](https://github.com/semrel-extra/zx-bulk-release/commit/ffaa845926ca23a5e4f459e3c590758da59ce04b))
+
 ## [1.7.4](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.3...v1.7.4) (2022-06-25)
 
 ### Fixes & improvements
