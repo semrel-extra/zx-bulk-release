@@ -1,3 +1,8 @@
+## [1.7.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.2...v1.7.3) (2022-06-25)
+
+### Fixes & improvements
+* fix: mv yarn install to build.js ([3d49325](https://github.com/semrel-extra/zx-bulk-release/commit/3d49325b5348a80ee6c7e4c5647f459e81130af7))
+
 ## [1.7.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.1...v1.7.2) (2022-06-25)
 
 ### Fixes & improvements

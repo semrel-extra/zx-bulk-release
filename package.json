@@ -1,6 +1,6 @@
 {
   "name": "zx-bulk-release",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "zx-based alternative for multi-semantic-release",
   "type": "module",
   "exports": "./src/main/js/index.js",
