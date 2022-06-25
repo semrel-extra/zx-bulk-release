@@ -3,6 +3,11 @@
 
 🚧 Work in progress. Early access preview
 
+## Requirements
+* macOS / linux
+* Node.js >= 16.0.0
+* yarn >= 4.0.0-rc.5
+
 ## Usage
 ```shell
 GH_TOKEN=foo NPM_TOKEN=bar npx zx-bulk-release [opts]
