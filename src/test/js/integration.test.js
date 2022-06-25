@@ -8,8 +8,6 @@ import {addCommits, createFakeRepo, createNpmRegistry, fixtures} from './test-ut
 
 const test = suite('integration')
 
-try {
-
 const cwd = await createFakeRepo({
   commits: [
     {
@@ -216,11 +214,5 @@ test('run()', async () => {
 
   await registry.stop()
 })
-
-} catch (e) {
-  console.error(e)
-
-  throw e
-}
 
 test.run()

@@ -2,6 +2,10 @@
 # If the tests pass and this is a push to the master branch it also runs Semantic Release.
 name: CI
 on: [push, pull_request]
+
+env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
 jobs:
   init:
     name: init

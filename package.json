@@ -6,9 +6,8 @@
   "exports": "./src/main/js/index.js",
   "bin": "./src/main/js/cli.js",
   "scripts": {
-    "_test": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' c8 uvu ./src/test -i fixtures -i utils && c8 report -r lcov",
+    "test": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' c8 uvu ./src/test -i fixtures -i utils && c8 report -r lcov",
     "test:it": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' node ./src/test/js/integration.test.js",
-    "test": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' node ./src/test/js/integration.test.js",
     "docs": "mkdir -p docs && cp ./README.md ./docs/README.md"
   },
   "dependencies": {
