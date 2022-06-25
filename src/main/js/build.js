@@ -4,7 +4,7 @@ import ini from 'ini'
 import {traverseDeps} from './deps.js'
 import {parseEnv} from './publish.js'
 
-export const build = (pkg, packages) => ctx(async ($) => {
+export const build = (pkg, packages, root) => ctx(async ($) => {
   if (pkg.built) return true
 
   await traverseDeps(pkg, packages, async (_, {pkg}) => build(pkg, packages))
@@ -22,6 +22,9 @@ export const build = (pkg, packages) => ctx(async ($) => {
         console.log(`tested '${pkg.name}'`)
       }
     }
+
+    $.cwd = root
+    await $`yarn`
   }
 
   pkg.built = true

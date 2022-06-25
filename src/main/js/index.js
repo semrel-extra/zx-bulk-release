@@ -5,7 +5,7 @@ import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
 import {publish, getLatest} from './publish.js'
 import {build} from './build.js'
 
-export const run = ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => ctx(async ($) => {
+export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
   const {packages, queue, root} = await topo({cwd})
   const dryRun = flags['dry-run'] || flags.dryRun
 
@@ -24,14 +24,11 @@ export const run = ({cwd = process.cwd(), env = process.env, flags = {}} = {}) =
     if (changes.length === 0) continue
     console.log(`semantic changes of '${name}'`, changes)
 
-    pkg.build = await build(pkg, packages)
-
-    $.cwd = cwd
-    await $`yarn`
+    pkg.build = await build(pkg, packages, cwd)
 
     if (dryRun) continue
 
     await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
     await publish(pkg, env)
   }
-})
+}
