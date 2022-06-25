@@ -32,7 +32,13 @@ const cwd = await createFakeRepo({
         {
           relpath: './packages/a/package.json',
           contents: {
-            name: 'a'
+            name: 'a',
+            scripts: {
+              build: 'echo "building a"'
+            },
+            release: {
+              build: true
+            }
           }
         }
       ]

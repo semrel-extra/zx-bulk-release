@@ -3,6 +3,7 @@ import {topo} from '@semrel-extra/topo'
 import {updateDeps} from './deps.js'
 import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
 import {publish, getLatest} from './publish.js'
+import {build} from './build.js'
 
 export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
   const {packages, queue} = await topo({cwd})
@@ -23,6 +24,7 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     if (changes.length === 0) continue
     console.log(`semantic changes of '${name}'`, changes)
 
+    pkg.build = await build(pkg, packages)
     if (dryRun) continue
 
     await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})

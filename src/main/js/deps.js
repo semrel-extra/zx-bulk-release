@@ -2,6 +2,21 @@ import {semver} from 'zx-extra'
 
 export const depScopes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
 
+export const traverseDeps = async (pkg, packages, fn) => {
+  const {manifest} = pkg
+
+  for (let scope of depScopes) {
+    const deps = manifest[scope]
+    if (!deps) continue
+
+    for (let [name, version] of Object.entries(deps)) {
+      if (!packages[name]) continue
+
+      await fn(pkg, {name, version, scope, pkg: packages[name]})
+    }
+  }
+}
+
 export const updateDeps = async (pkg, packages) => {
   const {manifest} = pkg
   const changes = []
