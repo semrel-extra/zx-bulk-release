@@ -12,7 +12,6 @@ export const build = (pkg, packages) => ctx(async ($) => {
   if (pkg.manifest.scripts?.build && pkg.manifest?.release?.build) {
     if (pkg.changes?.length === 0 && pkg.manifest?.release?.fetch) await fetchPkg(pkg)
 
-    try {
     if (!pkg.fetched) {
       $.cwd = pkg.absPath
 
@@ -25,9 +24,6 @@ export const build = (pkg, packages) => ctx(async ($) => {
       }
     }
     await $`yarn install`
-    } catch (e) {
-      console.log(`building '${pkg.name}' failed`, e)
-    }
   }
 
   pkg.built = true
