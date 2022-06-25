@@ -16,6 +16,11 @@ export const build = (pkg, packages) => ctx(async ($) => {
       $.cwd = pkg.absPath
       await $`npm run build`
       console.log(`built '${pkg.name}'`)
+
+      if (pkg.manifest.scripts?.test && pkg.manifest?.release?.test) {
+        await $`npm run test`
+        console.log(`tested '${pkg.name}'`)
+      }
     }
   }
 
