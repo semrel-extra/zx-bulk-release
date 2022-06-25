@@ -25,7 +25,7 @@ export const updateDeps = async (pkg, packages) => {
     const actual = dep?.version
     const next = resolveVersion(version, actual, prev)
 
-    pkg[scope] = {...pkg[scope], [name]: next || version}
+    pkg[scope] = {...pkg[scope], [name]: next || prev}
 
     if (!next) return
 
