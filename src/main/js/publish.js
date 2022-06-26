@@ -7,6 +7,7 @@ export const publish = async (pkg) => {
   await pushMeta(pkg)
   await npmPublish(pkg)
   await createGhRelease(pkg)
+  await ghPages(pkg)
 }
 
 export const pushTag = (pkg) => ctx(async ($) => {
@@ -98,6 +99,22 @@ ${commits.join('\n')}`).join('\n')
   await $`curl -u ${ghUser}:${ghToken} -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
 })
 
+const ghPages = async (pkg) => {
+  const {config} = pkg
+  if (!config.ghPages) return
+
+  console.log('publish to gh-pages')
+  const [from, branch = 'gh-pages', to = '.'] = config.ghPages.split(' ')
+
+  await push({
+    cwd: path.resolve(pkg.absPath, from),
+    from: '.',
+    to,
+    branch,
+    msg: 'docs update'
+  })
+}
+
 const branches = {}
 export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
   let cwd = branches[branch]
@@ -127,14 +144,20 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, fil
     const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
     await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
   }
-  if (from) await copydir({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles})
+  if (from) await copydir({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
 
   $.cwd = _cwd
 
   await $`git config user.name ${gitCommitterEmail}`
   await $`git config user.email ${gitCommitterName}`
   await $`git add .`
-  await $`git commit -m ${msg}`
+  try {
+    await $`git commit -m ${msg}`
+  } catch {
+    console.warn('no changes')
+    return
+  }
+
   await $.raw`git push origin HEAD:refs/heads/${branch}`
 })
 

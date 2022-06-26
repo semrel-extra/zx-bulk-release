@@ -16,7 +16,6 @@ export const build = (pkg, packages) => ctx(async ($) => {
     if (pkg.changes?.length === 0 && config.fetch) await fetchPkg(pkg)
 
     if (!pkg.fetched) {
-       // $.quote = v => v
       await $.raw`${config.buildCmd}`
       console.log(`built '${pkg.name}'`)
     }

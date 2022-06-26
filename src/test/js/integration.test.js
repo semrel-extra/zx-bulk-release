@@ -108,14 +108,15 @@ const cwd = await createFakeRepo({
               a: 'workspace:^'
             },
             scripts: {
-              build: 'cp index.js bundle.js',
+              build: 'cp index.js bundle.js && mkdir -p docs && echo "# docs" > docs/readme.md',
               test: "node ./index.js"
             },
             release: {
               buildCmd: 'yarn build',
               postbuildCmd: 'yarn install',
               testCmd: 'yarn test',
-              fetch: true
+              fetch: true,
+              ghPages: 'docs gh-pages b'
             },
             exports: {
               '.': {
@@ -209,9 +210,13 @@ test('run()', async () => {
 
     const origin = (await $`git remote get-url origin`).toString().trim()
     const meta = tempy.temporaryDirectory()
+    const ghp = tempy.temporaryDirectory()
 
     await $`git clone --single-branch --branch meta --depth 1 ${origin} ${meta}`
     assert.is((await fs.readJson(`${meta}/${tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')}.json`)).version, '1.1.0')
+
+    await $`git clone --single-branch --branch gh-pages --depth 1 ${origin} ${ghp}`
+    assert.is((await fs.readFile(`${ghp}/b/readme.md`, 'utf-8')).trim(), '# docs')
   })
 
   await registry.stop()
