@@ -68,6 +68,8 @@ export const parseEnv = (env = process.env) => {
 * [tophat/monodeploy](https://github.com/tophat/monodeploy)
 * [conventional-changelog/releaser-tools](https://github.com/conventional-changelog/releaser-tools)
 * [pmowrer/semantic-release-monorepo](https://github.com/pmowrer/semantic-release-monorepo)
+* [jscutlery/semver](https://github.com/jscutlery/semver)
+* [intuit/auto](https://github.com/intuit/auto)
 
 ## License 
 [MIT](./LICENSE)
