@@ -1,3 +1,11 @@
+## [1.10.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.9.2...v1.10.0) (2022-06-26)
+
+### Fixes & improvements
+* docs: add CC badges ([475c57a](https://github.com/semrel-extra/zx-bulk-release/commit/475c57aaa6efc1bf8bb6e44b3abbfb6da2f425dd))
+
+### Features
+* feat: configure ghPages push via opts ([ccc124e](https://github.com/semrel-extra/zx-bulk-release/commit/ccc124ef87fe4e049386d45c1676929dc0d36edd))
+
 ## [1.9.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.9.1...v1.9.2) (2022-06-26)
 
 ### Fixes & improvements
