@@ -1,4 +1,4 @@
-import {fs, ctx} from 'zx-extra'
+import {fs, $} from 'zx-extra'
 import {topo} from '@semrel-extra/topo'
 import {updateDeps} from './deps.js'
 import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
@@ -26,6 +26,7 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     if (changes.length === 0) continue
     console.log(`semantic changes of '${name}'`, changes)
 
+    $.o({cwd: pkg.absPath})`yarn install`
     pkg.build = await build(pkg, packages, cwd)
 
     if (dryRun) continue

@@ -20,7 +20,7 @@ export const build = (pkg, packages) => ctx(async ($) => {
       console.log(`built '${pkg.name}'`)
     }
 
-    if (config.postbuildCmd) await $.raw`${config.postbuildCmd}`
+    // if (config.postbuildCmd) await $.raw`${config.postbuildCmd}`
 
     if (!pkg.fetched && config.testCmd) {
       await $.raw`${config.testCmd}`
