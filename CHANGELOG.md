@@ -1,3 +1,8 @@
+## [1.9.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.9.1...v1.9.2) (2022-06-26)
+
+### Fixes & improvements
+* refactor: simplify build flow ([900380d](https://github.com/semrel-extra/zx-bulk-release/commit/900380da36be115290da6117090da47bdd3fc8f7))
+
 ## [1.9.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.9.0...v1.9.1) (2022-06-26)
 
 ### Fixes & improvements
