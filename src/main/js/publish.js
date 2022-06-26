@@ -100,18 +100,20 @@ ${commits.join('\n')}`).join('\n')
 })
 
 const ghPages = async (pkg) => {
-  const {config} = pkg
-  if (!config.ghPages) return
+  const {config: {ghPages: opts}} = pkg
+  if (!opts) return
 
   console.log('publish to gh-pages')
-  const [from, branch = 'gh-pages', to = '.'] = config.ghPages.split(' ')
+  const [from, branch = 'gh-pages', to = '.', msg = 'docs updated'] = typeof opts === 'string'
+    ? opts.split(' ')
+    : [opts.from, opts.branch, opts.to, opts.msg]
 
   await push({
     cwd: path.resolve(pkg.absPath, from),
     from: '.',
     to,
     branch,
-    msg: 'docs update'
+    msg
   })
 }
 
