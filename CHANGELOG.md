@@ -1,3 +1,8 @@
+## [1.7.8](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.7...v1.7.8) (2022-06-26)
+
+### Fixes & improvements
+* docs: mention jscutlery/semver and intuit/auto ([36b3da0](https://github.com/semrel-extra/zx-bulk-release/commit/36b3da029958c94e8a2e1a03da162ad3ac89bcac))
+
 ## [1.7.7](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.6...v1.7.7) (2022-06-26)
 
 ### Fixes & improvements
