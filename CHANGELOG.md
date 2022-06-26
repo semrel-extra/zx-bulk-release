@@ -1,3 +1,9 @@
+## [1.7.7](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.6...v1.7.7) (2022-06-26)
+
+### Fixes & improvements
+* docs: describe envs ([de70c03](https://github.com/semrel-extra/zx-bulk-release/commit/de70c03e3e6166cb722a03f8a43ff75614de5941))
+* refactor: enhance `parseRepo` helper ([7545427](https://github.com/semrel-extra/zx-bulk-release/commit/75454271e4fb472884ce80559c1713fca46faeb8))
+
 ## [1.7.6](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.5...v1.7.6) (2022-06-25)
 
 ### Fixes & improvements
