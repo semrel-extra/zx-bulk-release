@@ -1,3 +1,8 @@
+## [1.12.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.11.2...v1.12.0) (2022-06-26)
+
+### Features
+* feat: enhance default gh-pages commit msg ([81ecd7f](https://github.com/semrel-extra/zx-bulk-release/commit/81ecd7f73478c4e1f62d4287b81931e7a8120d58))
+
 ## [1.11.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.11.1...v1.11.2) (2022-06-26)
 
 ### Fixes & improvements
