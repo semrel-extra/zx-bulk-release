@@ -98,23 +98,12 @@ ${commits.join('\n')}`).join('\n')
   await $`curl -u ${ghUser}:${ghToken} -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
 })
 
-export const getOrigin = (cwd) => ctx(async ($) => {
-  $.cwd = cwd
-  const {ghToken, ghUser} = parseEnv($.env)
-  const originUrl = (await $`git config --get remote.origin.url`).toString().trim()
-  const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
-
-  return ghToken && ghUser && repoHost && repoName?
-    `https://${ghUser}:${ghToken}@${repoHost}/${repoName}`
-    : originUrl
-})
-
 const branches = {}
 export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
   let cwd = branches[branch]
   if (cwd) return cwd
 
-  const origin = _origin || await getOrigin(_cwd)
+  const origin = _origin || (await parseRepo(_cwd)).repoAuthedUrl
 
   cwd = tempy.temporaryDirectory()
   $.cwd = cwd
@@ -189,15 +178,21 @@ export const parseEnv = (env = process.env) => {
   }
 }
 
-export const parseRepo = (cwd, origin) => ctx(async ($) => {
+export const parseRepo = (cwd) => ctx(async ($) => {
   $.cwd = cwd
-  const originUrl = origin || (await $`git config --get remote.origin.url`).toString().trim()
+  const {ghToken, ghUser} = parseEnv($.env)
+  const originUrl = (await $`git config --get remote.origin.url`).toString().trim()
   const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
-
   const repoPublicUrl = `https://${repoHost}/${repoName}`
+  const repoAuthedUrl = ghToken && ghUser && repoHost && repoName?
+    `https://${ghUser}:${ghToken}@${repoHost}/${repoName}`
+    : originUrl
+
   return {
     repoName,
     repoHost,
-    repoPublicUrl
+    repoPublicUrl,
+    repoAuthedUrl,
+    originUrl,
   }
 })
