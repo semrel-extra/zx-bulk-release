@@ -1,3 +1,8 @@
+## [1.11.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.11.0...v1.11.1) (2022-06-26)
+
+### Fixes & improvements
+* fix: sort tags by version ([0c0dfde](https://github.com/semrel-extra/zx-bulk-release/commit/0c0dfdea415a6507492beed0c6b643eaab9f92d7))
+
 ## [1.11.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.10.1...v1.11.0) (2022-06-26)
 
 ### Features
