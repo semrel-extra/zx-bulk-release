@@ -1,3 +1,8 @@
+## [1.9.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.9.0...v1.9.1) (2022-06-26)
+
+### Fixes & improvements
+* refactor: replace postbuild hook with postupdate ([b7d68a5](https://github.com/semrel-extra/zx-bulk-release/commit/b7d68a5a2b9dec6516204f3fcbbc3c08db9c6d90))
+
 ## [1.9.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.8.0...v1.9.0) (2022-06-26)
 
 ### Features
