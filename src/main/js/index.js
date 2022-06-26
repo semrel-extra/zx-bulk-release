@@ -7,6 +7,7 @@ import {build} from './build.js'
 import {getConfig} from './config.js'
 
 export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
+  try {
   const {packages, queue, root} = await topo({cwd})
   const dryRun = flags['dry-run'] || flags.dryRun
 
@@ -32,5 +33,9 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
 
     await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
     await publish(pkg, env)
+  }
+  } catch (e) {
+    console.error(e)
+    throw e
   }
 }
