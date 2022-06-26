@@ -10,24 +10,23 @@ export const build = (pkg, packages) => ctx(async ($) => {
   await traverseDeps(pkg, packages, async (_, {pkg}) => build(pkg, packages))
 
   const {config} = pkg
-  $.cwd = pkg.absPath
 
   if (config.buildCmd) {
-    if (pkg.changes?.length === 0 && config.fetch) await fetchPkg(pkg)
+    if (pkg.changes.length === 0 && config.fetch) await fetchPkg(pkg)
 
     if (!pkg.fetched) {
+      $.cwd = pkg.absPath
+      console.log(`build '${pkg.name}'`)
       await $.raw`${config.buildCmd}`
-      console.log(`built '${pkg.name}'`)
 
       if (config.testCmd) {
+        console.log(`test '${pkg.name}'`)
         await $.raw`${config.testCmd}`
-        console.log(`tested '${pkg.name}'`)
       }
     }
   }
 
   pkg.built = true
-
   return true
 })
 
