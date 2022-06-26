@@ -1,3 +1,8 @@
+## [1.10.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.10.0...v1.10.1) (2022-06-26)
+
+### Fixes & improvements
+* refactor: simplify build helper ([bebd070](https://github.com/semrel-extra/zx-bulk-release/commit/bebd070355b26c131d389ac03b7d37444b9df94a))
+
 ## [1.10.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.9.2...v1.10.0) (2022-06-26)
 
 ### Fixes & improvements
