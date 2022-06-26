@@ -1,3 +1,11 @@
+## [1.8.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.8...v1.8.0) (2022-06-26)
+
+### Features
+* feat: add cosmiconfig ([1fe694d](https://github.com/semrel-extra/zx-bulk-release/commit/1fe694d2c919a029eb4aa5d5f500b287a2035608))
+
+### Fixes & improvements
+* docs: formatting ([d2bac88](https://github.com/semrel-extra/zx-bulk-release/commit/d2bac8893d33f4c9ce6c003c4f7188ea56452023))
+
 ## [1.7.8](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.7...v1.7.8) (2022-06-26)
 
 ### Fixes & improvements
