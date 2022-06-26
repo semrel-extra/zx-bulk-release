@@ -14,8 +14,7 @@ const CONFIG_FILES = [
 ]
 
 export const defaultConfig = {
-  buildCmd: 'yarn build',
-  postbuildCmd: 'yarn install',
+  buildCmd: 'yarn && yarn build',
   testCmd: 'yarn test',
   fetch: true
 }

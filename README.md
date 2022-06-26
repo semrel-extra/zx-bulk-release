@@ -39,8 +39,7 @@ await run({
 ### Config
 Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format: `.releaserc`, `.release.json`, `.release.yaml`, etc.
 ```yaml
-buildCmd:      'yarn build'
-postbuildCmd:  'yarn install'
+buildCmd:      'yarn && yarn build'
 testCmd:       'yarn test'
 fetch:         true
 ```

@@ -26,8 +26,7 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     if (changes.length === 0) continue
     console.log(`semantic changes of '${name}'`, changes)
 
-    $.o({cwd: pkg.absPath})`yarn install`
-    pkg.build = await build(pkg, packages, cwd)
+    await build(pkg, packages, cwd)
 
     if (dryRun) continue
 

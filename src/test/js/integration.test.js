@@ -49,8 +49,7 @@ const cwd = await createFakeRepo({
               test: "node ./index.js"
             },
             release: {
-              buildCmd: 'yarn build',
-              postbuildCmd: 'yarn install',
+              buildCmd: 'yarn && yarn build',
               testCmd: 'yarn test',
               fetch: true
             },
@@ -112,8 +111,7 @@ const cwd = await createFakeRepo({
               test: "node ./index.js"
             },
             release: {
-              buildCmd: 'yarn build',
-              postbuildCmd: 'yarn install',
+              buildCmd: 'yarn && yarn build',
               testCmd: 'yarn test',
               fetch: true,
               ghPages: 'docs gh-pages b'
