@@ -1,6 +1,10 @@
 # zx-bulk-release
 > [zx](https://github.com/google/zx)-based alternative for [multi-semantic-release](https://github.com/dhoulb/multi-semantic-release)
 
+[![CI](https://github.com/semrel-extra/zx-bulk-release/workflows/CI/badge.svg)](https://github.com/semrel-extra/zx-bulk-release/actions)
+[![Maintainability](https://api.codeclimate.com/v1/badges/bb94e929b1b6430781b5/maintainability)](https://codeclimate.com/github/semrel-extra/zx-bulk-release/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/bb94e929b1b6430781b5/test_coverage)](https://codeclimate.com/github/semrel-extra/zx-bulk-release/test_coverage)
+
 🚧 Work in progress. Early access preview
 
 ## Roadmap
