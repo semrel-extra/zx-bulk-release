@@ -36,9 +36,9 @@ const fetchPkg = (pkg) => ctx(async ($) => {
     const cwd = pkg.absPath
     const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
     const temp = tempy.temporaryDirectory()
-    const token = npmToken
-      ? npmToken
-      : getAuthToken(npmRegistry, ini.parse(await fs.readFile(npmConfig, 'utf8')))
+    const token = npmConfig
+      ? getAuthToken(npmRegistry, ini.parse(await fs.readFile(npmConfig, 'utf8')))
+      : npmToken
     const auth = `Authorization: Bearer ${token}`
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
 

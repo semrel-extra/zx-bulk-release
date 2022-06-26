@@ -10,7 +10,7 @@
 
 ## Usage
 ```shell
-GH_TOKEN=foo NPM_TOKEN=bar npx zx-bulk-release [opts]
+GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
 
 ## Roadmap
@@ -18,7 +18,7 @@ GH_TOKEN=foo NPM_TOKEN=bar npx zx-bulk-release [opts]
 * [x] Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
 * [x] No blocking (no release commits).
 * [ ] Changelogs, docs, bundles go to: release assets and/or meta branch.
-* [ ] No extra builds. Required deps are fetched from registry / meta branch / release assets.
+* [x] No extra builds. The required deps are fetched from the pkg registry.
 
 ## Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract: 
@@ -41,6 +41,24 @@ const env = { GH_TOKEN: 'foo', NPM_TOKEN: 'bar' } // Defaults to process.env
 const flags = {dryRun: true}
 
 await run({cwd, flags, env})
+```
+
+## env vars
+```js
+export const parseEnv = (env = process.env) => {
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
+
+  return {
+    ghUser: GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
+    ghToken: GH_TOKEN || GITHUB_TOKEN,
+    npmToken: NPM_TOKEN,
+    // npmConfig suppresses npmToken
+    npmConfig: NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
+    npmRegistry: NPM_REGISTRY || 'https://registry.npmjs.org',
+    gitCommitterName: GIT_COMMITTER_NAME || 'Semrel Extra Bot',
+    gitCommitterEmail: GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
+  }
+}
 ```
 
 ## References
