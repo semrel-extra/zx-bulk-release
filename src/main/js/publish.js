@@ -104,7 +104,7 @@ const ghPages = async (pkg) => {
   if (!opts) return
 
   console.log('publish to gh-pages')
-  const [from, branch = 'gh-pages', to = '.', msg = 'docs updated'] = typeof opts === 'string'
+  const [from, branch = 'gh-pages', to = '.', msg = `docs: update docs ${pkg.name} ${pkg.version}`] = typeof opts === 'string'
     ? opts.split(' ')
     : [opts.from, opts.branch, opts.to, opts.msg]
 
