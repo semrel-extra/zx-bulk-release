@@ -25,11 +25,24 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```js
 import { run } from 'zx-bulk-release'
 
-const cwd = '/foo/bar' // Defaults to process.cwd()
-const env = { GH_TOKEN: 'foo', NPM_TOKEN: 'bar' } // Defaults to process.env
+const cwd = '/foo/bar'
+const env = {GH_TOKEN: 'foo', NPM_TOKEN: 'bar'}
 const flags = {dryRun: true}
 
-await run({cwd, flags, env})
+await run({
+  cwd,    // Defaults to process.cwd()
+  flags,  // Defaults to process.env
+  env     // Defaults to minimist-parsed `process.argv.slice(2)`
+})
+```
+
+### Config
+Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format: `.releaserc`, `.release.json`, `.release.yaml`, etc.
+```yaml
+buildCmd:      'yarn build'
+postbuildCmd:  'yarn install'
+testCmd:       'yarn test'
+fetch:         true
 ```
 
 ## Implementation notes

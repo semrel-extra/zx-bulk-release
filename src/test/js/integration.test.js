@@ -49,9 +49,10 @@ const cwd = await createFakeRepo({
               test: "node ./index.js"
             },
             release: {
-              build: true,
-              fetch: true,
-              test: true
+              buildCmd: 'yarn build',
+              postbuildCmd: 'yarn install',
+              testCmd: 'yarn test',
+              fetch: true
             },
             exports: {
               '.': {
@@ -111,9 +112,10 @@ const cwd = await createFakeRepo({
               test: "node ./index.js"
             },
             release: {
-              build: true,
-              fetch: true,
-              test: true
+              buildCmd: 'yarn build',
+              postbuildCmd: 'yarn install',
+              testCmd: 'yarn test',
+              fetch: true
             },
             exports: {
               '.': {

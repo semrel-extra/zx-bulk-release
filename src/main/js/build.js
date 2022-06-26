@@ -9,21 +9,24 @@ export const build = (pkg, packages) => ctx(async ($) => {
 
   await traverseDeps(pkg, packages, async (_, {pkg}) => build(pkg, packages))
 
-  if (pkg.manifest.scripts?.build && pkg.manifest?.release?.build) {
-    if (pkg.changes?.length === 0 && pkg.manifest?.release?.fetch) await fetchPkg(pkg)
+  const {config} = pkg
+  $.cwd = pkg.absPath
+
+  if (config.buildCmd) {
+    if (pkg.changes?.length === 0 && config.fetch) await fetchPkg(pkg)
 
     if (!pkg.fetched) {
-      $.cwd = pkg.absPath
-
-      await $`yarn build`
+       // $.quote = v => v
+      await $.raw`${config.buildCmd}`
       console.log(`built '${pkg.name}'`)
-
-      if (pkg.manifest.scripts?.test && pkg.manifest?.release?.test) {
-        await $`yarn test`
-        console.log(`tested '${pkg.name}'`)
-      }
     }
-    await $`yarn install`
+
+    if (config.postbuildCmd) await $.raw`${config.postbuildCmd}`
+
+    if (!pkg.fetched && config.testCmd) {
+      await $.raw`${config.testCmd}`
+      console.log(`tested '${pkg.name}'`)
+    }
   }
 
   pkg.built = true

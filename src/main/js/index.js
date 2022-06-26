@@ -4,6 +4,7 @@ import {updateDeps} from './deps.js'
 import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
 import {publish, getLatest} from './publish.js'
 import {build} from './build.js'
+import {getConfig} from './config.js'
 
 export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
   const {packages, queue, root} = await topo({cwd})
@@ -11,6 +12,7 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
 
   for (let name of queue) {
     const pkg = packages[name]
+    pkg.config = await getConfig(cwd, root.absPath)
     pkg.latest = await getLatest(cwd, name)
 
     const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
