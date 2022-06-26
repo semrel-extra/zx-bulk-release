@@ -1,3 +1,8 @@
+## [1.11.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.10.1...v1.11.0) (2022-06-26)
+
+### Features
+* feat: pass $.argv as default flags ([e07f619](https://github.com/semrel-extra/zx-bulk-release/commit/e07f619f85bccd2f8592ff3f1c3e6bc4af05b38d))
+
 ## [1.10.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.10.0...v1.10.1) (2022-06-26)
 
 ### Fixes & improvements
