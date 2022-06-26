@@ -1,3 +1,8 @@
+## [1.11.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.11.1...v1.11.2) (2022-06-26)
+
+### Fixes & improvements
+* fix: add global try-catch ([9255cb1](https://github.com/semrel-extra/zx-bulk-release/commit/9255cb1606ecb78a47e4fc1941cf26b3318f85ac))
+
 ## [1.11.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.11.0...v1.11.1) (2022-06-26)
 
 ### Fixes & improvements
