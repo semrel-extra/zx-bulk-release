@@ -1,3 +1,8 @@
+## [1.9.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.8.0...v1.9.0) (2022-06-26)
+
+### Features
+* feat: add gh-pages push ([32130b6](https://github.com/semrel-extra/zx-bulk-release/commit/32130b64a2088cc98b1cae678691cd55c18fe0a3))
+
 ## [1.8.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.7.8...v1.8.0) (2022-06-26)
 
 ### Features
