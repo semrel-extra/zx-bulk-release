@@ -1,3 +1,8 @@
+## [1.15.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.6...v1.15.0) (2022-06-27)
+
+### Features
+* feat: print queue ([65b768c](https://github.com/semrel-extra/zx-bulk-release/commit/65b768ced601820ab6caab2f8259d481e277be4d))
+
 ## [1.14.6](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.5...v1.14.6) (2022-06-27)
 
 ### Fixes & improvements
