@@ -1,3 +1,8 @@
+## [1.14.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.1...v1.14.2) (2022-06-27)
+
+### Fixes & improvements
+* refactor: memoize origins ([4df0550](https://github.com/semrel-extra/zx-bulk-release/commit/4df05504f8a3ba770614374aff792bbc540cb640))
+
 ## [1.14.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.0...v1.14.1) (2022-06-27)
 
 ### Fixes & improvements
