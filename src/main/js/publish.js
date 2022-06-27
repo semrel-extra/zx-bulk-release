@@ -15,17 +15,17 @@ export const pushTag = (pkg) => ctx(async ($) => {
   const {absPath: cwd, name, version} = pkg
   const tag = formatTag({name, version})
   const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
-  $.cwd = cwd
 
   console.log(`[${name}] push release tag ${tag}`)
 
+  $.cwd = cwd
   await $`git config user.name ${gitCommitterName}`
   await $`git config user.email ${gitCommitterEmail}`
   await $`git tag -m ${tag} ${tag}`
   await $`git push origin ${tag}`
 })
 
-export const pushMeta = (pkg) => ctx(async ($) => {
+export const pushMeta = async (pkg) => {
   console.log(`[${pkg.name}] push artifact to branch 'meta'`)
 
   const cwd = pkg.absPath
@@ -34,9 +34,7 @@ export const pushMeta = (pkg) => ctx(async ($) => {
   const to = '.'
   const branch = 'meta'
   const msg = `chore: release meta ${name} ${version}`
-
-  $.cwd = cwd
-  const hash = (await $`git rev-parse HEAD`).toString().trim()
+  const hash = (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
   const meta = {
     META_VERSION: '1',
     name: pkg.name,
@@ -50,7 +48,7 @@ export const pushMeta = (pkg) => ctx(async ($) => {
   const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
   await push({cwd, to, branch, msg, files})
-})
+}
 
 export const npmPublish = (pkg) => ctx(async ($) => {
   const {absPath: cwd, name, version} = pkg
@@ -124,10 +122,11 @@ const ghPages = async (pkg) => {
   const {config: {ghPages: opts}} = pkg
   if (!opts) return
 
-  console.log(`[${pkg.name}] publish to gh-pages`)
-  const [from, branch = 'gh-pages', to = '.', msg = `docs: update docs ${pkg.name} ${pkg.version}`] = typeof opts === 'string'
+  const [branch = 'gh-pages', from = 'docs', to = '.', msg = `docs: update docs ${pkg.name} ${pkg.version}`] = typeof opts === 'string'
     ? opts.split(' ')
-    : [opts.from, opts.branch, opts.to, opts.msg]
+    : [opts.branch, opts.from, opts.to, opts.msg]
+
+  console.log(`[${pkg.name}] publish docs to ${branch}`)
 
   await push({
     cwd: path.resolve(pkg.absPath, from),
@@ -224,10 +223,9 @@ export const parseEnv = (env = process.env) => {
   }
 }
 
-export const parseRepo = (cwd) => ctx(async ($) => {
-  $.cwd = cwd
+export const parseRepo = async (cwd) => {
   const {ghToken, ghUser} = parseEnv($.env)
-  const originUrl = (await $`git config --get remote.origin.url`).toString().trim()
+  const originUrl = (await $.o({cwd})`git config --get remote.origin.url`).toString().trim()
   const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
   const repoAuthedUrl = ghToken && ghUser && repoHost && repoName?
@@ -241,4 +239,4 @@ export const parseRepo = (cwd) => ctx(async ($) => {
     repoAuthedUrl,
     originUrl,
   }
-})
+}

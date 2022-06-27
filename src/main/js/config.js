@@ -14,13 +14,19 @@ const CONFIG_FILES = [
 ]
 
 export const defaultConfig = {
-  buildCmd: 'yarn && yarn build',
-  testCmd: 'yarn test',
-  fetch: true
+  cmd: 'yarn && yarn build && yarn test',
+  npmFetch: true,
+  changelog: 'changelog',
+  ghPages: 'gh-pages'
 }
 
 export const getConfig = async (...cwds) =>
-  (await Promise.all(cwds.map(
+  normalizeConfig((await Promise.all(cwds.map(
     cwd => cosmiconfig(CONFIG_NAME, { searchPlaces: CONFIG_FILES }).search(cwd).then(r => r?.config)
-  ))).find(Boolean) || defaultConfig
+  ))).find(Boolean) || defaultConfig)
 
+export const normalizeConfig = config => ({
+  ...config,
+  npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
+  cmd:      config.cmd || (config.buildCmd ? `${config.buildCmd}${config.testCmd ? ` && ${config.testCmd}` : ''}` : '')
+})

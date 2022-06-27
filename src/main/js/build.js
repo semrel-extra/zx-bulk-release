@@ -1,36 +1,29 @@
-import {ctx, tempy, fs} from 'zx-extra'
+import {tempy, fs, $} from 'zx-extra'
 import {copy} from 'git-glob-cp'
 import ini from 'ini'
 import {traverseDeps} from './deps.js'
 import {parseEnv} from './publish.js'
 
-export const build = (pkg, packages) => ctx(async ($) => {
+export const build = async (pkg, packages) => {
   if (pkg.built) return true
 
   await traverseDeps(pkg, packages, async (_, {pkg}) => build(pkg, packages))
 
   const {config} = pkg
 
-  if (config.buildCmd) {
-    if (pkg.changes.length === 0 && config.fetch) await fetchPkg(pkg)
-
+  if (config.cmd) {
+    if (pkg.changes.length === 0 && config.npmFetch) await fetchPkg(pkg)
     if (!pkg.fetched) {
-      $.cwd = pkg.absPath
-      console.log(`[${pkg.name}] build`)
-      await $.raw`${config.buildCmd}`
-
-      if (config.testCmd) {
-        console.log(`[${pkg.name}] test`)
-        await $.raw`${config.testCmd}`
-      }
+      console.log(`[${pkg.name}] run cmd '${config.cmd}'`)
+      await $.o({cwd: pkg.absPath, quote: v => v})`${config.cmd}`
     }
   }
 
   pkg.built = true
   return true
-})
+}
 
-const fetchPkg = (pkg) => ctx(async ($) => {
+const fetchPkg = async (pkg) => {
   try {
     const cwd = pkg.absPath
     const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
@@ -49,7 +42,7 @@ const fetchPkg = (pkg) => ctx(async ($) => {
   } catch (e) {
     console.log(`[${pkg.name}] fetching '${pkg.name}@${pkg.version}' failed`, e)
   }
-})
+}
 
 // NOTE registry-auth-token does not work with localhost:4873
 const getAuthToken = (registry, npmrc) =>

@@ -10,9 +10,10 @@
 ## Roadmap
 * [x] [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger semantic releases.
 * [x] Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
-* [x] No blocking (no release commits).
-* [ ] Changelogs, docs, bundles go to: release assets and/or meta branch.
-* [x] No extra builds. The required deps are fetched from the pkg registry.
+* [x] No default branch blocking (no release commits).
+* [x] Pkg changelogs go to `changelog` branch (configurable).
+* [x] Docs are published to `gh-pages` branch (configurable).
+* [x] No extra builds. The required deps are fetched from the pkg registry (`npmFetch` flag).
 
 ## Requirements
 * macOS / linux
@@ -42,10 +43,13 @@ await run({
 
 ### Config
 Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format: `.releaserc`, `.release.json`, `.release.yaml`, etc.
-```yaml
-buildCmd:      'yarn && yarn build'
-testCmd:       'yarn test'
-fetch:         true
+```json
+{
+  "cmd": "yarn && yarn build && yarn test",
+  "npmFetch": true,
+  "changelog": "changelog",
+  "ghPages": "gh-pages"
+}
 ```
 
 ## Implementation notes

@@ -52,7 +52,7 @@ const cwd = await createFakeRepo({
               buildCmd: 'yarn && yarn build',
               testCmd: 'yarn test',
               fetch: true,
-              changelog: {}
+              changelog: 'changelog'
             },
             exports: {
               '.': {
@@ -115,7 +115,7 @@ const cwd = await createFakeRepo({
               buildCmd: 'yarn && yarn build',
               testCmd: 'yarn test',
               fetch: true,
-              ghPages: 'docs gh-pages b'
+              ghPages: 'gh-pages docs b'
             },
             exports: {
               '.': {
