@@ -1,3 +1,8 @@
+## [1.14.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.0...v1.14.1) (2022-06-27)
+
+### Fixes & improvements
+* fix: impr gh-pages path resolve ([09a5ae9](https://github.com/semrel-extra/zx-bulk-release/commit/09a5ae96fc17b6d819a5622bef15045476a4b4ed))
+
 ## [1.14.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.13.0...v1.14.0) (2022-06-27)
 
 ### Features
