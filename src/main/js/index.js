@@ -13,6 +13,8 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
   const {packages, queue, root} = await topo({cwd})
   const dryRun = flags['dry-run'] || flags.dryRun
 
+  console.log('queue:', queue)
+
   for (let name of queue) {
     const pkg = packages[name]
     pkg.config = await getConfig(pkg.absPath, root.absPath)

@@ -57,6 +57,47 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
 * [demo-zx-bulk-release](https://github.com/semrel-extra/demo-zx-bulk-release)
 * [qiwi/pijma](https://github.com/qiwi/pijma)
 
+### Output
+
+[Readable and clear logs](https://github.com/semrel-extra/demo-zx-bulk-release/runs/7069468916?check_suite_focus=true)
+
+```shell
+Run npm_config_yes=true npx zx-bulk-release
+zx-bulk-release
+[@semrel-extra/zxbr-test-a] semantic changes [
+  {
+    group: 'Fixes & improvements',
+    releaseType: 'patch',
+    change: 'fix(a): random',
+    subj: 'fix(a): random',
+    body: '',
+    short: '6ff25bd',
+    hash: '6ff25bd421755b929ef2b58f35c727670fd93849'
+  }
+]
+[@semrel-extra/zxbr-test-a] run cmd 'yarn && yarn build && yarn test'
+[@semrel-extra/zxbr-test-a] push release tag 2022.6.27-semrel-extra.zxbr-test-a.1.8.1-f0
+[@semrel-extra/zxbr-test-a] push artifact to branch 'meta'
+[@semrel-extra/zxbr-test-a] push changelog
+[@semrel-extra/zxbr-test-a] publish npm package @semrel-extra/zxbr-test-a 1.8.1 to https://registry.npmjs.org
+[@semrel-extra/zxbr-test-a] create gh release
+[@semrel-extra/zxbr-test-b] semantic changes [
+  {
+    group: 'Dependencies',
+    releaseType: 'patch',
+    change: 'perf',
+    subj: 'perf: @semrel-extra/zxbr-test-a updated to 1.8.1'
+  }
+]
+[@semrel-extra/zxbr-test-b] run cmd 'yarn && yarn build && yarn test'
+[@semrel-extra/zxbr-test-b] push release tag 2022.6.27-semrel-extra.zxbr-test-b.1.3.5-f0
+[@semrel-extra/zxbr-test-b] push artifact to branch 'meta'
+[@semrel-extra/zxbr-test-b] push changelog
+[@semrel-extra/zxbr-test-b] publish npm package @semrel-extra/zxbr-test-b 1.3.5 to https://registry.npmjs.org
+[@semrel-extra/zxbr-test-b] create gh release
+[@semrel-extra/zxbr-test-d] semantic changes [
+```
+
 ## Implementation notes
 ### Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract:
