@@ -1,3 +1,9 @@
+## [1.13.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.12.0...v1.13.0) (2022-06-27)
+
+### Features
+* feat: add log labels ([a0e80b6](https://github.com/semrel-extra/zx-bulk-release/commit/a0e80b64215c3f69206713cd6073c0240b0930c9))
+* feat: add changelog generator ([4c0914f](https://github.com/semrel-extra/zx-bulk-release/commit/4c0914f24a91e2297f8c6ff8410949c2a0220fb5))
+
 ## [1.12.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.11.2...v1.12.0) (2022-06-26)
 
 ### Features
