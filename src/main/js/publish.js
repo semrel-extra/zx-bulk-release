@@ -17,7 +17,7 @@ export const pushTag = (pkg) => ctx(async ($) => {
   const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
   $.cwd = cwd
 
-  console.log(`push release tag ${tag}`)
+  console.log(`[${name}] push release tag ${tag}`)
 
   await $`git config user.name ${gitCommitterName}`
   await $`git config user.email ${gitCommitterEmail}`
@@ -26,14 +26,14 @@ export const pushTag = (pkg) => ctx(async ($) => {
 })
 
 export const pushMeta = (pkg) => ctx(async ($) => {
-  console.log('push artifact to branch `meta`')
+  console.log(`[${pkg.name}] push artifact to branch 'meta'`)
 
   const cwd = pkg.absPath
   const {name, version} = pkg
   const tag = formatTag({name, version})
   const to = '.'
-  const branch =  'meta'
-  const msg =  `chore: release meta ${name} ${version}`
+  const branch = 'meta'
+  const msg = `chore: release meta ${name} ${version}`
 
   $.cwd = cwd
   const hash = (await $`git rev-parse HEAD`).toString().trim()
@@ -52,11 +52,12 @@ export const pushMeta = (pkg) => ctx(async ($) => {
   await push({cwd, to, branch, msg, files})
 })
 
-export const npmPublish = ({absPath: cwd}) => ctx(async ($) => {
+export const npmPublish = (pkg) => ctx(async ($) => {
+  const {absPath: cwd, name, version} = pkg
   const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
   const npmrc = npmConfig ? npmConfig : path.resolve(cwd, '.npmrc')
 
-  console.log(`publish npm package to ${npmRegistry}`)
+  console.log(`[${name}] publish npm package ${name} ${version} to ${npmRegistry}`)
   $.cwd = cwd
   if (!npmConfig) {
     await $.raw`echo ${npmRegistry.replace(/https?:/, '')}/:_authToken=${npmToken} >> ${npmrc}`
@@ -65,7 +66,7 @@ export const npmPublish = ({absPath: cwd}) => ctx(async ($) => {
 })
 
 export const ghRelease = async (pkg) => {
-  console.log('create gh release')
+  console.log(`[${pkg.name}] create gh release`)
 
   const {ghUser, ghToken} = parseEnv($.env)
   if (!ghToken || !ghUser) return null
@@ -87,7 +88,7 @@ const pushChangelog = async (pkg) => {
   const {config: {changelog: opts}} = pkg
   if (!opts) return
 
-  console.log('push changelog')
+  console.log(`[${pkg.name}] push changelog`)
   const [branch = 'changelog', file = `${pkg.name.replace(/[^a-z0-9-]/ig, '')}-changelog.md`, msg = `chore: update changelog ${pkg.name}`] = typeof opts === 'string'
     ? opts.split(' ')
     : [opts.branch, opts.file, opts.msg]
@@ -123,7 +124,7 @@ const ghPages = async (pkg) => {
   const {config: {ghPages: opts}} = pkg
   if (!opts) return
 
-  console.log('publish to gh-pages')
+  console.log(`[${pkg.name}] publish to gh-pages`)
   const [from, branch = 'gh-pages', to = '.', msg = `docs: update docs ${pkg.name} ${pkg.version}`] = typeof opts === 'string'
     ? opts.split(' ')
     : [opts.from, opts.branch, opts.to, opts.msg]

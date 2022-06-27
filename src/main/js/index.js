@@ -7,6 +7,8 @@ import {build} from './build.js'
 import {getConfig} from './config.js'
 
 export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
+  console.log('zx-bulk-release')
+
   try {
   const {packages, queue, root} = await topo({cwd})
   const dryRun = flags['dry-run'] || flags.dryRun
@@ -25,7 +27,7 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     pkg.manifest.version = pkg.version
 
     if (changes.length === 0) continue
-    console.log(`semantic changes of '${name}'`, changes)
+    console.log(`[${name}] semantic changes`, changes)
 
     await build(pkg, packages, cwd)
 

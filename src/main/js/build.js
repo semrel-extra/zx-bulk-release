@@ -16,11 +16,11 @@ export const build = (pkg, packages) => ctx(async ($) => {
 
     if (!pkg.fetched) {
       $.cwd = pkg.absPath
-      console.log(`build '${pkg.name}'`)
+      console.log(`[${pkg.name}] build`)
       await $.raw`${config.buildCmd}`
 
       if (config.testCmd) {
-        console.log(`test '${pkg.name}'`)
+        console.log(`[${pkg.name}] test`)
         await $.raw`${config.testCmd}`
       }
     }
@@ -45,9 +45,9 @@ const fetchPkg = (pkg) => ctx(async ($) => {
     await copy({from: ['**/*', '!package.json'], to: cwd, cwd: `${temp}/package`})
 
     pkg.fetched = true
-    console.log(`fetched '${pkg.name}@${pkg.version}'`)
+    console.log(`[${pkg.name}] fetched '${pkg.name}@${pkg.version}'`)
   } catch (e) {
-    console.log(`fetching '${pkg.name}@${pkg.version}' failed`, e)
+    console.log(`[${pkg.name}] fetching '${pkg.name}@${pkg.version}' failed`, e)
   }
 })
 
