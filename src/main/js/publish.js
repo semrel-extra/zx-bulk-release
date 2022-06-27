@@ -129,7 +129,7 @@ const ghPages = async (pkg) => {
   console.log(`[${pkg.name}] publish docs to ${branch}`)
 
   await push({
-    cwd: path.resolve(pkg.absPath, from),
+    cwd: path.join(pkg.absPath, from),
     from: '.',
     to,
     branch,
