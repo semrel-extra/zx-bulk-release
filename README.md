@@ -7,13 +7,14 @@
 
 🚧 Work in progress. Early access preview
 
-## Roadmap
-* [x] [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger semantic releases.
-* [x] Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
-* [x] No default branch blocking (no release commits).
-* [x] Pkg changelogs go to `changelog` branch (configurable).
-* [x] Docs are published to `gh-pages` branch (configurable).
-* [x] No extra builds. The required deps are fetched from the pkg registry (`npmFetch` flag).
+## Key features
+* [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger semantic releases.
+* Automated cross-pkg version bumping.
+* Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
+* No default branch blocking (no release commits).
+* Pkg changelogs go to `changelog` branch (configurable).
+* Docs are published to `gh-pages` branch (configurable).
+* No extra builds. The required deps are fetched from the pkg registry (`npmFetch` flag).
 
 ## Requirements
 * macOS / linux
@@ -51,6 +52,10 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
   "ghPages": "gh-pages"
 }
 ```
+
+### Demo
+* [demo-zx-bulk-release](https://github.com/semrel-extra/demo-zx-bulk-release)
+* [qiwi/pijma](https://github.com/qiwi/pijma)
 
 ## Implementation notes
 ### Tags
@@ -110,6 +115,7 @@ Each release projects its result into the `meta` branch.
 * [tophat/monodeploy](https://github.com/tophat/monodeploy)
 * [intuit/auto](https://github.com/intuit/auto)
 * [vercel/turborepo](https://github.com/vercel/turborepo)
+* [lerna/lerna](https://github.com/lerna/lerna)
 * [nrwl/nx](https://github.com/nrwl/nx)
 
 ## License 

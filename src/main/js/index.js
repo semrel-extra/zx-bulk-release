@@ -40,4 +40,5 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     console.error(e)
     throw e
   }
+  console.log('Great success!')
 }
