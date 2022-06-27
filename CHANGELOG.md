@@ -1,3 +1,8 @@
+## [1.14.5](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.4...v1.14.5) (2022-06-27)
+
+### Fixes & improvements
+* docs: mention vercel/turborepo ([a0dc3e9](https://github.com/semrel-extra/zx-bulk-release/commit/a0dc3e9f637f349e5d855855612824bc1d538178))
+
 ## [1.14.4](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.3...v1.14.4) (2022-06-27)
 
 ### Fixes & improvements
