@@ -11,12 +11,11 @@ export const build = async (pkg, packages) => {
 
   const {config} = pkg
 
-  if (config.cmd) {
-    if (pkg.changes.length === 0 && config.npmFetch) await fetchPkg(pkg)
-    if (!pkg.fetched) {
-      console.log(`[${pkg.name}] run cmd '${config.cmd}'`)
-      await $.o({cwd: pkg.absPath, quote: v => v})`${config.cmd}`
-    }
+  if (pkg.changes.length === 0 && config.npmFetch) await fetchPkg(pkg)
+
+  if (!pkg.fetched && config.cmd) {
+    console.log(`[${pkg.name}] run cmd '${config.cmd}'`)
+    await $.o({cwd: pkg.absPath, quote: v => v})`${config.cmd}`
   }
 
   pkg.built = true
