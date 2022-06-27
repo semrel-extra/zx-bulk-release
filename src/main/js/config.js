@@ -17,7 +17,7 @@ export const defaultConfig = {
   cmd: 'yarn && yarn build && yarn test',
   npmFetch: true,
   changelog: 'changelog',
-  ghPages: 'gh-pages'
+  // ghPages: 'gh-pages'
 }
 
 export const getConfig = async (...cwds) =>
