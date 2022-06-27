@@ -1,3 +1,8 @@
+## [1.14.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.2...v1.14.3) (2022-06-27)
+
+### Fixes & improvements
+* fix: disable gh-pages by default ([78ce3e8](https://github.com/semrel-extra/zx-bulk-release/commit/78ce3e84cf217a4f91e62cf27281d2f1e014168d))
+
 ## [1.14.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.1...v1.14.2) (2022-06-27)
 
 ### Fixes & improvements
