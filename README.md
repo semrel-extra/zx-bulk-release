@@ -104,11 +104,13 @@ Each release projects its result into the `meta` branch.
 * [semrel-extra/zx-semrel](https://github.com/semrel-extra/zx-semrel)
 * [dhoulb/multi-semantic-release](https://github.com/dhoulb/multi-semantic-release)
 * [semantic-release/semantic-release](https://github.com/semantic-release/semantic-release)
-* [tophat/monodeploy](https://github.com/tophat/monodeploy)
 * [conventional-changelog/releaser-tools](https://github.com/conventional-changelog/releaser-tools)
 * [pmowrer/semantic-release-monorepo](https://github.com/pmowrer/semantic-release-monorepo)
 * [jscutlery/semver](https://github.com/jscutlery/semver)
+* [tophat/monodeploy](https://github.com/tophat/monodeploy)
 * [intuit/auto](https://github.com/intuit/auto)
+* [vercel/turborepo](https://github.com/vercel/turborepo)
+* [nrwl/nx](https://github.com/nrwl/nx)
 
 ## License 
 [MIT](./LICENSE)
