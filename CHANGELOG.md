@@ -1,3 +1,8 @@
+## [1.14.6](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.5...v1.14.6) (2022-06-27)
+
+### Fixes & improvements
+* docs: add demo link ([1e35af4](https://github.com/semrel-extra/zx-bulk-release/commit/1e35af4d4e925c5d5a0c022e135dee2f94a2c1a0))
+
 ## [1.14.5](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.4...v1.14.5) (2022-06-27)
 
 ### Fixes & improvements
