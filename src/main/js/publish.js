@@ -225,7 +225,7 @@ export const parseEnv = (env = process.env) => {
 
 export const parseRepo = async (cwd) => {
   const {ghToken, ghUser} = parseEnv($.env)
-  const originUrl = (await $.o({cwd})`git config --get remote.origin.url`).toString().trim()
+  const originUrl = await getOrigin(cwd)
   const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
   const repoAuthedUrl = ghToken && ghUser && repoHost && repoName?
@@ -239,4 +239,13 @@ export const parseRepo = async (cwd) => {
     repoAuthedUrl,
     originUrl,
   }
+}
+
+const origins = {}
+export const getOrigin = async (cwd) => {
+  if (!origins[cwd]) {
+    origins[cwd] = (await $.o({cwd})`git config --get remote.origin.url`).toString().trim()
+  }
+
+  return origins[cwd]
 }
