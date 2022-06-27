@@ -1,12 +1,13 @@
 import {formatTag, getLatestTag} from './tag.js'
-import {tempy, ctx, fs, path} from 'zx-extra'
+import {tempy, ctx, fs, path, $} from 'zx-extra'
 import {copydir} from 'git-glob-cp'
 
 export const publish = async (pkg) => {
   await pushTag(pkg)
   await pushMeta(pkg)
+  await pushChangelog(pkg)
   await npmPublish(pkg)
-  await createGhRelease(pkg)
+  await ghRelease(pkg)
   await ghPages(pkg)
 }
 
@@ -63,16 +64,43 @@ export const npmPublish = ({absPath: cwd}) => ctx(async ($) => {
   await $`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
 })
 
-export const createGhRelease = (pkg) => ctx(async ($) => {
+export const ghRelease = async (pkg) => {
   console.log('create gh release')
 
-  const cwd = pkg.absPath
-  const {name, version} = pkg
   const {ghUser, ghToken} = parseEnv($.env)
-  const {repoName, repoPublicUrl} = await parseRepo(cwd)
-
   if (!ghToken || !ghUser) return null
 
+  const {name, version, absPath: cwd} = pkg
+  const {repoName} = await parseRepo(cwd)
+  const tag = formatTag({name, version})
+  const releaseNotes = await formatReleaseNotes(pkg)
+  const releaseData = JSON.stringify({
+    name: tag,
+    tag_name: tag,
+    body: releaseNotes
+  })
+
+  await $.o({cwd})`curl -u ${ghUser}:${ghToken} -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
+}
+
+const pushChangelog = async (pkg) => {
+  const {config: {changelog: opts}} = pkg
+  if (!opts) return
+
+  console.log('push changelog')
+  const [branch = 'changelog', file = `${pkg.name.replace(/[^a-z0-9-]/ig, '')}-changelog.md`, msg = `chore: update changelog ${pkg.name}`] = typeof opts === 'string'
+    ? opts.split(' ')
+    : [opts.branch, opts.file, opts.msg]
+  const _cwd = await fetch({cwd: pkg.absPath, branch})
+  const releaseNotes = await formatReleaseNotes(pkg)
+
+  await $.o({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
+  await push({cwd: _cwd, branch, msg})
+}
+
+const formatReleaseNotes = async (pkg) => {
+  const {name, version, absPath: cwd} = pkg
+  const {repoPublicUrl} = await parseRepo(cwd)
   const tag = formatTag({name, version})
   const releaseDiffRef = `## [${name}@${version}](${repoPublicUrl}/compare/${pkg.latest.tag?.ref}...${tag}) (${new Date().toISOString().slice(0, 10)})`
   const releaseDetails = Object.values(pkg.changes
@@ -88,16 +116,8 @@ export const createGhRelease = (pkg) => ctx(async ($) => {
 ### ${group}
 ${commits.join('\n')}`).join('\n')
 
-  const releaseNotes = releaseDiffRef + '\n' + releaseDetails + '\n'
-  const releaseData = JSON.stringify({
-    name: tag,
-    tag_name: tag,
-    body: releaseNotes
-  })
-
-  $.cwd = cwd
-  await $`curl -u ${ghUser}:${ghToken} -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
-})
+  return releaseDiffRef + '\n' + releaseDetails + '\n'
+}
 
 const ghPages = async (pkg) => {
   const {config: {ghPages: opts}} = pkg

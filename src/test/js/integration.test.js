@@ -51,7 +51,8 @@ const cwd = await createFakeRepo({
             release: {
               buildCmd: 'yarn && yarn build',
               testCmd: 'yarn test',
-              fetch: true
+              fetch: true,
+              changelog: {}
             },
             exports: {
               '.': {
@@ -174,9 +175,13 @@ test('run()', async () => {
 
     const origin = (await $`git remote get-url origin`).toString().trim()
     const meta = tempy.temporaryDirectory()
+    const chlog = tempy.temporaryDirectory()
 
     await $`git clone --single-branch --branch meta --depth 1 ${origin} ${meta}`
     assert.is((await fs.readJson(`${meta}/${tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')}.json`)).version, '1.0.1')
+
+    await $`git clone --single-branch --branch changelog --depth 1 ${origin} ${chlog}`
+    assert.ok((await fs.readFile(`${chlog}/a-changelog.md`, 'utf-8')).includes('### Fixes & improvements'))
   })
 
   await addCommits({cwd, commits: [
