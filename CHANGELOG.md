@@ -1,3 +1,8 @@
+## [1.14.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.13.0...v1.14.0) (2022-06-27)
+
+### Features
+* feat: add config normalizer ([80afee7](https://github.com/semrel-extra/zx-bulk-release/commit/80afee796e71aef6288943b2c6276b6f172192c5))
+
 ## [1.13.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.12.0...v1.13.0) (2022-06-27)
 
 ### Features
