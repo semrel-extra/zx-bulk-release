@@ -1,3 +1,8 @@
+## [1.14.4](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.3...v1.14.4) (2022-06-27)
+
+### Fixes & improvements
+* refactor: simplify pkg build condition ([d6f236b](https://github.com/semrel-extra/zx-bulk-release/commit/d6f236b99e98b324cc180cbbdc2a41d92385498b))
+
 ## [1.14.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.2...v1.14.3) (2022-06-27)
 
 ### Fixes & improvements
