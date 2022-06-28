@@ -26,6 +26,11 @@
 ```shell
 GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
+| Flag                | Description                | Default  |
+|---------------------|----------------------------|----------|
+| `--dry-run`         | Dry run mode               | `false`  |
+| `--ignore`          | Packages to ignore: `a, b` |          |
+| `--include-private` | Include private pkgs       | `false`  |
 
 ### JS API
 ```js
@@ -166,14 +171,14 @@ export const parseEnv = (env = process.env) => {
   const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
 
   return {
-    ghUser: GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
-    ghToken: GH_TOKEN || GITHUB_TOKEN,
-    npmToken: NPM_TOKEN,
+    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
+    ghToken:            GH_TOKEN || GITHUB_TOKEN,
+    npmToken:           NPM_TOKEN,
     // npmConfig suppresses npmToken
-    npmConfig: NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
-    npmRegistry: NPM_REGISTRY || 'https://registry.npmjs.org',
-    gitCommitterName: GIT_COMMITTER_NAME || 'Semrel Extra Bot',
-    gitCommitterEmail: GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
+    npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
+    npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
+    gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
+    gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
   }
 }
 ```
