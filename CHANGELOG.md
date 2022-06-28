@@ -1,3 +1,8 @@
+## [1.17.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.1...v1.17.2) (2022-06-28)
+
+### Fixes & improvements
+* docs: add npm badge ([f63dfe3](https://github.com/semrel-extra/zx-bulk-release/commit/f63dfe338208641a8edd910b81e320deeed2446c))
+
 ## [1.17.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.0...v1.17.1) (2022-06-28)
 
 ### Fixes & improvements
