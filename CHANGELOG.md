@@ -1,3 +1,8 @@
+## [1.16.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.16.0...v1.16.1) (2022-06-28)
+
+### Fixes & improvements
+* refactor: extract tag utils from publish.js ([82b3ef0](https://github.com/semrel-extra/zx-bulk-release/commit/82b3ef02affb65bb79eda5f54f32b0378e7083f2))
+
 ## [1.16.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.15.0...v1.16.0) (2022-06-28)
 
 ### Features
