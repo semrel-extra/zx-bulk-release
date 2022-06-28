@@ -1,6 +1,6 @@
 import {formatTag, getLatestTag} from './tag.js'
-import {tempy, ctx, fs, path, $} from 'zx-extra'
-import {copydir} from 'git-glob-cp'
+import {ctx, fs, path, $} from 'zx-extra'
+import {push, fetch, parseRepo} from './repo.js'
 import {parseEnv} from './config.js'
 import {npmPublish} from './npm.js'
 
@@ -83,7 +83,7 @@ const pushChangelog = async (pkg) => {
   const releaseNotes = await formatReleaseNotes(pkg)
 
   await $.o({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
-  await push({cwd: _cwd, branch, msg})
+  await push({cwd: pkg.absPath, branch, msg})
 }
 
 const formatReleaseNotes = async (pkg) => {
@@ -126,52 +126,6 @@ const ghPages = async (pkg) => {
   })
 }
 
-const branches = {}
-export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
-  let cwd = branches[branch]
-  if (cwd) return cwd
-
-  const origin = _origin || (await parseRepo(_cwd)).repoAuthedUrl
-
-  cwd = tempy.temporaryDirectory()
-  $.cwd = cwd
-  try {
-    await $`git clone --single-branch --branch ${branch} --depth 1 ${origin} .`
-  } catch {
-    await $`git init .`
-    await $`git remote add origin ${origin}`
-  }
-
-  branches[branch] = cwd
-
-  return cwd
-})
-
-export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = []}) => ctx(async ($) => {
-  const _cwd = await fetch({cwd, branch, origin})
-  const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
-
-  for (let {relpath, contents} of files) {
-    const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
-    await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
-  }
-  if (from) await copydir({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
-
-  $.cwd = _cwd
-
-  await $`git config user.name ${gitCommitterEmail}`
-  await $`git config user.email ${gitCommitterName}`
-  await $`git add .`
-  try {
-    await $`git commit -m ${msg}`
-  } catch {
-    console.warn('no changes')
-    return
-  }
-
-  await $.raw`git push origin HEAD:refs/heads/${branch}`
-})
-
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
 export const getLatestMeta = async (cwd, tag) => {
@@ -196,31 +150,4 @@ export const getLatest = async (cwd, name) => {
     tag,
     meta
   }
-}
-
-export const parseRepo = async (cwd) => {
-  const {ghToken, ghUser} = parseEnv($.env)
-  const originUrl = await getOrigin(cwd)
-  const [,,repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
-  const repoPublicUrl = `https://${repoHost}/${repoName}`
-  const repoAuthedUrl = ghToken && ghUser && repoHost && repoName?
-    `https://${ghUser}:${ghToken}@${repoHost}/${repoName}`
-    : originUrl
-
-  return {
-    repoName,
-    repoHost,
-    repoPublicUrl,
-    repoAuthedUrl,
-    originUrl,
-  }
-}
-
-const origins = {}
-export const getOrigin = async (cwd) => {
-  if (!origins[cwd]) {
-    origins[cwd] = (await $.o({cwd})`git config --get remote.origin.url`).toString().trim()
-  }
-
-  return origins[cwd]
 }
