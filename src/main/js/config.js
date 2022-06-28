@@ -17,6 +17,8 @@ export const defaultConfig = {
   cmd: 'yarn && yarn build && yarn test',
   npmFetch: true,
   changelog: 'changelog',
+  ghRelease: true,
+  // npmPublish: true,
   // ghPages: 'gh-pages'
 }
 
@@ -30,3 +32,17 @@ export const normalizeConfig = config => ({
   npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
   cmd:      config.cmd || (config.buildCmd ? `${config.buildCmd}${config.testCmd ? ` && ${config.testCmd}` : ''}` : '')
 })
+
+export const parseEnv = (env = process.env) => {
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
+
+  return {
+    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
+    ghToken:            GH_TOKEN || GITHUB_TOKEN,
+    npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
+    npmToken:           NPM_TOKEN,
+    npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
+    gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
+    gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
+  }
+}

@@ -1,17 +1,16 @@
 import {ctx, semver} from 'zx-extra'
 
-const releaseSeverityOrder = ['major', 'minor', 'patch']
-const semanticRules = [
+export const releaseSeverityOrder = ['major', 'minor', 'patch']
+export const semanticRules = [
   {group: 'Features', releaseType: 'minor', prefixes: ['feat']},
   {group: 'Fixes & improvements', releaseType: 'patch', prefixes: ['fix', 'perf', 'refactor', 'docs']},
   {group: 'BREAKING CHANGES', releaseType: 'major', keywords: ['BREAKING CHANGE', 'BREAKING CHANGES']},
 ]
 
 export const getPkgCommits = async (cwd, since) => ctx(async ($) => {
-  $.cwd = cwd
-
   const range = since ? `${since}..HEAD` : 'HEAD'
 
+  $.cwd = cwd
   return (await $.raw`git log ${range} --format=+++%s__%b__%h__%H -- .`)
     .toString()
     .split('+++')

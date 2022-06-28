@@ -1,6 +1,8 @@
 import {formatTag, getLatestTag} from './tag.js'
 import {tempy, ctx, fs, path, $} from 'zx-extra'
 import {copydir} from 'git-glob-cp'
+import {parseEnv} from './config.js'
+import {npmPublish} from './npm.js'
 
 export const publish = async (pkg) => {
   await pushTag(pkg)
@@ -49,19 +51,6 @@ export const pushMeta = async (pkg) => {
 
   await push({cwd, to, branch, msg, files})
 }
-
-export const npmPublish = (pkg) => ctx(async ($) => {
-  const {absPath: cwd, name, version} = pkg
-  const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
-  const npmrc = npmConfig ? npmConfig : path.resolve(cwd, '.npmrc')
-
-  console.log(`[${name}] publish npm package ${name} ${version} to ${npmRegistry}`)
-  $.cwd = cwd
-  if (!npmConfig) {
-    await $.raw`echo ${npmRegistry.replace(/https?:/, '')}/:_authToken=${npmToken} >> ${npmrc}`
-  }
-  await $`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
-})
 
 export const ghRelease = async (pkg) => {
   console.log(`[${pkg.name}] create gh release`)
@@ -206,20 +195,6 @@ export const getLatest = async (cwd, name) => {
   return {
     tag,
     meta
-  }
-}
-
-export const parseEnv = (env = process.env) => {
-  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
-
-  return {
-    ghUser: GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
-    ghToken: GH_TOKEN || GITHUB_TOKEN,
-    npmConfig: NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
-    npmToken: NPM_TOKEN,
-    npmRegistry: NPM_REGISTRY || 'https://registry.npmjs.org',
-    gitCommitterName: GIT_COMMITTER_NAME || 'Semrel Extra Bot',
-    gitCommitterEmail: GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
   }
 }
 
