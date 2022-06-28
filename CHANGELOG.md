@@ -1,3 +1,12 @@
+## [1.17.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.16.2...v1.17.0) (2022-06-28)
+
+### Fixes & improvements
+* docs: describe CLI options ([e744e97](https://github.com/semrel-extra/zx-bulk-release/commit/e744e97e8e5451ffff217283ad4e552f05073e7c))
+* docs: describe internal release flow ([e29bfc9](https://github.com/semrel-extra/zx-bulk-release/commit/e29bfc968a519d7c48b0475ad30c826bef17fb96))
+
+### Features
+* feat: introduce `--include-private` and `ignore` flags ([d029b62](https://github.com/semrel-extra/zx-bulk-release/commit/d029b6242da2e3c7fabaa5e24d61709b47e42b94))
+
 ## [1.16.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.16.1...v1.16.2) (2022-06-28)
 
 ### Fixes & improvements
