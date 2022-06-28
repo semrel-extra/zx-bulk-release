@@ -1,3 +1,12 @@
+## [1.16.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.15.0...v1.16.0) (2022-06-28)
+
+### Features
+* feat: use npm pkg registry for meta fallback ([ee771cb](https://github.com/semrel-extra/zx-bulk-release/commit/ee771cb0320845e81782ae6143380e4c6d241b33))
+
+### Fixes & improvements
+* refactor: separate repo utils ([869e3d3](https://github.com/semrel-extra/zx-bulk-release/commit/869e3d3e1cd5998d17b2a638f6b12e768f866644))
+* refactor: separate npm domain ([28c5887](https://github.com/semrel-extra/zx-bulk-release/commit/28c5887c7f4ea269122b428796fef10a0926346e))
+
 ## [1.15.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.14.6...v1.15.0) (2022-06-27)
 
 ### Features
