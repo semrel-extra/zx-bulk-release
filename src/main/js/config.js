@@ -46,3 +46,6 @@ export const parseEnv = (env = process.env) => {
     gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
   }
 }
+
+const camelize = s => s.replace(/-./g, x=>x[1].toUpperCase())
+export const normalizeFlags = (flags = {}) => Object.entries(flags).reduce((acc, [k, v]) => ({...acc, [camelize(k)]: v}), {})

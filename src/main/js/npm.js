@@ -50,10 +50,6 @@ export const npmPublish = (pkg) => ctx(async ($) => {
   await $`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
 })
 
-// NOTE registry-auth-token does not work with localhost:4873
-export const getAuthToken = (registry, npmrc) =>
-  (Object.entries(npmrc).find(([reg]) => reg.startsWith(registry.replace(/^https?/, ''))) || [])[1]
-
 // $`npm view ${name}@${version} dist.tarball`
 export const getTarballUrl = (registry, name, version) => `${registry}/${name}/-/${name.replace(/^.+(%2f|\/)/,'')}-${version}.tgz`
 
@@ -65,3 +61,7 @@ export const getBearerToken = async (npmRegistry, npmToken, npmConfig) => {
     : npmToken
   return `Bearer ${token}`
 }
+
+// NOTE registry-auth-token does not work with localhost:4873
+export const getAuthToken = (registry, npmrc) =>
+  (Object.entries(npmrc).find(([reg]) => reg.startsWith(registry.replace(/^https?/, ''))) || [])[1]

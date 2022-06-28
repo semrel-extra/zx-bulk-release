@@ -2,5 +2,6 @@
 
 import {argv} from 'zx-extra'
 import {run} from './index.js'
+import {normalizeFlags} from './config.js';
 
-run({flags: argv})
+run({flags: normalizeFlags(argv)})
