@@ -14,7 +14,7 @@
 * No default branch blocking (no release commits).
 * Pkg changelogs go to `changelog` branch (configurable).
 * Docs are published to `gh-pages` branch (configurable).
-* No extra builds. The required deps are fetched from the pkg registry (`npmFetch` flag).
+* No extra builds. The required deps are fetched from the pkg registry (`npmFetch` config opt).
 
 ## Requirements
 * macOS / linux
@@ -135,9 +135,38 @@ By default, it omits the packages marked as `private`. You can override this by 
 
 ### `analyze`
 Determines pkg changes, release type, next version etc.
+```js
+export const analyze = async (pkg, packages, root) => {
+  pkg.config = await getConfig(pkg.absPath, root.absPath)
+  pkg.latest = await getLatest(pkg)
+
+  const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
+  const depsChanges = await updateDeps(pkg, packages)
+  const changes = [...semanticChanges, ...depsChanges]
+
+  pkg.changes = changes
+  pkg.version = resolvePkgVersion(changes, pkg.latest.tag?.version || pkg.manifest.version)
+  pkg.manifest.version = pkg.version
+
+  console.log(`[${pkg.name}] semantic changes`, changes)
+}
+```
 
 ### `build`
-Building pkg assets: bundles, docs, etc.
+Applies `config.cmd` to build pkg assets: bundles, docs, etc.
+```js
+export const build = async (pkg, packages) => {
+  // ...
+  if (!pkg.fetched && config.cmd) {
+    console.log(`[${pkg.name}] run cmd '${config.cmd}'`)
+    await $.o({cwd: pkg.absPath, quote: v => v})`${config.cmd}`
+  }
+  // ...
+}
+```
+
+### `publish`
+Publish the pkg to git, npm, gh-pages, gh-release, etc.
 ```js
 export const publish = async (pkg) => {
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
@@ -149,9 +178,6 @@ export const publish = async (pkg) => {
   await ghPages(pkg)
 }
 ```
-
-### `publish`
-Publish the pkg to git, npm, gh-pages, gh-release, etc.
 
 ### Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract:
