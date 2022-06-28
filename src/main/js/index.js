@@ -18,7 +18,7 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
   for (let name of queue) {
     const pkg = packages[name]
     pkg.config = await getConfig(pkg.absPath, root.absPath)
-    pkg.latest = await getLatest(cwd, name)
+    pkg.latest = await getLatest(pkg)
 
     const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
     const depsChanges = await updateDeps(pkg, packages)

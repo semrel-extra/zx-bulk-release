@@ -2,7 +2,7 @@ import {formatTag, getLatestTag} from './tag.js'
 import {ctx, fs, path, $} from 'zx-extra'
 import {push, fetch, parseRepo} from './repo.js'
 import {parseEnv} from './config.js'
-import {npmPublish} from './npm.js'
+import {fetchManifest, npmPublish} from './npm.js'
 
 export const publish = async (pkg) => {
   await pushTag(pkg)
@@ -142,9 +142,10 @@ export const getLatestMeta = async (cwd, tag) => {
   return null
 }
 
-export const getLatest = async (cwd, name) => {
+export const getLatest = async (pkg) => {
+  const {absPath: cwd, name} = pkg
   const tag = await getLatestTag(cwd, name)
-  const meta = await getLatestMeta(cwd, tag?.ref)
+  const meta = await getLatestMeta(cwd, tag?.ref) || await fetchManifest(pkg, {nothrow: true})
 
   return {
     tag,

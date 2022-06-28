@@ -15,7 +15,7 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
   try {
     await $`git clone --single-branch --branch ${branch} --depth 1 ${origin} .`
   } catch (e) {
-    console.warn(`ref ${branch} does not exist in ${origin}`)
+    console.warn(`ref '${branch}' does not exist in ${origin}`)
     await $`git init .`
     await $`git remote add origin ${origin}`
   }

@@ -3,18 +3,15 @@ import {$, ctx, fs, path, tempy} from 'zx-extra'
 import ini from 'ini'
 import {copy} from 'git-glob-cp'
 
-export const fetchPkg = async (pkg) => {
+export const fetchPkg = async (pkg, {env = $.env} = {}) => {
   try {
     const cwd = pkg.absPath
-    const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
+    const {npmRegistry, npmToken, npmConfig} = parseEnv(env)
     const temp = tempy.temporaryDirectory()
-    const token = npmConfig
-      ? getAuthToken(npmRegistry, ini.parse(await fs.readFile(npmConfig, 'utf8')))
-      : npmToken
-    const auth = `Authorization: Bearer ${token}`
+    const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
 
-    await $`wget --header=${auth} -qO- ${tarball} | tar xvz -C ${temp}`
+    await $.raw`wget --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar xvz -C ${temp}`
     await copy({from: ['**/*', '!package.json'], to: cwd, cwd: `${temp}/package`})
 
     pkg.fetched = true
@@ -24,7 +21,21 @@ export const fetchPkg = async (pkg) => {
   }
 }
 
-export const fetchManifest = async (pkg) => {}
+export const fetchManifest = async (pkg, {nothrow, env = $.env} = {}) => {
+  const {npmRegistry, npmToken, npmConfig} = parseEnv(env)
+  const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
+  const url = getManifestUrl(npmRegistry, pkg.name, pkg.version)
+
+  try {
+    const res = await fetch(url, {authorization: bearerToken})
+    if (!res.ok) throw res
+
+    return res.json() // NOTE .json() is async too
+  } catch (e) {
+    if (nothrow) return null
+    throw e
+  }
+}
 
 export const npmPublish = (pkg) => ctx(async ($) => {
   const {absPath: cwd, name, version} = pkg
@@ -45,3 +56,12 @@ export const getAuthToken = (registry, npmrc) =>
 
 // $`npm view ${name}@${version} dist.tarball`
 export const getTarballUrl = (registry, name, version) => `${registry}/${name}/-/${name.replace(/^.+(%2f|\/)/,'')}-${version}.tgz`
+
+export const getManifestUrl = (registry, name, version) => `${registry}/${name}/${version}`
+
+export const getBearerToken = async (npmRegistry, npmToken, npmConfig) => {
+  const token = npmConfig
+    ? getAuthToken(npmRegistry, ini.parse(await fs.readFile(npmConfig, 'utf8')))
+    : npmToken
+  return `Bearer ${token}`
+}
