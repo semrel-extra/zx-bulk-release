@@ -1256,7 +1256,7 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-git-glob-cp@^1.7.1:
+git-glob-cp@^1.7.2:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/git-glob-cp/-/git-glob-cp-1.7.2.tgz#3c2cd2920bf5808cf20dd3af9a5a015b5fe338d0"
   integrity sha512-iih9Xi8n/ikq5jB7ThgZ7dYUoUyaOaTq+jG0bqhb2aR+CWh9KHyJrcFIEVWLSxGzM7pCyS789P8lu64ZHsQplw==

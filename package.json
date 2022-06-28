@@ -13,7 +13,7 @@
   "dependencies": {
     "@semrel-extra/topo": "^1.4.1",
     "cosmiconfig": "^7.0.1",
-    "git-glob-cp": "^1.7.1",
+    "git-glob-cp": "^1.7.2",
     "ini": "^3.0.0",
     "zx-extra": "^1.7.1"
   },
