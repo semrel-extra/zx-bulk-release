@@ -4,6 +4,7 @@
 [![CI](https://github.com/semrel-extra/zx-bulk-release/workflows/CI/badge.svg)](https://github.com/semrel-extra/zx-bulk-release/actions)
 [![Maintainability](https://api.codeclimate.com/v1/badges/bb94e929b1b6430781b5/maintainability)](https://codeclimate.com/github/semrel-extra/zx-bulk-release/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/bb94e929b1b6430781b5/test_coverage)](https://codeclimate.com/github/semrel-extra/zx-bulk-release/test_coverage)
+[![npm (tag)](https://img.shields.io/npm/v/zx-bulk-release)](https://www.npmjs.com/package/zx-bulk-release)
 
 🚧 Work in progress. Early access preview
 
@@ -22,6 +23,10 @@
 * npm >=7 / yarn >= 3
 
 ## Usage
+### Install
+```shell
+yarn add zx-bulk-release
+```
 ### CLI
 ```shell
 GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
@@ -130,7 +135,7 @@ try {
 ```
 
 ### `topo`
-[Toposort](https://github.com/semrel-extra/topo) is used to order the pkgs to be released.
+[Toposort](https://github.com/semrel-extra/topo) is used to resolve the pkg release queue.
 By default, it omits the packages marked as `private`. You can override this by setting the `--include-private` flag.
 
 ### `analyze`
