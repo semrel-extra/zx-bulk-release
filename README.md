@@ -59,7 +59,7 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
 
 ### Output
 
-[Readable and clear logs](https://github.com/semrel-extra/demo-zx-bulk-release/runs/7090161341?check_suite_focus=true#step:6:1)
+[Compact and clear logs](https://github.com/semrel-extra/demo-zx-bulk-release/runs/7090161341?check_suite_focus=true#step:6:1)
 
 ```shell
 Run npm_config_yes=true npx zx-bulk-release
@@ -99,6 +99,55 @@ zx-bulk-release
 ```
 
 ## Implementation notes
+### Flow
+```js
+try {
+  const {packages, queue, root} = await topo({cwd, flags})
+  console.log('queue:', queue)
+
+  for (let name of queue) {
+    const pkg = packages[name]
+
+    await analyze(pkg, packages, root)
+
+    if (pkg.changes.length === 0) continue
+
+    await build(pkg, packages)
+
+    if (flags.dryRun) continue
+
+    await publish(pkg)
+  }
+} catch (e) {
+  console.error(e)
+  throw e
+}
+```
+
+### `topo`
+[Toposort](https://github.com/semrel-extra/topo) is used to order the pkgs to be released.
+By default, it omits the packages marked as `private`. You can override this by setting the `--include-private` flag.
+
+### `analyze`
+Determines pkg changes, release type, next version etc.
+
+### `build`
+Building pkg assets: bundles, docs, etc.
+```js
+export const publish = async (pkg) => {
+  await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
+  await pushTag(pkg)
+  await pushMeta(pkg)
+  await pushChangelog(pkg)
+  await npmPublish(pkg)
+  await ghRelease(pkg)
+  await ghPages(pkg)
+}
+```
+
+### `publish`
+Publish the pkg to git, npm, gh-pages, gh-release, etc.
+
 ### Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract:
 ```js
