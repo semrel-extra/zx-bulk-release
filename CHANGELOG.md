@@ -1,3 +1,8 @@
+## [1.16.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.16.1...v1.16.2) (2022-06-28)
+
+### Fixes & improvements
+* refactor: separate `analyze` helper ([1f76993](https://github.com/semrel-extra/zx-bulk-release/commit/1f76993d3d9539a02d516c0cd757713964f6f523))
+
 ## [1.16.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.16.0...v1.16.1) (2022-06-28)
 
 ### Fixes & improvements
