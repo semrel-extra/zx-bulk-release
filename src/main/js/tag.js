@@ -1,7 +1,22 @@
-// Semantic tags
+// Semantic tags processing
 
-import {ctx, semver} from 'zx-extra'
+import {ctx, semver, $} from 'zx-extra'
 import {Buffer} from 'buffer'
+import {parseEnv} from './config.js'
+
+export const pushTag = (pkg) => ctx(async ($) => {
+  const {absPath: cwd, name, version} = pkg
+  const tag = formatTag({name, version})
+  const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
+
+  console.log(`[${name}] push release tag ${tag}`)
+
+  $.cwd = cwd
+  await $`git config user.name ${gitCommitterName}`
+  await $`git config user.email ${gitCommitterEmail}`
+  await $`git tag -m ${tag} ${tag}`
+  await $`git push origin ${tag}`
+})
 
 const f0 = {
   parse(tag) {
@@ -85,15 +100,12 @@ export const parseTag = (tag) => f0.parse(tag) || f1.parse(tag) || lerna.parse(t
 
 export const formatTag = (tag) => f0.format(tag) || f1.format(tag) || null
 
-export const getTags = (cwd) => ctx(async ($) => {
-  $.cwd = cwd
-
-  return (await $`git tag -l`).toString()
+export const getTags = async (cwd) =>
+  (await $.o({cwd})`git tag -l`).toString()
     .split('\n')
     .map(tag => parseTag(tag.trim()))
     .filter(Boolean)
     .sort((a, b) => semver.rcompare(a.version, b.version))
-})
 
 export const getLatestTag = async (cwd, name) =>
   (await getTags(cwd)).find(tag => tag.name === name) || null

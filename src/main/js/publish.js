@@ -1,4 +1,4 @@
-import {formatTag, getLatestTag} from './tag.js'
+import {formatTag, getLatestTag, pushTag} from './tag.js'
 import {ctx, fs, path, $} from 'zx-extra'
 import {push, fetch, parseRepo} from './repo.js'
 import {parseEnv} from './config.js'
@@ -13,25 +13,10 @@ export const publish = async (pkg) => {
   await ghPages(pkg)
 }
 
-export const pushTag = (pkg) => ctx(async ($) => {
-  const {absPath: cwd, name, version} = pkg
-  const tag = formatTag({name, version})
-  const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
-
-  console.log(`[${name}] push release tag ${tag}`)
-
-  $.cwd = cwd
-  await $`git config user.name ${gitCommitterName}`
-  await $`git config user.email ${gitCommitterEmail}`
-  await $`git tag -m ${tag} ${tag}`
-  await $`git push origin ${tag}`
-})
-
 export const pushMeta = async (pkg) => {
   console.log(`[${pkg.name}] push artifact to branch 'meta'`)
 
-  const cwd = pkg.absPath
-  const {name, version} = pkg
+  const {name, version, absPath: cwd} = pkg
   const tag = formatTag({name, version})
   const to = '.'
   const branch = 'meta'
