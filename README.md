@@ -59,7 +59,7 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
 
 ### Output
 
-[Readable and clear logs](https://github.com/semrel-extra/demo-zx-bulk-release/runs/7069468916?check_suite_focus=true)
+[Readable and clear logs](https://github.com/semrel-extra/demo-zx-bulk-release/runs/7090161341?check_suite_focus=true#step:6:1)
 
 ```shell
 Run npm_config_yes=true npx zx-bulk-release

@@ -5,6 +5,7 @@ import {parseEnv} from './config.js'
 import {fetchManifest, npmPublish} from './npm.js'
 
 export const publish = async (pkg) => {
+  await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
   await pushTag(pkg)
   await pushMeta(pkg)
   await pushChangelog(pkg)

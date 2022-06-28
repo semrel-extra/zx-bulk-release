@@ -1,10 +1,7 @@
-import {fs, $} from 'zx-extra'
 import {topo} from '@semrel-extra/topo'
-import {updateDeps} from './deps.js'
-import {getSemanticChanges, resolvePkgVersion} from './analyze.js'
-import {publish, getLatest} from './publish.js'
+import {analyze} from './analyze.js'
+import {publish} from './publish.js'
 import {build} from './build.js'
-import {getConfig} from './config.js'
 
 export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
   console.log('zx-bulk-release')
@@ -17,26 +14,16 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
 
   for (let name of queue) {
     const pkg = packages[name]
-    pkg.config = await getConfig(pkg.absPath, root.absPath)
-    pkg.latest = await getLatest(pkg)
 
-    const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
-    const depsChanges = await updateDeps(pkg, packages)
-    const changes = [...semanticChanges, ...depsChanges]
+    await analyze(pkg, packages, root)
 
-    pkg.changes = changes
-    pkg.version = resolvePkgVersion(changes, pkg.latest.tag?.version || pkg.manifest.version)
-    pkg.manifest.version = pkg.version
+    if (pkg.changes.length === 0) continue
 
-    if (changes.length === 0) continue
-    console.log(`[${name}] semantic changes`, changes)
-
-    await build(pkg, packages, cwd)
+    await build(pkg, packages)
 
     if (dryRun) continue
 
-    await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
-    await publish(pkg, env)
+    await publish(pkg)
   }
   } catch (e) {
     console.error(e)
