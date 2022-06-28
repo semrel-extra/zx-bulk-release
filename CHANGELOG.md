@@ -1,3 +1,8 @@
+## [1.17.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.0...v1.17.1) (2022-06-28)
+
+### Fixes & improvements
+* docs: describe `analyze` step ([ae611ad](https://github.com/semrel-extra/zx-bulk-release/commit/ae611ada7709d9f9fa72d20f39e74ebe05353a2d))
+
 ## [1.17.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.16.2...v1.17.0) (2022-06-28)
 
 ### Fixes & improvements
