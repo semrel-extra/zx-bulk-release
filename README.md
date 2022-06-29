@@ -17,6 +17,12 @@
 * Docs are published to `gh-pages` branch (configurable).
 * No extra builds. The required deps are fetched from the pkg registry (`npmFetch` config opt).
 
+## Roadmap
+* [ ] Multistack. Add support for java/kt/py.
+* [ ] Self-repair. Restore broken/missing metadata from external registries (npm, pypi, m2).
+* [ ] Semaphore. Let several release agents to serve the monorepo at the same time.
+* [ ] Stats. Store release metrics to `meta`.
+
 ## Requirements
 * macOS / linux
 * Node.js >= 16.0.0
@@ -238,6 +244,7 @@ Each release projects its result into the `meta` branch.
 * [conventional-changelog/releaser-tools](https://github.com/conventional-changelog/releaser-tools)
 * [pmowrer/semantic-release-monorepo](https://github.com/pmowrer/semantic-release-monorepo)
 * [jscutlery/semver](https://github.com/jscutlery/semver)
+* [microsoft/rushstack](https://github.com/microsoft/rushstack)
 * [tophat/monodeploy](https://github.com/tophat/monodeploy)
 * [intuit/auto](https://github.com/intuit/auto)
 * [vercel/turborepo](https://github.com/vercel/turborepo)
