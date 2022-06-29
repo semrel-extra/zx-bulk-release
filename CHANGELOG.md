@@ -1,3 +1,8 @@
+## [1.17.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.2...v1.17.3) (2022-06-29)
+
+### Fixes & improvements
+* docs: add roadmap ([185a12d](https://github.com/semrel-extra/zx-bulk-release/commit/185a12d8956c3e274035b863682afee3bd64ccb7))
+
 ## [1.17.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.1...v1.17.2) (2022-06-28)
 
 ### Fixes & improvements
