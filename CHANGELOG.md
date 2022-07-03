@@ -1,3 +1,8 @@
+## [1.17.4](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.3...v1.17.4) (2022-07-03)
+
+### Fixes & improvements
+* fix: fix tag pattern ([240b452](https://github.com/semrel-extra/zx-bulk-release/commit/240b452b8ee414bfbb0d13a0218790059400eb06))
+
 ## [1.17.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.2...v1.17.3) (2022-06-29)
 
 ### Fixes & improvements
