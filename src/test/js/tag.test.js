@@ -134,6 +134,16 @@ test('formatTag() / parseTag()', () => {
       }
     ],
     [
+      '2022.7.3-a.1.0.1-f0',
+      {
+        name: 'a',
+        version: '1.0.1',
+        date: new Date(Date.UTC(2022, 6, 3)),
+        format: 'f0',
+        ref: '2022.7.3-a.1.0.1-f0'
+      }
+    ],
+    [
       '2022.6.13-examplecom.v1.0.0.ZXhhbXBsZS5jb20-f1',
       {
         name: 'example.com',

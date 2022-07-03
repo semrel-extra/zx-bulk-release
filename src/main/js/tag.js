@@ -22,7 +22,7 @@ const f0 = {
   parse(tag) {
     if (!tag.endsWith('-f0')) return null
 
-    const pattern = /^(\d{4}\.(?:[1-9]|1[012])\.(?:0[1-9]|[12]\d|30|31))-((?:[a-z0-9-]+\.)?[a-z0-9-]+)\.(v?\d+\.\d+\.\d+.*)-f0$/
+    const pattern = /^(\d{4}\.(?:[1-9]|1[012])\.(?:[1-9]|[12]\d|30|31))-((?:[a-z0-9-]+\.)?[a-z0-9-]+)\.(v?\d+\.\d+\.\d+.*)-f0$/
     const matched = pattern.exec(tag) || []
     const [, _date, _name, version] = matched
 
@@ -47,7 +47,7 @@ const f1 = {
   parse(tag) {
     if (!tag.endsWith('-f1')) return null
 
-    const pattern = /^(\d{4}\.(?:[1-9]|1[012])\.(?:0[1-9]|[12]\d|30|31))-[a-z0-9-]+\.(v?\d+\.\d+\.\d+.*)\.([^.]+)-f1$/
+    const pattern = /^(\d{4}\.(?:[1-9]|1[012])\.(?:[1-9]|[12]\d|30|31))-[a-z0-9-]+\.(v?\d+\.\d+\.\d+.*)\.([^.]+)-f1$/
     const matched = pattern.exec(tag) || []
     const [, _date, version, b64] = matched
 
