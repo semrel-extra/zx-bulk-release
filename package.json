@@ -13,13 +13,13 @@
   "dependencies": {
     "@semrel-extra/topo": "^1.4.1",
     "cosmiconfig": "^7.0.1",
-    "git-glob-cp": "^1.7.2",
+    "git-glob-cp": "^1.7.3",
     "ini": "^3.0.0",
-    "zx-extra": "^1.7.1"
+    "zx-extra": "^2.1.0"
   },
   "devDependencies": {
     "c8": "^7.11.3",
-    "uvu": "^0.5.4",
+    "uvu": "^0.5.5",
     "verdaccio": "^5.13.1"
   },
   "publishConfig": {

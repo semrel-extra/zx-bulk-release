@@ -20,6 +20,7 @@ export const createNpmRegistry = () => {
       return sleep(1000)
     },
     async stop() {
+      p._nothrow = true
       return p?.kill()
     }
   }
