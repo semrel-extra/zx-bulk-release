@@ -1,7 +1,6 @@
 import {parseEnv} from './config.js'
-import {$, ctx, fs, path, tempy} from 'zx-extra'
+import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import ini from 'ini'
-import {copy} from 'git-glob-cp'
 
 export const fetchPkg = async (pkg, {env = $.env} = {}) => {
   try {

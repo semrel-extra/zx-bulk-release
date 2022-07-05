@@ -1,6 +1,5 @@
-import {$, ctx, fs, path, tempy} from 'zx-extra'
+import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import {parseEnv} from './config.js'
-import {copydir} from 'git-glob-cp'
 
 const branches = {}
 export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
@@ -32,7 +31,7 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, fil
     const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
     await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
   }
-  if (from) await copydir({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
+  if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
 
   $.cwd = _cwd
 
