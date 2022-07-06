@@ -1,3 +1,8 @@
+## [1.17.6](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.5...v1.17.6) (2022-07-06)
+
+### Fixes & improvements
+* perf: update zx-extra to v2.4.0, rm own `ini` dep ([e746a72](https://github.com/semrel-extra/zx-bulk-release/commit/e746a72d28abc5f941a74dd191e54dac300a9aa7))
+
 ## [1.17.5](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.4...v1.17.5) (2022-07-05)
 
 ### Fixes & improvements
