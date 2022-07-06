@@ -1,6 +1,5 @@
 import {parseEnv} from './config.js'
-import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
-import ini from 'ini'
+import {$, ctx, fs, path, tempy, copy, INI} from 'zx-extra'
 
 export const fetchPkg = async (pkg, {env = $.env} = {}) => {
   try {
@@ -56,7 +55,7 @@ export const getManifestUrl = (registry, name, version) => `${registry}/${name}/
 
 export const getBearerToken = async (npmRegistry, npmToken, npmConfig) => {
   const token = npmConfig
-    ? getAuthToken(npmRegistry, ini.parse(await fs.readFile(npmConfig, 'utf8')))
+    ? getAuthToken(npmRegistry, INI.parse(await fs.readFile(npmConfig, 'utf8')))
     : npmToken
   return `Bearer ${token}`
 }
