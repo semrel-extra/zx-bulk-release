@@ -10,7 +10,7 @@ export const fetchPkg = async (pkg, {env = $.env} = {}) => {
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
 
     await $.raw`wget --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar xvz -C ${temp}`
-    await copy({from: ['**/*', '!package.json'], to: cwd, cwd: `${temp}/package`})
+    await copy({from: ['**/*', '!package.json'], to: cwd, baseFrom: `${temp}/package`})
 
     pkg.fetched = true
     console.log(`[${pkg.name}] fetched '${pkg.name}@${pkg.version}'`)
