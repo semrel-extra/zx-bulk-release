@@ -1,3 +1,8 @@
+## [1.17.7](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.6...v1.17.7) (2022-07-06)
+
+### Fixes & improvements
+* fix: fix `fetchPkg` target dir ([5ebf5f1](https://github.com/semrel-extra/zx-bulk-release/commit/5ebf5f10d42bad4c6903ef3a195da037d455e446))
+
 ## [1.17.6](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.5...v1.17.6) (2022-07-06)
 
 ### Fixes & improvements
