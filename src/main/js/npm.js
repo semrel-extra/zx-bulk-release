@@ -1,5 +1,5 @@
 import {parseEnv} from './config.js'
-import {$, ctx, fs, path, tempy, copy, INI} from 'zx-extra'
+import {$, ctx, fs, path, tempy, copy, INI, fetch} from 'zx-extra'
 
 export const fetchPkg = async (pkg, {env = $.env} = {}) => {
   try {
@@ -36,7 +36,8 @@ export const fetchManifest = async (pkg, {nothrow, env = $.env} = {}) => {
 }
 
 export const npmPublish = (pkg) => ctx(async ($) => {
-  const {absPath: cwd, name, version} = pkg
+  const {absPath: cwd, name, version, manifest} = pkg
+  if (manifest.private) return
   const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
   const npmrc = npmConfig ? npmConfig : path.resolve(cwd, '.npmrc')
 
