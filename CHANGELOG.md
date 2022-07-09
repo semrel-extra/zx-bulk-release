@@ -1,3 +1,13 @@
+## [1.18.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.7...v1.18.0) (2022-07-09)
+
+### Features
+* feat: do not publish to npm private packages ([5a7ddea](https://github.com/semrel-extra/zx-bulk-release/commit/5a7ddead35b95adfc5f0450084ca78ead0edc531))
+* feat: do not publish to npm private packages ([2e236d8](https://github.com/semrel-extra/zx-bulk-release/commit/2e236d83de4342a6ee6b9e937e6a4dd20d1b3a2e))
+
+### Fixes & improvements
+* fix: fetch is not defined ([8e6cca1](https://github.com/semrel-extra/zx-bulk-release/commit/8e6cca1d69aaeaec75de8404746163d9e2db9193))
+* fix: correct extract private field ([5624baa](https://github.com/semrel-extra/zx-bulk-release/commit/5624baa10eee03e5f327e7d51529883b40a4a961))
+
 ## [1.17.7](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.6...v1.17.7) (2022-07-06)
 
 ### Fixes & improvements
