@@ -1,6 +1,6 @@
-import {$} from 'zx-extra'
 import {traverseDeps} from './deps.js'
 import {fetchPkg} from './npm.js'
+import {runHook} from './util.js'
 
 export const build = async (pkg, packages) => {
   if (pkg.built) return true
@@ -11,9 +11,8 @@ export const build = async (pkg, packages) => {
 
   if (pkg.changes.length === 0 && config.npmFetch) await fetchPkg(pkg)
 
-  if (!pkg.fetched && config.cmd) {
-    console.log(`[${pkg.name}] run cmd '${config.cmd}'`)
-    await $.o({cwd: pkg.absPath, quote: v => v})`${config.cmd}`
+  if (!pkg.fetched && config.buildCmd) {
+    await await runHook(pkg, 'buildCmd')
   }
 
   pkg.built = true

@@ -29,8 +29,8 @@ export const getConfig = async (...cwds) =>
 
 export const normalizeConfig = config => ({
   ...config,
-  npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
-  cmd:      config.cmd || (config.buildCmd ? `${config.buildCmd}${config.testCmd ? ` && ${config.testCmd}` : ''}` : '')
+  npmFetch:   config.npmFetch || config.fetch || config.fetchPkg,
+  buildCmd:   config.cmd || (config.buildCmd ? `${config.buildCmd}${config.testCmd ? ` && ${config.testCmd}` : ''}` : '')
 })
 
 export const parseEnv = (env = process.env) => {

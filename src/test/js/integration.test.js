@@ -113,6 +113,7 @@ const cwd = await createFakeRepo({
             },
             release: {
               buildCmd: 'yarn && yarn build',
+              publishCmd: 'echo "custom publish: ${{name}} ${{version}}"',
               testCmd: 'yarn test',
               fetch: true,
               ghPages: 'gh-pages docs b'

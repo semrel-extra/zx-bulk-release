@@ -1,8 +1,9 @@
 import {formatTag, getLatestTag, pushTag} from './tag.js'
-import {ctx, fs, path, $} from 'zx-extra'
+import {fs, path, $} from 'zx-extra'
 import {push, fetch, parseRepo} from './repo.js'
 import {parseEnv} from './config.js'
 import {fetchManifest, npmPublish} from './npm.js'
+import {runHook, tpl} from './util.js'
 
 export const publish = async (pkg) => {
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
@@ -12,6 +13,7 @@ export const publish = async (pkg) => {
   await npmPublish(pkg)
   await ghRelease(pkg)
   await ghPages(pkg)
+  await runHook(pkg, 'publishCmd')
 }
 
 export const pushMeta = async (pkg) => {
