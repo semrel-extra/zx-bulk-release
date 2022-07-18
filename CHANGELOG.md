@@ -1,3 +1,8 @@
+## [1.19.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.18.0...v1.19.0) (2022-07-18)
+
+### Features
+* feat: add optional `publishCmd` directive ([e3cb37c](https://github.com/semrel-extra/zx-bulk-release/commit/e3cb37c1c7eff7e16fab5ac57a5ae28d7e2e1f57))
+
 ## [1.18.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.17.7...v1.18.0) (2022-07-09)
 
 ### Features
