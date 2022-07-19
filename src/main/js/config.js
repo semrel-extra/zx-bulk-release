@@ -29,8 +29,8 @@ export const getConfig = async (...cwds) =>
 
 export const normalizeConfig = config => ({
   ...config,
-  npmFetch:   config.npmFetch || config.fetch || config.fetchPkg,
-  buildCmd:   config.cmd || (config.buildCmd ? `${config.buildCmd}${config.testCmd ? ` && ${config.testCmd}` : ''}` : '')
+  npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
+  buildCmd: config.cmd || (config.buildCmd ? `${config.buildCmd}${config.testCmd ? ` && ${config.testCmd}` : ''}` : '')
 })
 
 export const parseEnv = (env = process.env) => {
@@ -47,5 +47,5 @@ export const parseEnv = (env = process.env) => {
   }
 }
 
-const camelize = s => s.replace(/-./g, x=>x[1].toUpperCase())
+const camelize = s => s.replace(/-./g, x => x[1].toUpperCase())
 export const normalizeFlags = (flags = {}) => Object.entries(flags).reduce((acc, [k, v]) => ({...acc, [camelize(k)]: v}), {})

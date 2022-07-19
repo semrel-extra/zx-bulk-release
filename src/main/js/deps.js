@@ -25,7 +25,7 @@ export const updateDeps = async (pkg, packages) => {
     const actual = dep?.version
     const next = resolveVersion(version, actual, prev)
 
-    pkg[scope] = {...pkg[scope], [name]: next || prev}
+    pkg[scope] = {...pkg[scope], [name]: next || subsWorkspace(prev, actual)}
 
     if (!next) return
 
@@ -46,15 +46,21 @@ export const resolveVersion = (decl, actual, prev) => {
   if (!decl) return null
 
   // https://yarnpkg.com/features/workspaces
-  if (decl.startsWith('workspace:')) {
-    const [, range, caret] = /^workspace:(([\^~*])?.*)$/.exec(decl)
-
-    decl = caret === range
-      ? caret === '*' ? actual : caret + actual
-      : range
-  }
+  decl = subsWorkspace(decl, actual)
 
   if (!semver.satisfies(actual, decl)) return actual === prev ? null : actual
 
   return decl === prev ? null : decl
+}
+
+export const subsWorkspace = (decl, actual) => {
+  if (decl.startsWith('workspace:')) {
+    const [, range, caret] = /^workspace:(([\^~*])?.*)$/.exec(decl)
+
+    return caret === range
+      ? caret === '*' ? actual : caret + actual
+      : range
+  }
+
+  return decl
 }
