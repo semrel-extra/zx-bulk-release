@@ -1,3 +1,8 @@
+## [1.19.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.1...v1.19.2) (2022-07-19)
+
+### Fixes & improvements
+* fix: subs ws refs in manifests ([b5cd3b8](https://github.com/semrel-extra/zx-bulk-release/commit/b5cd3b8368500f74cecc9d7e065aaeff01e70dfe))
+
 ## [1.19.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.0...v1.19.1) (2022-07-19)
 
 ### Fixes & improvements
