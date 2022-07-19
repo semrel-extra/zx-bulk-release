@@ -1,3 +1,8 @@
+## [1.19.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.0...v1.19.1) (2022-07-19)
+
+### Fixes & improvements
+* fix: fix workspace refs substitution ([9fed233](https://github.com/semrel-extra/zx-bulk-release/commit/9fed23332988a2dc5a08b1b4854a03998c17a6a4))
+
 ## [1.19.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.18.0...v1.19.0) (2022-07-18)
 
 ### Features
