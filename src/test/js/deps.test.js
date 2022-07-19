@@ -1,10 +1,10 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {resolveVersion} from '../../main/js/deps.js'
+import {resolveNextVersion} from '../../main/js/deps.js'
 
 const test = suite('deps')
 
-test('resolveVersion()', async () => {
+test('resolveNextVersion()', async () => {
   const cases = [
     [,,,null],
     ['^1.0', '2.0.0',, '2.0.0'],
@@ -26,7 +26,7 @@ test('resolveVersion()', async () => {
   ]
 
   cases.forEach(([decl, actual, prev, expected]) => {
-    assert.is(resolveVersion(decl, actual, prev), expected)
+    assert.is(resolveNextVersion(decl, actual, prev), expected)
   })
 })
 

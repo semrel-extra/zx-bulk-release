@@ -23,14 +23,13 @@ export const updateDeps = async (pkg, packages) => {
   await traverseDeps(pkg, packages, async (_, {name, version, deps, scope, pkg: dep}) => {
     const prev = pkg.latest.meta?.[scope]?.[name]
     const actual = dep?.version
-    const next = resolveVersion(version, actual, prev)
+    const next = resolveNextVersion(version, actual, prev)
+    const _version = next || subsWorkspace(version, actual)
 
-    pkg[scope] = {...pkg[scope], [name]: next || subsWorkspace(prev, actual)}
+    pkg[scope] = {...pkg[scope], [name]: _version}  // Update pkg context
+    deps[name] = _version                           // Update manifest
 
     if (!next) return
-
-    deps[name] = next
-
     changes.push({
       group: 'Dependencies',
       releaseType: 'patch',
@@ -42,7 +41,7 @@ export const updateDeps = async (pkg, packages) => {
   return changes
 }
 
-export const resolveVersion = (decl, actual, prev) => {
+export const resolveNextVersion = (decl, actual, prev) => {
   if (!decl) return null
 
   // https://yarnpkg.com/features/workspaces
