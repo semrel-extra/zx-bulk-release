@@ -2,9 +2,11 @@ import {analyze} from './analyze.js'
 import {publish} from './publish.js'
 import {build} from './build.js'
 import {topo} from './topo.js'
+import {within, $} from 'zx-extra'
 
-export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} = {}) => {
+export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   console.log('zx-bulk-release')
+  $.env = {...process.env, ...env}
 
   try {
   const {packages, queue, root} = await topo({cwd, flags})
@@ -28,4 +30,4 @@ export const run = async ({cwd = process.cwd(), env = process.env, flags = {}} =
     throw e
   }
   console.log('Great success!')
-}
+})
