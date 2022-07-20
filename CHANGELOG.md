@@ -1,3 +1,8 @@
+## [1.20.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.3...v1.20.0) (2022-07-20)
+
+### Features
+* feat: set custom env if passed ([8acd852](https://github.com/semrel-extra/zx-bulk-release/commit/8acd8524124d06f54ac54d113b7049fe6b778851))
+
 ## [1.19.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.2...v1.19.3) (2022-07-20)
 
 ### Fixes & improvements
