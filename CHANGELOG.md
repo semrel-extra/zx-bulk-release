@@ -1,3 +1,8 @@
+## [1.19.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.2...v1.19.3) (2022-07-20)
+
+### Fixes & improvements
+* perf: use PAT instead of basic auth for api.github.com calls ([c153615](https://github.com/semrel-extra/zx-bulk-release/commit/c153615b145f934cd715dc1523bfa99070f1e60e))
+
 ## [1.19.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.1...v1.19.2) (2022-07-19)
 
 ### Fixes & improvements
