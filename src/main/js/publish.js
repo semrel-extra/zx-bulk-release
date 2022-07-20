@@ -43,8 +43,8 @@ export const pushMeta = async (pkg) => {
 export const ghRelease = async (pkg) => {
   console.log(`[${pkg.name}] create gh release`)
 
-  const {ghUser, ghToken} = parseEnv($.env)
-  if (!ghToken || !ghUser) return null
+  const {ghToken} = parseEnv($.env)
+  if (!ghToken) return null
 
   const {name, version, absPath: cwd} = pkg
   const {repoName} = await parseRepo(cwd)
@@ -56,7 +56,7 @@ export const ghRelease = async (pkg) => {
     body: releaseNotes
   })
 
-  await $.o({cwd})`curl -u ${ghUser}:${ghToken} -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
+  await $.o({cwd})`curl -H "Authorization: token ${ghToken}" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
 }
 
 const pushChangelog = async (pkg) => {
