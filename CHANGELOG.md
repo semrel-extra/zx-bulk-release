@@ -1,3 +1,8 @@
+## [1.20.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.20.0...v1.20.1) (2022-07-28)
+
+### Fixes & improvements
+* fix: swap git user.name and user.email values ([8595f1b](https://github.com/semrel-extra/zx-bulk-release/commit/8595f1b67344166a6b7c51e2b62e948f9f2f0dc5))
+
 ## [1.20.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.19.3...v1.20.0) (2022-07-20)
 
 ### Features
