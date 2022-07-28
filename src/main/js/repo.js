@@ -35,8 +35,8 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, fil
 
   $.cwd = _cwd
 
-  await $`git config user.name ${gitCommitterEmail}`
-  await $`git config user.email ${gitCommitterName}`
+  await $`git config user.name ${gitCommitterName}`
+  await $`git config user.email ${gitCommitterEmail}`
   await $`git add .`
   try {
     await $`git commit -m ${msg}`
@@ -58,7 +58,7 @@ export const parseRepo = async (_cwd) => {
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
   const repoAuthedUrl = ghToken && ghUser && repoHost && repoName ?
-    `https://${ghUser}:${ghToken}@${repoHost}/${repoName}`
+    `https://${ghUser}:${ghToken}@${repoHost}/${repoName}.git`
     : originUrl
 
   repos[cwd] = {

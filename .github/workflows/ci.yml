@@ -27,6 +27,12 @@ jobs:
         timeout-minutes: 2
         run: yarn test
 
+      - name: Push coverage
+        if: github.ref == 'refs/heads/master'
+        run: |
+          npx ggcp lcov.info https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git/coverage/${{ github.sha }} --cwd=${{ github.workspace }}/coverage --message='chore: push coverage'
+
+
   test_pr:
     if: github.event_name == 'pull_request'
     name: Test PR (Node v${{ matrix.node-version }}, OS ${{ matrix.os }})
