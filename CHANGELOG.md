@@ -1,3 +1,8 @@
+## [1.22.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.0...v1.22.1) (2022-07-30)
+
+### Fixes & improvements
+* fix: fix commit msg chunks join ([e2a9299](https://github.com/semrel-extra/zx-bulk-release/commit/e2a9299c08c288f5fd8ff14575fcd841017dd3d6))
+
 ## [1.22.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.21.0...v1.22.0) (2022-07-30)
 
 ### Features
