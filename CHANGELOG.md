@@ -1,3 +1,8 @@
+## [1.22.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.21.0...v1.22.0) (2022-07-30)
+
+### Features
+* feat: introduce pkg context ([b57d4b0](https://github.com/semrel-extra/zx-bulk-release/commit/b57d4b0d9c5bb4501e79c556f64aacfebb83458a))
+
 ## [1.21.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.20.1...v1.21.0) (2022-07-30)
 
 ### Features
