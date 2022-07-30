@@ -1,3 +1,8 @@
+## [1.21.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.20.1...v1.21.0) (2022-07-30)
+
+### Features
+* feat: introduce `debug` flag ([b3e384c](https://github.com/semrel-extra/zx-bulk-release/commit/b3e384c1f32f27b5babf1f7adac7154e5827c1fb))
+
 ## [1.20.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.20.0...v1.20.1) (2022-07-28)
 
 ### Fixes & improvements
