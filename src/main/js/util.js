@@ -22,3 +22,5 @@ export const runHook = async (pkg, name) => {
         await $.o({cwd: pkg.absPath, quote: v => v})`${cmd}`
     }
 }
+
+export const restJoin = (rest, context, def) => tpl(rest.filter(Boolean).join(' ') || def, context)

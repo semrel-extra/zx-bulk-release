@@ -3,7 +3,7 @@ import {fs, path, $} from 'zx-extra'
 import {push, fetch, parseRepo} from './repo.js'
 import {parseEnv} from './config.js'
 import {fetchManifest, npmPublish} from './npm.js'
-import {runHook, tpl} from './util.js'
+import {restJoin, runHook} from './util.js'
 
 export const publish = async (pkg) => {
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
@@ -64,10 +64,11 @@ const pushChangelog = async (pkg) => {
   if (!opts) return
 
   console.log(`[${pkg.name}] push changelog`)
-  const [branch = 'changelog', file = `${pkg.name.replace(/[^a-z0-9-]/ig, '')}-changelog.md`, msg = `chore: update changelog ${pkg.name}`] = typeof opts === 'string'
+  const [branch = 'changelog', file = `${pkg.name.replace(/[^a-z0-9-]/ig, '')}-changelog.md`, ..._msg] = typeof opts === 'string'
     ? opts.split(' ')
     : [opts.branch, opts.file, opts.msg]
   const _cwd = await fetch({cwd: pkg.absPath, branch})
+  const msg = restJoin(_msg, pkg, 'chore: update changelog ${{name}}')
   const releaseNotes = await formatReleaseNotes(pkg)
 
   await $.o({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
@@ -99,9 +100,10 @@ const ghPages = async (pkg) => {
   const {config: {ghPages: opts}} = pkg
   if (!opts) return
 
-  const [branch = 'gh-pages', from = 'docs', to = '.', msg = `docs: update docs ${pkg.name} ${pkg.version}`] = typeof opts === 'string'
+  const [branch = 'gh-pages', from = 'docs', to = '.', ..._msg] = typeof opts === 'string'
     ? opts.split(' ')
     : [opts.branch, opts.from, opts.to, opts.msg]
+  const msg = restJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}')
 
   console.log(`[${pkg.name}] publish docs to ${branch}`)
 
