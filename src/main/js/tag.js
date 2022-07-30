@@ -9,6 +9,7 @@ export const pushTag = (pkg) => ctx(async ($) => {
   const tag = formatTag({name, version})
   const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
 
+  pkg.context.git.tag = tag
   console.log(`[${name}] push release tag ${tag}`)
 
   $.cwd = cwd

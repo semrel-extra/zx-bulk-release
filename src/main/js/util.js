@@ -8,14 +8,14 @@ export const get = (obj, path = '.') => {
     let result = obj
 
     for (let i = 0, len = chunks.length; i < len && result !== undefined && result !== null; i++) {
-        result = obj[chunks[i]]
+        result = result[chunks[i]]
     }
 
     return result
 }
 
 export const runHook = async (pkg, name) => {
-    const cmd = tpl(pkg.config[name], pkg)
+    const cmd = tpl(pkg.config[name], {...pkg, ...pkg.context})
 
     if (cmd) {
         console.log(`[${pkg.name}] run ${name} '${cmd}'`)

@@ -116,7 +116,13 @@ const cwd = await createFakeRepo({
               publishCmd: 'echo "custom publish: ${{name}} ${{version}}"',
               testCmd: `yarn test &&
                 echo "test: \${{name}}" &&
-                echo "test: \${{version}}"
+                echo "test: \${{version}}" &&
+                echo "
+                  \${{name}}
+                  \${{version}}
+                  \${{git.sha}}
+                  \${{git.root}}
+                " | awk '{$1=$1};1' > test.txt
 `,
               fetch: true,
               ghPages: 'gh-pages docs b'
@@ -151,6 +157,7 @@ const cwd = await createFakeRepo({
   ]
 })
 
+// console.log('cwd=', cwd)
 $.cwd = cwd
 await $`yarn install`
 
@@ -187,6 +194,18 @@ test('run()', async () => {
 
     await $`git clone --single-branch --branch changelog --depth 1 ${origin} ${chlog}`
     assert.ok((await fs.readFile(`${chlog}/a-changelog.md`, 'utf-8')).includes('### Fixes & improvements'))
+
+    // verify cmd context via side-effects
+    const sha = (await $`git rev-parse HEAD`).toString().trim()
+    const gitRoot = (await $`git rev-parse --show-toplevel`).toString().trim()
+    assert.ok((await fs.readFile(`${cwd}/packages/b/test.txt`, 'utf-8'))
+      .includes(`
+b
+1.0.0
+${sha}
+${gitRoot}
+`)
+    )
   })
 
   await addCommits({cwd, commits: [

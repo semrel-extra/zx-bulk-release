@@ -1,6 +1,7 @@
 import {analyze} from './analyze.js'
 import {publish} from './publish.js'
 import {build} from './build.js'
+import {contextify} from './contextify.js'
 import {topo} from './topo.js'
 import {within, $} from 'zx-extra'
 
@@ -16,7 +17,8 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
   for (let name of queue) {
     const pkg = packages[name]
 
-    await analyze(pkg, packages, root)
+    await contextify(pkg, packages, root)
+    await analyze(pkg, packages)
 
     if (pkg.changes.length === 0) continue
 
