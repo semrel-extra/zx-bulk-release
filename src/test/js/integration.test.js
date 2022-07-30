@@ -23,16 +23,16 @@ const cwd = await createFakeRepo({
             name: 'root',
             workspaces: ['packages/*'],
             private: true,
-            packageManager: 'yarn@4.0.0-rc.9'
+            packageManager: 'yarn@4.0.0-rc.14'
           }
         },
         {
           relpath: '.yarnrc.yml',
-          contents: 'yarnPath: .yarn/releases/yarn-4.0.0-rc.9.cjs'
+          contents: 'yarnPath: .yarn/releases/yarn-4.0.0-rc.14.cjs'
         },
         {
-          relpath: '.yarn/releases/yarn-4.0.0-rc.9.cjs',
-          contents: fs.readFileSync(path.resolve(fixtures, 'regular-monorepo/.yarn/releases/yarn-4.0.0-rc.9.cjs'), 'utf8')
+          relpath: '.yarn/releases/yarn-4.0.0-rc.14.cjs',
+          contents: fs.readFileSync(path.resolve(fixtures, 'regular-monorepo/.yarn/releases/yarn-4.0.0-rc.14.cjs'), 'utf8')
         }
       ]
     },
@@ -64,7 +64,7 @@ const cwd = await createFakeRepo({
         },
         {
           relpath: './packages/a/index.js',
-          contents: 'export const a = "a"'
+          contents: 'export const a = "a"; console.log("test: ./packages/a/index.js loaded")'
         }
       ]
     },
@@ -114,7 +114,10 @@ const cwd = await createFakeRepo({
             release: {
               buildCmd: 'yarn && yarn build',
               publishCmd: 'echo "custom publish: ${{name}} ${{version}}"',
-              testCmd: 'yarn test',
+              testCmd: `yarn test &&
+                echo "test: \${{name}}" &&
+                echo "test: \${{version}}"
+`,
               fetch: true,
               ghPages: 'gh-pages docs b'
             },
@@ -131,6 +134,7 @@ const cwd = await createFakeRepo({
           contents: `
              export {a} from 'a'
              export const b = 'b'
+             console.log('test: ./packages/b/index.js loaded')
 `
         }
       ]

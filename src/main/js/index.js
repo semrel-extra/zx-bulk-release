@@ -7,6 +7,7 @@ import {within, $} from 'zx-extra'
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   console.log('zx-bulk-release')
   $.env = {...process.env, ...env}
+  $.verbose = !!(flags.debug || $.env.DEBUG ) || $.verbose
 
   try {
   const {packages, queue, root} = await topo({cwd, flags})
