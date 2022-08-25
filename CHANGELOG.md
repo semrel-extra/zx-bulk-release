@@ -1,3 +1,8 @@
+## [1.22.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.2...v1.22.3) (2022-08-25)
+
+### Fixes & improvements
+* fix: fix commit analyzer regexp ([18f38a5](https://github.com/semrel-extra/zx-bulk-release/commit/18f38a5e7c95030d85bc5b3d47b49e0f9ba6164d))
+
 ## [1.22.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.1...v1.22.2) (2022-08-25)
 
 ### Fixes & improvements
