@@ -1,3 +1,8 @@
+## [1.22.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.1...v1.22.2) (2022-08-25)
+
+### Fixes & improvements
+* fix: fix commit scope regexp ([507885d](https://github.com/semrel-extra/zx-bulk-release/commit/507885d0a24042450f0e5a4728ffd060ea33a673))
+
 ## [1.22.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.0...v1.22.1) (2022-07-30)
 
 ### Fixes & improvements
