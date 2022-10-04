@@ -222,7 +222,7 @@ export const parseEnv = (env = process.env) => {
 
 ### Meta
 
-Each release projects its result into the `meta` branch.  
+Each release stores its result into the `meta` branch.  
 `2022-6-26-semrel-extra-zxbr-test-c-1-3-1-f0.json`
 ```json
 {
