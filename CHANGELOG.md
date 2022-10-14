@@ -1,3 +1,12 @@
+## [1.23.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.3...v1.23.0) (2022-10-14)
+
+### Features
+* feat: introduce reports ([443102c](https://github.com/semrel-extra/zx-bulk-release/commit/443102c6395adabef63e433ec1136d30dbe8fff4))
+
+### Fixes & improvements
+* refactor: introduce internal logger ([ede8d6d](https://github.com/semrel-extra/zx-bulk-release/commit/ede8d6df3612654f3d6e9d5997f1b579c8149f2b))
+* perf: up depx ([372bab2](https://github.com/semrel-extra/zx-bulk-release/commit/372bab2639d8feabaf1153e2cb0576838edb556f))
+
 ## [1.22.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.2...v1.22.3) (2022-08-25)
 
 ### Fixes & improvements
