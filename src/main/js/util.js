@@ -14,6 +14,22 @@ export const get = (obj, path = '.') => {
     return result
 }
 
+export const set = (obj, path, value) => {
+    const chunks = path.split('.').filter(Boolean)
+    let result = obj
+
+    for (let i = 0, len = chunks.length; i < len && result !== undefined && result !== null; i++) {
+        if (i === len - 1) {
+            result[chunks[i]] = value
+        } else {
+            result[chunks[i]] = result[chunks[i]] || {}
+            result = result[chunks[i]]
+        }
+    }
+
+    return result
+}
+
 export const runHook = async (pkg, name) => {
     const cmd = tpl(pkg.config[name], {...pkg, ...pkg.context})
 
@@ -25,25 +41,38 @@ export const runHook = async (pkg, name) => {
 
 export const restJoin = (rest, context, def) => tpl(rest.filter(Boolean).join(' ') || def, context)
 
-export const createReporter = ({file = false, logger = console} = {}) => {
+export const createReporter = (file, logger = console) => {
     const state = {
+        status: 'initial',
         queue: [],
         packages: [],
         events: [],
     }
 
     return {
-        state,
-        setQueue(queue) {
-            state.queue = queue
-            this.log()('queue:', queue)
-        },
         setPackages(packages) {
-            state.packages = Object.values(packages).map(({manifest: {name, version}}) => ({
+            state.packages = Object.values(packages).map(({manifest: {name, version}, absPath}) => ({
+                status: 'initial',
                 name,
                 version,
-                events: []
+                path: absPath
             }))
+        },
+        getState(key, pkgName) {
+            const _state = pkgName ? state.packages.find(({name}) => name === pkgName) : state
+            return get(_state, key)
+        },
+        setState(key, value, pkgName) {
+            const _state = pkgName ? state.packages.find(({name}) => name === pkgName) : state
+            set(_state, key, value)
+        },
+        setStatus(status, name) {
+            this.setState('status', status, name)
+
+            this.persistState()
+        },
+        getStatus (status, name) {
+            return this.getState('status', name)
         },
         log(ctx = {}) { return (...chunks) => {
             const {pkg, scope = pkg?.name || '~', level = 'info'} = ctx
@@ -52,8 +81,8 @@ export const createReporter = ({file = false, logger = console} = {}) => {
             state.events.push(event)
             logger[level](`[${scope}]`, ...msg)
         }},
-        persist() {
-            file && fs.writeJsonSync(file, state)
+        persistState() {
+            file && fs.writeJsonSync(file, JSON.stringify(state))
         }
     }
 }

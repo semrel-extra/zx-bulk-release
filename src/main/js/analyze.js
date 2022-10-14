@@ -6,9 +6,11 @@ export const analyze = async (pkg, packages) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
   const depsChanges = await updateDeps(pkg, packages)
   const changes = [...semanticChanges, ...depsChanges]
+  const releaseType = getNextReleaseType(changes)
 
   pkg.changes = changes
-  pkg.version = resolvePkgVersion(changes, pkg.latest.tag?.version || pkg.manifest.version)
+  pkg.releaseType = releaseType
+  pkg.version = resolvePkgVersion(releaseType, pkg.latest.tag?.version || pkg.manifest.version)
   pkg.manifest.version = pkg.version
 
   log({pkg})('semantic changes', changes)
@@ -62,17 +64,17 @@ export const getSemanticChanges = async (cwd, since) => {
   return semanticChanges
 }
 
-export const getNextReleaseType = (changes) => releaseSeverityOrder.find(type => changes.find(({releaseType}) => type === releaseType))
+export const getNextReleaseType = (changes) => changes.length
+  ? releaseSeverityOrder.find(type => changes.find(({releaseType}) => type === releaseType))
+  : null
 
-export const getNextVersion = (changes, prevVersion) => {
+export const getNextVersion = (releaseType, prevVersion) => {
   if (!prevVersion) return '1.0.0'
-
-  const releaseType = getNextReleaseType(changes)
 
   return semver.inc(prevVersion, releaseType)
 }
 
-export const resolvePkgVersion = (changes, prevVersion) =>
-  changes.length > 0
-    ? getNextVersion(changes, prevVersion)
+export const resolvePkgVersion = (releaseType, prevVersion) =>
+  releaseType
+    ? getNextVersion(releaseType, prevVersion)
     : prevVersion || null

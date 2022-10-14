@@ -7,7 +7,7 @@ import {topo} from './topo.js'
 import {createReporter, log} from './util.js';
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
-  $.r = createReporter()
+  const reporter = $.r = createReporter(flags.report)
   $.env = {...process.env, ...env}
   $.verbose = !!(flags.debug || $.env.DEBUG ) || $.verbose
 
@@ -15,26 +15,49 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
 
   try {
   const {packages, queue, root} = await topo({cwd, flags})
-  $.r.setQueue(queue)
-  $.r.setPackages(packages)
+  reporter.setState('queue', queue)
+  reporter.setPackages(packages)
 
+  log()('queue:', queue)
+
+  reporter.setStatus('pending')
   for (let name of queue) {
     const pkg = packages[name]
 
+    reporter.setStatus('analyzing', name)
     await contextify(pkg, packages, root)
     await analyze(pkg, packages)
+    reporter.setState('version', pkg.version, name)
+    reporter.setState('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
+    reporter.setState('releaseType', pkg.releaseType, name)
 
-    if (pkg.changes.length === 0) continue
+    // pkg.latest.tag?.version || pkg.manifest.version
 
+    if (pkg.changes.length === 0) {
+      reporter.setStatus('skipped', name)
+      continue
+    }
+
+    reporter.setStatus('building', name)
     await build(pkg, packages)
+    reporter.setStatus('')
 
-    if (flags.dryRun) continue
+    if (flags.dryRun) {
+      reporter.setStatus('success', name)
+      continue
+    }
 
+    reporter.setStatus('publishing', name)
     await publish(pkg)
+
+    reporter.setStatus('success', name)
   }
   } catch (e) {
     log({level: 'error'})(e)
+    reporter.setState('error', e)
+    reporter.setStatus('failure')
     throw e
   }
+  reporter.setStatus('success')
   log()('Great success!')
 })

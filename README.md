@@ -246,18 +246,18 @@ Release process state is reported to the console and `release-report.json` if `r
   status: 'success' | 'failure' | 'pending',
   error: string | null
   queue: ['a', 'b', 'c', 'd'],
-  packages: {
-    '<name>': {
-      path
+  packages: [
+      name: string,
+      version: string,
+      path: string
       config: {},
-      semanticChanges: [],
+      changes: [],
       tag: string | null,
       version: string,
       releaseType: string | null,
       prevVersion: string | null,
-      nextVersion: string | null,
     }
-  }
+  }]
 }
 ```
 
