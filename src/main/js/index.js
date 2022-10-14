@@ -10,30 +10,27 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
   const reporter = $.r = createReporter(flags.report)
   $.env = {...process.env, ...env}
   $.verbose = !!(flags.debug || $.env.DEBUG ) || $.verbose
-
   log()('zx-bulk-release')
 
   try {
   const {packages, queue, root} = await topo({cwd, flags})
-  reporter.setState('queue', queue)
-  reporter.setPackages(packages)
-
   log()('queue:', queue)
 
+  reporter.setQueue(queue, packages)
   reporter.setStatus('pending')
+
   for (let name of queue) {
     const pkg = packages[name]
 
     reporter.setStatus('analyzing', name)
     await contextify(pkg, packages, root)
     await analyze(pkg, packages)
+    reporter.setState('config', pkg.config, name)
     reporter.setState('version', pkg.version, name)
     reporter.setState('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
     reporter.setState('releaseType', pkg.releaseType, name)
 
-    // pkg.latest.tag?.version || pkg.manifest.version
-
-    if (pkg.changes.length === 0) {
+    if (!pkg.releaseType) {
       reporter.setStatus('skipped', name)
       continue
     }
