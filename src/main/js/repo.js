@@ -1,5 +1,6 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import {parseEnv} from './config.js'
+import {log} from './util.js'
 
 const branches = {}
 export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
@@ -14,7 +15,7 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
   try {
     await $`git clone --single-branch --branch ${branch} --depth 1 ${origin} .`
   } catch (e) {
-    console.warn(`ref '${branch}' does not exist in ${origin}`)
+    log({level: 'warn'})(`ref '${branch}' does not exist in ${origin}`)
     await $`git init .`
     await $`git remote add origin ${origin}`
   }
@@ -41,7 +42,7 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, fil
   try {
     await $`git commit -m ${msg}`
   } catch {
-    console.warn(`no changes to commit to ${branch}`)
+    log({level: 'warn'})(`no changes to commit to ${branch}`)
     return
   }
 

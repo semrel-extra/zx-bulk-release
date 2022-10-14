@@ -1,4 +1,5 @@
 import {parseEnv} from './config.js'
+import {log} from './util.js'
 import {$, ctx, fs, path, tempy, copy, INI, fetch} from 'zx-extra'
 
 export const fetchPkg = async (pkg, {env = $.env} = {}) => {
@@ -13,9 +14,9 @@ export const fetchPkg = async (pkg, {env = $.env} = {}) => {
     await copy({from: ['**/*', '!package.json'], to: cwd, baseFrom: `${temp}/package`})
 
     pkg.fetched = true
-    console.log(`[${pkg.name}] fetched '${pkg.name}@${pkg.version}'`)
+    log({pkg})(`fetched '${pkg.name}@${pkg.version}'`)
   } catch (e) {
-    console.log(`[${pkg.name}] fetching '${pkg.name}@${pkg.version}' failed`, e)
+    log({pkg})(`fetching '${pkg.name}@${pkg.version}' failed`, e)
   }
 }
 
@@ -41,7 +42,7 @@ export const npmPublish = (pkg) => ctx(async ($) => {
   const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
   const npmrc = npmConfig ? npmConfig : path.resolve(cwd, '.npmrc')
 
-  console.log(`[${name}] publish npm package ${name} ${version} to ${npmRegistry}`)
+  log({pkg})(`publish npm package ${name} ${version} to ${npmRegistry}`)
   $.cwd = cwd
   if (!npmConfig) {
     await $.raw`echo ${npmRegistry.replace(/https?:/, '')}/:_authToken=${npmToken} >> ${npmrc}`
