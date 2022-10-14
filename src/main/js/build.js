@@ -12,7 +12,7 @@ export const build = async (pkg, packages) => {
   if (pkg.changes.length === 0 && config.npmFetch) await fetchPkg(pkg)
 
   if (!pkg.fetched && config.buildCmd) {
-    await await runHook(pkg, 'buildCmd')
+    await runHook(pkg, 'buildCmd')
   }
 
   pkg.built = true

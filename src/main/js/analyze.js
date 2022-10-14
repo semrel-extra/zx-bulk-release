@@ -1,5 +1,6 @@
 import {ctx, semver} from 'zx-extra'
 import {updateDeps} from './deps.js'
+import {log} from './util.js'
 
 export const analyze = async (pkg, packages) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
@@ -10,7 +11,7 @@ export const analyze = async (pkg, packages) => {
   pkg.version = resolvePkgVersion(changes, pkg.latest.tag?.version || pkg.manifest.version)
   pkg.manifest.version = pkg.version
 
-  console.log(`[${pkg.name}] semantic changes`, changes)
+  log({pkg})('semantic changes', changes)
 }
 
 export const releaseSeverityOrder = ['major', 'minor', 'patch']

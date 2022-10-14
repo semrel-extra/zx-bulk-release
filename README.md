@@ -203,6 +203,7 @@ Note, [npm-package-name charset](https://www.npmjs.com/package/validate-npm-pack
 ```
 
 ### env vars
+
 ```js
 export const parseEnv = (env = process.env) => {
   const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
@@ -233,6 +234,29 @@ Each release stores its result into the `meta` branch.
   "dependencies": {
     "@semrel-extra/zxbr-test-a": "^1.4.0",
     "@semrel-extra/zxbr-test-d": "~1.2.0"
+  }
+}
+```
+
+### Report
+
+Release process state is reported to the console and `release-report.json` if `report` flag set to `true`.
+```json
+{
+  status: 'success' | 'failure' | 'pending',
+  error: string | null
+  queue: ['a', 'b', 'c', 'd'],
+  packages: {
+    '<name>': {
+      path
+      config: {},
+      semanticChanges: [],
+      tag: string | null,
+      version: string,
+      releaseType: string | null,
+      prevVersion: string | null,
+      nextVersion: string | null,
+    }
   }
 }
 ```

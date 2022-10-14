@@ -3,6 +3,7 @@
 import {ctx, semver, $} from 'zx-extra'
 import {Buffer} from 'buffer'
 import {parseEnv} from './config.js'
+import {log} from './util.js'
 
 export const pushTag = (pkg) => ctx(async ($) => {
   const {absPath: cwd, name, version} = pkg
@@ -10,7 +11,7 @@ export const pushTag = (pkg) => ctx(async ($) => {
   const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
 
   pkg.context.git.tag = tag
-  console.log(`[${name}] push release tag ${tag}`)
+  log({pkg})(`push release tag ${tag}`)
 
   $.cwd = cwd
   await $`git config user.name ${gitCommitterName}`
