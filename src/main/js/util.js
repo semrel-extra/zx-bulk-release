@@ -50,13 +50,17 @@ export const createReporter = (file, logger = console) => {
     }
 
     return {
-        setPackages(packages) {
-            state.packages = Object.values(packages).map(({manifest: {name, version}, absPath}) => ({
-                status: 'initial',
-                name,
-                version,
-                path: absPath
-            }))
+        setQueue(queue, packages) {
+            state.queue = queue
+            state.packages = queue.map(name => {
+                const {manifest: {version}, absPath} = packages[name]
+                return {
+                    status: 'initial',
+                    name,
+                    version,
+                    path: absPath
+                }
+            })
         },
         getState(key, pkgName) {
             const _state = pkgName ? state.packages.find(({name}) => name === pkgName) : state
