@@ -38,7 +38,7 @@ export const fetchManifest = async (pkg, {nothrow, env = $.env} = {}) => {
 
 export const npmPublish = (pkg) => ctx(async ($) => {
   const {absPath: cwd, name, version, manifest} = pkg
-  if (manifest.private) return
+  if (manifest.private || pkg.config?.npmPublish === false) return
   const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
   const npmrc = npmConfig ? npmConfig : path.resolve(cwd, '.npmrc')
 

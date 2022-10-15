@@ -240,24 +240,46 @@ Each release stores its result into the `meta` branch.
 
 ### Report
 
-Release process state is reported to the console and `release-report.json` if `report` flag set to `true`.
-```json
+Release process state is reported to the console and to a file if `--report` flag is set to `/some/path/release-report.json`, for example.
+```js
 {
-  status: 'success' | 'failure' | 'pending',
-  error: string | null
-  queue: ['a', 'b', 'c', 'd'],
-  packages: [
-      name: string,
-      version: string,
-      path: string
-      config: {},
-      changes: [],
-      tag: string | null,
-      version: string,
-      releaseType: string | null,
-      prevVersion: string | null,
-    }
-  }]
+  status: 'success',            // 'sucess' | 'failure' | 'pending'
+  error: null,                  // null or Error
+  queue: ['a', 'b', 'c', 'd']   // release queue
+  packages: [{
+    name: 'a',
+    version: '1.1.0',
+    path: '/pkg/abs/path',
+    config: {                   // pkg config
+      changelog: 'changelog',
+      npmFetch: true
+    },                 
+    changes: [{                 // semantic changes
+      group: 'Features',
+      releaseType: 'minor',
+      change: 'feat: add feat',
+      subj: 'feat: add feat',
+      body: '',
+      short: '792512c',
+      hash: '792512cccd69c6345d9d32d3d73e2591ea1776b5'
+    }],                  
+    tag: {
+      version: 'v1.1.0',
+      name: 'a',
+      ref: '2022.6.22-a.v1.1.0-f0'
+    },
+    releaseType: 'minor',       // 'major' | 'minor' | 'patch'
+    prevVersion: '1.0.0'        // previous version or null
+  }, {
+    name: 'b',
+    // ...
+  }],
+  events: [
+    {msg: ['zx-bulk-release'], scope:'~', date: 1665839585488, level: 'info'},
+    {msg: ['queue:',['a','b']], scope:'~', date: 1665839585493, level: 'info'},
+    {msg: ["run buildCmd 'yarn && yarn build && yarn test'"], scope: 'a', date:1665839585719, level:'info'},
+    // ...
+  ]
 }
 ```
 

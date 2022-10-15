@@ -29,6 +29,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     reporter.setState('version', pkg.version, name)
     reporter.setState('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
     reporter.setState('releaseType', pkg.releaseType, name)
+    reporter.setState('tag', pkg.tag, name)
 
     if (!pkg.releaseType) {
       reporter.setStatus('skipped', name)

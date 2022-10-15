@@ -1,5 +1,6 @@
 import {ctx, semver} from 'zx-extra'
 import {updateDeps} from './deps.js'
+import {formatTag} from './tag.js';
 import {log} from './util.js'
 
 export const analyze = async (pkg, packages) => {
@@ -12,6 +13,7 @@ export const analyze = async (pkg, packages) => {
   pkg.releaseType = releaseType
   pkg.version = resolvePkgVersion(releaseType, pkg.latest.tag?.version || pkg.manifest.version)
   pkg.manifest.version = pkg.version
+  pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version}) : null
 
   log({pkg})('semantic changes', changes)
 }
