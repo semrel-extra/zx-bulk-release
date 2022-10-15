@@ -1,3 +1,11 @@
+## [1.24.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.23.0...v1.24.0) (2022-10-15)
+
+### Features
+* feat: add pkg.tag to report ([c3e6d76](https://github.com/semrel-extra/zx-bulk-release/commit/c3e6d76b9001f6935b17eac8496425ce519230e0))
+
+### Fixes & improvements
+* fix: fix report format ([274401c](https://github.com/semrel-extra/zx-bulk-release/commit/274401c8685469801258574c20ae3c4c94f6956f))
+
 ## [1.23.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.22.3...v1.23.0) (2022-10-14)
 
 ### Features
