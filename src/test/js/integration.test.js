@@ -7,7 +7,7 @@ import {formatTag} from '../../main/js/tag.js'
 import {addCommits, createFakeRepo, createNpmRegistry, fixtures} from './test-utils.js'
 
 const test = suite('integration')
-const report = tempy.temporaryFile()
+const report = tempy.temporaryFile({extension: 'json'})
 
 const cwd = await createFakeRepo({
   commits: [
@@ -164,8 +164,7 @@ await $`yarn install`
 
 test('run() dry-run', async () => {
   await run({cwd, flags: {dryRun: true, report}})
-
-  const r = JSON.parse(await fs.readJson(report))
+  const r = await fs.readJson(report)
   const [a, b] = r.packages
 
   assert.equal(r.queue, ['a', 'b'])

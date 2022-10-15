@@ -86,7 +86,7 @@ export const createReporter = (file, logger = console) => {
             logger[level](`[${scope}]`, ...msg)
         }},
         persistState() {
-            file && fs.writeJsonSync(file, JSON.stringify(state))
+            file && fs.outputJsonSync(file, state)
         }
     }
 }

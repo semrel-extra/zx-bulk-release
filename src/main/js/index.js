@@ -37,7 +37,6 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
 
     reporter.setStatus('building', name)
     await build(pkg, packages)
-    reporter.setStatus('')
 
     if (flags.dryRun) {
       reporter.setStatus('success', name)
