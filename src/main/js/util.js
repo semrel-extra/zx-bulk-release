@@ -35,7 +35,7 @@ export const runHook = async (pkg, name) => {
 
     if (cmd) {
         log({pkg})(`run ${name} '${cmd}'`)
-        await $.o({cwd: pkg.absPath, quote: v => v})`${cmd}`
+        await $.o({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
     }
 }
 
