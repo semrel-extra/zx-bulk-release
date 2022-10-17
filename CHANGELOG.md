@@ -1,3 +1,8 @@
+## [1.25.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.24.0...v1.25.0) (2022-10-17)
+
+### Features
+* feat: enaple zx-extra `preferLocal` flag for `runCmd` hooks ([2b3cad5](https://github.com/semrel-extra/zx-bulk-release/commit/2b3cad58484e68869e1f712ea26cd10870ef86ee))
+
 ## [1.24.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.23.0...v1.24.0) (2022-10-15)
 
 ### Features
