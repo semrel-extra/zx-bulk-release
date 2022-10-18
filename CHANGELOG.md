@@ -1,3 +1,8 @@
+## [1.25.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.0...v1.25.1) (2022-10-18)
+
+### Fixes & improvements
+* perf: export getLatestTaggedVersion (#10) ([32a9db8](https://github.com/semrel-extra/zx-bulk-release/commit/32a9db8f6f8a1aec8f452e7a2e4bc6d56c77ecfa))
+
 ## [1.25.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.24.0...v1.25.0) (2022-10-17)
 
 ### Features
