@@ -6,6 +6,8 @@ import {contextify} from './contextify.js'
 import {topo} from './topo.js'
 import {createReporter, log} from './util.js';
 
+export { getLatestTaggedVersion } from './tag.js'
+
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   const reporter = $.r = createReporter(flags.report)
   $.env = {...process.env, ...env}
