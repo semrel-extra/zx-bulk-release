@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.4.3",
-    "cosmiconfig": "^7.0.1",
+    "cosmiconfig": "^8.0.0",
     "zx-extra": "^2.5.2"
   },
   "devDependencies": {
