@@ -1,3 +1,8 @@
+## [1.25.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.1...v1.25.2) (2022-11-22)
+
+### Fixes & improvements
+* fix(deps): update dependency cosmiconfig to v8 ([1ea0184](https://github.com/semrel-extra/zx-bulk-release/commit/1ea01849f902c850f357a9f14490f73de4d8c2d6))
+
 ## [1.25.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.0...v1.25.1) (2022-10-18)
 
 ### Fixes & improvements
