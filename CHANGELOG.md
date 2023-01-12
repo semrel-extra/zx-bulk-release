@@ -1,3 +1,8 @@
+## [1.25.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.2...v1.25.3) (2023-01-12)
+
+### Fixes & improvements
+* fix: add relpath to report ([d67355c](https://github.com/semrel-extra/zx-bulk-release/commit/d67355c8aced32918a8ae078e5182ce2ce58b3b6))
+
 ## [1.25.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.1...v1.25.2) (2022-11-22)
 
 ### Fixes & improvements
