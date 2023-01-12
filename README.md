@@ -250,6 +250,7 @@ Release process state is reported to the console and to a file if `--report` fla
     name: 'a',
     version: '1.1.0',
     path: '/pkg/abs/path',
+    relPath: 'pkg/rel/path',
     config: {                   // pkg config
       changelog: 'changelog',
       npmFetch: true

@@ -53,12 +53,13 @@ export const createReporter = (file, logger = console) => {
         setQueue(queue, packages) {
             state.queue = queue
             state.packages = queue.map(name => {
-                const {manifest: {version}, absPath} = packages[name]
+                const {manifest: {version}, absPath, relPath} = packages[name]
                 return {
                     status: 'initial',
                     name,
                     version,
-                    path: absPath
+                    path: absPath,
+                    relPath
                 }
             })
         },
