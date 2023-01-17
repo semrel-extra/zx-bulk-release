@@ -21,14 +21,14 @@
     "docs": "mkdir -p docs && cp ./README.md ./docs/README.md"
   },
   "dependencies": {
-    "@semrel-extra/topo": "^1.4.3",
+    "@semrel-extra/topo": "^1.4.4",
     "cosmiconfig": "^8.0.0",
-    "zx-extra": "^2.5.2"
+    "zx-extra": "^2.5.3"
   },
   "devDependencies": {
     "c8": "^7.12.0",
     "uvu": "^0.5.6",
-    "verdaccio": "^5.15.4"
+    "verdaccio": "^5.19.1"
   },
   "publishConfig": {
     "access": "public"
