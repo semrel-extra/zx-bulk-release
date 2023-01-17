@@ -1,3 +1,8 @@
+## [1.26.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.3...v1.26.0) (2023-01-17)
+
+### Features
+* feat: expose test-utils ([59e9708](https://github.com/semrel-extra/zx-bulk-release/commit/59e9708d9adde41ef1f1a53d044f944e40ef000e))
+
 ## [1.25.3](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.2...v1.25.3) (2023-01-12)
 
 ### Fixes & improvements
