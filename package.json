@@ -3,8 +3,18 @@
   "version": "1.25.3",
   "description": "zx-based alternative for multi-semantic-release",
   "type": "module",
-  "exports": "./src/main/js/index.js",
+  "exports": {
+    ".": "./src/main/js/index.js",
+    "./test-utils": "./src/test/js/test-utils.js"
+  },
   "bin": "./src/main/js/cli.js",
+  "files": [
+    "src/main/js",
+    "src/test/js/test-utils.js",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "test": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' c8 uvu ./src/test -i fixtures -i utils && c8 report -r lcov",
     "test:it": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' node ./src/test/js/integration.test.js",
