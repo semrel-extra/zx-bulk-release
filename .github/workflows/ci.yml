@@ -10,7 +10,7 @@ jobs:
   test_push:
     if: github.event_name == 'push'
     name: Test on push
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18.5
+          node-version: 18
 
       - name: Install deps
         run: yarn install
@@ -38,7 +38,7 @@ jobs:
     name: Test PR (Node v${{ matrix.node-version }}, OS ${{ matrix.os }})
     strategy:
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-22.04 ]
         node-version: [ 16, 18 ]
 
     runs-on: ${{ matrix.os }}
@@ -63,7 +63,7 @@ jobs:
     # https://github.community/t/trigger-job-on-tag-push-only/18076
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: test_push
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     permissions:
       checks: read
       statuses: write
@@ -79,7 +79,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18.5
+          node-version: 18
 
       - name: Install deps
         run: yarn install
