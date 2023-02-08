@@ -1,3 +1,8 @@
+## [1.26.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.26.0...v1.26.1) (2023-02-08)
+
+### Fixes & improvements
+* fix: allow multiple scopes in prefix ([2df6cb7](https://github.com/semrel-extra/zx-bulk-release/commit/2df6cb7999bed91968693069b80adeeb29b3890a))
+
 ## [1.26.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.25.3...v1.26.0) (2023-01-17)
 
 ### Features
