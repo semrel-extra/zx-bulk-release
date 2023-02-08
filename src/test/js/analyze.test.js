@@ -2,12 +2,12 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
 import { topo } from '@semrel-extra/topo'
-import {getPkgCommits} from '../../main/js/analyze.js'
+import {getPkgCommits, analyzeCommits} from '../../main/js/analyze.js'
 import {createFakeRepo} from './test-utils.js'
 
 const test = suite('analyze')
 
-test('obtains commits for each package', async () => {
+test('`getPkgCommits` obtains commits for each package', async () => {
   const cwd = await createFakeRepo({commits: [
     {
       msg: 'chore: initial commit',
@@ -86,6 +86,19 @@ test('obtains commits for each package', async () => {
           contents: 'foo bar'
         }
       ]
+    },
+    {
+      msg: 'patch(a,b): patch both a and b',
+      files: [
+        {
+          relpath: './packages/b/file2.txt',
+          contents: 'foo bar qux'
+        },
+        {
+          relpath: './packages/a/file2.txt',
+          contents: 'foo bar qux'
+        }
+      ]
     }
   ]})
   const {queue, packages} = await topo({cwd})
@@ -96,9 +109,69 @@ test('obtains commits for each package', async () => {
   }
 
   assert.equal(results, {
-    a: ['refactor(a): a refactoring'],
-    b: ['fix(b): add some file', 'feat: init pkg b']
+    a: [
+      'patch(a,b): patch both a and b',
+      'refactor(a): a refactoring',
+    ],
+    b: [
+      'patch(a,b): patch both a and b',
+      'fix(b): add some file',
+      'feat: init pkg b'
+    ]
   })
+})
+
+test('`analyzeCommits` analyzes commits for each package', async () => {
+  const result = analyzeCommits([
+    {
+      subj: 'patch(a,b): patch both a and b',
+      body: '',
+      short: 'fdc0fe9',
+      hash: 'fdc0fe9ac8ee1d2f35381302395ff8e0d497deb2'
+    },
+    {
+      subj: 'fix(b): add some file',
+      body: '',
+      short: 'be70e04',
+      hash: 'be70e0497004f0bd95afd8dd76c2fd71ebadc08b'
+    },
+    {
+      subj: 'feat: init pkg b',
+      body: '',
+      short: '1b693b9',
+      hash: '1b693b9912b0076f5f29d57db1f3026ef24eedd8'
+    }
+  ])
+
+  assert.equal(result, [
+    {
+      group: 'Fixes & improvements',
+      releaseType: 'patch',
+      change: 'patch(a,b): patch both a and b',
+      subj: 'patch(a,b): patch both a and b',
+      body: '',
+      short: 'fdc0fe9',
+      hash: 'fdc0fe9ac8ee1d2f35381302395ff8e0d497deb2'
+    },
+    {
+      group: 'Fixes & improvements',
+      releaseType: 'patch',
+      change: 'fix(b): add some file',
+      subj: 'fix(b): add some file',
+      body: '',
+      short: 'be70e04',
+      hash: 'be70e0497004f0bd95afd8dd76c2fd71ebadc08b'
+    },
+    {
+      group: 'Features',
+      releaseType: 'minor',
+      change: 'feat: init pkg b',
+      subj: 'feat: init pkg b',
+      body: '',
+      short: '1b693b9',
+      hash: '1b693b9912b0076f5f29d57db1f3026ef24eedd8'
+    }
+  ])
 })
 
 test.run()
