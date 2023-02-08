@@ -21,7 +21,7 @@ export const analyze = async (pkg, packages) => {
 export const releaseSeverityOrder = ['major', 'minor', 'patch']
 export const semanticRules = [
   {group: 'Features', releaseType: 'minor', prefixes: ['feat']},
-  {group: 'Fixes & improvements', releaseType: 'patch', prefixes: ['fix', 'perf', 'refactor', 'docs']},
+  {group: 'Fixes & improvements', releaseType: 'patch', prefixes: ['fix', 'perf', 'refactor', 'docs', 'patch']},
   {group: 'BREAKING CHANGES', releaseType: 'major', keywords: ['BREAKING CHANGE', 'BREAKING CHANGES']},
 ]
 
@@ -41,10 +41,14 @@ export const getPkgCommits = async (cwd, since) => ctx(async ($) => {
 
 export const getSemanticChanges = async (cwd, since) => {
   const commits = await getPkgCommits(cwd, since)
-  const semanticChanges = commits
-    .reduce((acc, {subj, body, short, hash}) => {
+
+  return analyzeCommits(commits)
+}
+
+export const analyzeCommits = (commits) =>
+  commits.reduce((acc, {subj, body, short, hash}) => {
     semanticRules.forEach(({group, releaseType, prefixes, keywords}) => {
-      const prefixMatcher = prefixes && new RegExp(`^(${prefixes.join('|')})(\\([a-z0-9\\-_]+\\))?:\\s.+$`)
+      const prefixMatcher = prefixes && new RegExp(`^(${prefixes.join('|')})(\\([a-z0-9\\-_,]+\\))?:\\s.+$`)
       const keywordsMatcher = keywords && new RegExp(`(${keywords.join('|')}):\\s(.+)`)
       const change = subj.match(prefixMatcher)?.[0] || body.match(keywordsMatcher)?.[2]
 
@@ -62,9 +66,6 @@ export const getSemanticChanges = async (cwd, since) => {
     })
     return acc
   }, [])
-
-  return semanticChanges
-}
 
 export const getNextReleaseType = (changes) => changes.length
   ? releaseSeverityOrder.find(type => changes.find(({releaseType}) => type === releaseType))
