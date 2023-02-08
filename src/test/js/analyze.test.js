@@ -88,7 +88,11 @@ test('`getPkgCommits` obtains commits for each package', async () => {
       ]
     },
     {
-      msg: 'patch(a,b): patch both a and b',
+      msg: `patch(a,b): patch both a and b
+
+commit details
+      
+`,
       files: [
         {
           relpath: './packages/b/file2.txt',
@@ -140,6 +144,16 @@ test('`analyzeCommits` analyzes commits for each package', async () => {
       body: '',
       short: '1b693b9',
       hash: '1b693b9912b0076f5f29d57db1f3026ef24eedd8'
+    },
+    {
+      subj: 'chore: update deps',
+      body: `chore: update deps
+
+  BREAKING CHANGE: following the deps, now it's pure ESM
+
+    `,
+      short: 'e296ecd',
+      hash: 'e296ecddfcb70a4fd44c8372461e3a1447655c2e'
     }
   ])
 
@@ -170,6 +184,19 @@ test('`analyzeCommits` analyzes commits for each package', async () => {
       body: '',
       short: '1b693b9',
       hash: '1b693b9912b0076f5f29d57db1f3026ef24eedd8'
+    },
+    {
+      group: 'BREAKING CHANGES',
+      releaseType: 'major',
+      change: "following the deps, now it's pure ESM",
+      subj: 'chore: update deps',
+      body: `chore: update deps
+
+  BREAKING CHANGE: following the deps, now it's pure ESM
+
+    `,
+      short: 'e296ecd',
+      hash: 'e296ecddfcb70a4fd44c8372461e3a1447655c2e'
     }
   ])
 })
