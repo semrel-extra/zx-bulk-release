@@ -58,8 +58,8 @@ export const parseRepo = async (_cwd) => {
   const originUrl = await getOrigin(cwd)
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
-  const repoAuthedUrl = ghToken && ghUser && repoHost && repoName ?
-    `https://${ghUser}:${ghToken}@${repoHost}/${repoName}.git`
+  const repoAuthedUrl = ghToken && ghUser && repoHost && repoName
+    ? `https://${ghUser}:${ghToken}@${repoHost}/${repoName}.git`
     : originUrl
 
   repos[cwd] = {

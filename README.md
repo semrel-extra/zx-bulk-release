@@ -278,7 +278,7 @@ Release process state is reported to the console and to a file if `--report` fla
   events: [
     {msg: ['zx-bulk-release'], scope:'~', date: 1665839585488, level: 'info'},
     {msg: ['queue:',['a','b']], scope:'~', date: 1665839585493, level: 'info'},
-    {msg: ["run buildCmd 'yarn && yarn build && yarn test'"], scope: 'a', date:1665839585719, level:'info'},
+    {msg: ["run buildCmd 'yarn && yarn build && yarn test'"], scope: 'a', date: 1665839585719, level:'info'},
     // ...
   ]
 }
@@ -299,6 +299,8 @@ Release process state is reported to the console and to a file if `--report` fla
 * [vercel/turborepo](https://github.com/vercel/turborepo)
 * [lerna/lerna](https://github.com/lerna/lerna)
 * [nrwl/nx](https://github.com/nrwl/nx)
+* [moonrepo/moon](https://github.com/moonrepo/moon)
+* [ojkelly/yarn.build](https://github.com/ojkelly/yarn.build)
 
 ## License 
 [MIT](./LICENSE)
