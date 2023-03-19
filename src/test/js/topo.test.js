@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {fileURLToPath} from "node:url"
+import {fileURLToPath} from 'node:url'
 import path from 'node:path'
 import {topo} from '../../main/js/topo.js'
 
@@ -15,8 +15,10 @@ test('topo returns pkg info and release queue', async () => {
 })
 
 test('topo applies pkg filter', async () => {
-  const {nodes, queue} = await topo({cwd: path.resolve(fixtures, 'regular-monorepo'), flags: {ignore: 'b,c'}})
+  const {queue, graphs, sources} = await topo({cwd: path.resolve(fixtures, 'regular-monorepo'), flags: {ignore: 'b,c'}})
   assert.equal(queue, ['a', 'd'])
+  assert.equal(graphs, [{ nodes: new Set(['a', 'd']), sources: ['a']}])
+  assert.equal(sources, ['a'])
 })
 
 test.run()
