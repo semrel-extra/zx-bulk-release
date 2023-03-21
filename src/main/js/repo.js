@@ -1,6 +1,7 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import {parseEnv} from './config.js'
 import {log} from './log.js'
+import {keyByValue} from './util.js'
 
 const branches = {}
 export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
@@ -25,28 +26,39 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
 })
 
 export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = []}) => ctx(async ($) => {
-  const _cwd = await fetch({cwd, branch, origin})
-  const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
+  let retries = 3
+  let _cwd
 
-  for (let {relpath, contents} of files) {
-    const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
-    await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
+  while (retries > 0) {
+    try {
+      const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
+      _cwd = await fetch({cwd, branch, origin})
+
+      for (let {relpath, contents} of files) {
+        const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
+        await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
+      }
+      if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
+
+      $.cwd = _cwd
+
+      await $`git config user.name ${gitCommitterName}`
+      await $`git config user.email ${gitCommitterEmail}`
+      await $`git add .`
+      try {
+        await $`git commit -m ${msg}`
+      } catch {
+        log({level: 'warn'})(`no changes to commit to ${branch}`)
+        return
+      }
+
+      return await $.raw`git push origin HEAD:refs/heads/${branch}`
+    } catch (e) {
+      retries -= 1
+      branches[keyByValue(branches, _cwd)] = null
+      console.warn('git push failed', 'retries left', retries, e)
+    }
   }
-  if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
-
-  $.cwd = _cwd
-
-  await $`git config user.name ${gitCommitterName}`
-  await $`git config user.email ${gitCommitterEmail}`
-  await $`git add .`
-  try {
-    await $`git commit -m ${msg}`
-  } catch {
-    log({level: 'warn'})(`no changes to commit to ${branch}`)
-    return
-  }
-
-  await $.raw`git push origin HEAD:refs/heads/${branch}`
 })
 
 const repos = {}

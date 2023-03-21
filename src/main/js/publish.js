@@ -3,11 +3,11 @@ import {formatTag, getLatestTag, pushTag} from './tag.js'
 import {push, fetch, parseRepo} from './repo.js'
 import {parseEnv} from './config.js'
 import {fetchManifest, npmPublish} from './npm.js'
-import {restJoin} from './util.js'
-import {runHook} from './processor.js'
+import {msgJoin} from './util.js'
+import {runCmd} from './processor.js'
 import {log} from './log.js'
 
-export const publish = async (pkg) => {
+export const publish = async (pkg, run = runCmd) => {
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
   await pushTag(pkg)
   await pushMeta(pkg)
@@ -15,7 +15,7 @@ export const publish = async (pkg) => {
   await npmPublish(pkg)
   await ghRelease(pkg)
   await ghPages(pkg)
-  await runHook(pkg, 'publishCmd')
+  await run(pkg, 'publishCmd')
 }
 
 export const pushMeta = async (pkg) => {
@@ -70,7 +70,7 @@ const pushChangelog = async (pkg) => {
     ? opts.split(' ')
     : [opts.branch, opts.file, opts.msg]
   const _cwd = await fetch({cwd: pkg.absPath, branch})
-  const msg = restJoin(_msg, pkg, 'chore: update changelog ${{name}}')
+  const msg = msgJoin(_msg, pkg, 'chore: update changelog ${{name}}')
   const releaseNotes = await formatReleaseNotes(pkg)
 
   await $.o({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
@@ -105,7 +105,7 @@ const ghPages = async (pkg) => {
   const [branch = 'gh-pages', from = 'docs', to = '.', ..._msg] = typeof opts === 'string'
     ? opts.split(' ')
     : [opts.branch, opts.from, opts.to, opts.msg]
-  const msg = restJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}')
+  const msg = msgJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}')
 
   log({pkg})(`publish docs to ${branch}`)
 

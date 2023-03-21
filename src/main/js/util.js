@@ -1,5 +1,3 @@
-import {$, fs} from 'zx-extra'
-
 export const tpl = (str, context) =>
   str?.replace(/\$\{\{\s*([.a-z0-9]+)\s*}}/gi, (matched, key) => get(context, key) ?? '')
 
@@ -30,4 +28,19 @@ export const set = (obj, path, value) => {
     return result
 }
 
-export const restJoin = (rest, context, def) => tpl(rest.filter(Boolean).join(' ') || def, context)
+export const msgJoin = (rest, context, def) => tpl(rest.filter(Boolean).join(' ') || def, context)
+
+export const getPromise = () => {
+    let resolve, reject
+    const promise = new Promise((...args) => {
+        [resolve, reject] = args
+    })
+
+    return {
+        resolve,
+        reject,
+        promise,
+    }
+}
+
+export const keyByValue = (obj, value) => Object.keys(obj).find((key) => obj[key] === value)

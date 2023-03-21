@@ -1,16 +1,19 @@
 import os from 'node:os'
 import {$, fs, within} from 'zx-extra'
 import {log} from './log.js'
-import {topo} from './topo.js'
+import {topo, traverse} from './topo.js'
 import {contextify} from './contextify.js'
 import {analyze} from './analyze.js'
 import {build} from './build.js'
 import {publish} from './publish.js'
 import {createState} from './state.js'
-import {tpl} from "./util.js";
+import {tpl} from './util.js'
+import {queuefy} from 'queuefy'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = os.cpus().length} = {}) => within(async () => {
   const state = createState({file: flags.report})
+  const _runCmd = queuefy(runCmd, concurrency)
+
   $.state = state
   $.env = {...process.env, ...env}
   $.verbose = !!(flags.debug || $.env.DEBUG ) || $.verbose
@@ -18,16 +21,14 @@ export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = o
   log()('zx-bulk-release')
 
   try {
-    const {packages, queue, root} = await topo({cwd, flags})
+    const {packages, queue, root, sources, next, prev, nodes} = await topo({cwd, flags})
     log()('queue:', queue)
 
     state.setQueue(queue, packages)
-    state.setStatus('pending')
 
-    for (let name of queue) {
-      const pkg = packages[name]
-
+    await traverse({nodes, prev, async cb(name) {
       state.setStatus('analyzing', name)
+      const pkg = packages[name]
       await contextify(pkg, packages, root)
       await analyze(pkg, packages)
       state.set('config', pkg.config, name)
@@ -35,25 +36,31 @@ export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = o
       state.set('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
       state.set('releaseType', pkg.releaseType, name)
       state.set('tag', pkg.tag, name)
+    }})
+
+    state.setStatus('pending')
+
+    await traverse({nodes, prev, async cb(name) {
+      const pkg = packages[name]
 
       if (!pkg.releaseType) {
         state.setStatus('skipped', name)
-        continue
+        return
       }
 
       state.setStatus('building', name)
-      await build(pkg, packages)
+      await build(pkg, packages, _runCmd)
 
       if (flags.dryRun) {
         state.setStatus('success', name)
-        continue
+        return
       }
 
       state.setStatus('publishing', name)
-      await publish(pkg)
+      await publish(pkg, _runCmd)
 
       state.setStatus('success', name)
-    }
+    }})
   } catch (e) {
     log({level: 'error'})(e)
     state.set('error', e)
@@ -64,7 +71,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = o
   log()('Great success!')
 })
 
-export const runHook = async (pkg, name) => {
+export const runCmd = async (pkg, name) => {
   const cmd = tpl(pkg.config[name], {...pkg, ...pkg.context})
 
   if (cmd) {

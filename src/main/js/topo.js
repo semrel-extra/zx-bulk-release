@@ -1,4 +1,5 @@
 import {topo as _topo} from '@semrel-extra/topo'
+import {getPromise} from './util.js'
 
 export const topo = async ({flags = {}, cwd} = {}) => {
   const ignore = typeof flags.ignore === 'string'
@@ -14,4 +15,17 @@ export const topo = async ({flags = {}, cwd} = {}) => {
       !ignore.includes(name)
 
   return _topo({cwd, filter})
+}
+
+export const traverse = async ({nodes, prev, cb}) => {
+  const waitings = nodes.reduce((acc, node) => {
+    acc[node] = getPromise()
+    return acc
+  }, {})
+
+  await Promise.all(nodes.map(async (name) => {
+    await Promise.all((prev.get(name) || []).map((p) => waitings[p].promise))
+    await cb(name)
+    waitings[name].resolve(true)
+  }))
 }
