@@ -1,3 +1,8 @@
+## [1.26.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.26.1...v1.26.2) (2023-03-21)
+
+### Fixes & improvements
+* refactor: separate processor layer ([dae6b96](https://github.com/semrel-extra/zx-bulk-release/commit/dae6b9682cd7d283e4f776c69f30c5f50fe9fa41))
+
 ## [1.26.1](https://github.com/semrel-extra/zx-bulk-release/compare/v1.26.0...v1.26.1) (2023-02-08)
 
 ### Fixes & improvements
