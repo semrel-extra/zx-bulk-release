@@ -1,3 +1,11 @@
+## [2.0.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.26.2...v2.0.0) (2023-03-21)
+
+### Features
+* feat: replace sequent flow with concurrent ([ec35d7e](https://github.com/semrel-extra/zx-bulk-release/commit/ec35d7e337e64369f0423b71008345177f3ac949))
+
+### BREAKING CHANGES
+* concurrent flow might cause throttling issues ([ec35d7e](https://github.com/semrel-extra/zx-bulk-release/commit/ec35d7e337e64369f0423b71008345177f3ac949))
+
 ## [1.26.2](https://github.com/semrel-extra/zx-bulk-release/compare/v1.26.1...v1.26.2) (2023-03-21)
 
 ### Fixes & improvements
