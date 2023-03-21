@@ -1,9 +1,11 @@
-import {formatTag, getLatestTag, pushTag} from './tag.js'
 import {fs, path, $} from 'zx-extra'
+import {formatTag, getLatestTag, pushTag} from './tag.js'
 import {push, fetch, parseRepo} from './repo.js'
 import {parseEnv} from './config.js'
 import {fetchManifest, npmPublish} from './npm.js'
-import {restJoin, runHook, log} from './util.js'
+import {restJoin} from './util.js'
+import {runHook} from './processor.js'
+import {log} from './log.js'
 
 export const publish = async (pkg) => {
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})

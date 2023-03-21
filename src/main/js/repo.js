@@ -1,6 +1,6 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import {parseEnv} from './config.js'
-import {log} from './util.js'
+import {log} from './log.js'
 
 const branches = {}
 export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {

@@ -1,5 +1,5 @@
 import {parseEnv} from './config.js'
-import {log} from './util.js'
+import {log} from './log.js'
 import {$, ctx, fs, path, tempy, copy, INI, fetch} from 'zx-extra'
 
 export const fetchPkg = async (pkg, {env = $.env} = {}) => {

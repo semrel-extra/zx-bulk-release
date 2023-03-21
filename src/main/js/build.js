@@ -1,6 +1,6 @@
 import {traverseDeps} from './deps.js'
 import {fetchPkg} from './npm.js'
-import {runHook} from './util.js'
+import {runHook} from './processor.js'
 
 export const build = async (pkg, packages) => {
   if (pkg.built) return true

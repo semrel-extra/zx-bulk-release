@@ -3,7 +3,7 @@
 import {ctx, semver, $} from 'zx-extra'
 import {Buffer} from 'buffer'
 import {parseEnv} from './config.js'
-import {log} from './util.js'
+import {log} from './log.js'
 
 export const pushTag = (pkg) => ctx(async ($) => {
   const {absPath: cwd, name, version} = pkg

@@ -1,7 +1,7 @@
 import {ctx, semver} from 'zx-extra'
 import {updateDeps} from './deps.js'
 import {formatTag} from './tag.js';
-import {log} from './util.js'
+import {log} from './log.js'
 
 export const analyze = async (pkg, packages) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
