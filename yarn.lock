@@ -86,36 +86,6 @@
   dependencies:
     tslib "^2.4.1"
 
-"@qiwi/substrate-abstract@2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@qiwi/substrate-abstract/-/substrate-abstract-2.0.3.tgz#449319c29fd727bf79c9e10ab3bb4ef7bea08548"
-  integrity sha512-MGhuGCLfoJYY6SFrmTdvVcvX8n+Gn5e9Xlsdnmza8PhpoohOeOV6CxtJOeItoWwC35sSMmJOLUh2dvxTdHD/iQ==
-  dependencies:
-    "@qiwi/substrate-types" "2.0.3"
-
-"@qiwi/substrate-std@2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@qiwi/substrate-std/-/substrate-std-2.0.3.tgz#dac53a8b1229161eaeb0028ba56fb6c534ae9075"
-  integrity sha512-gGU1laT/qbEoY1bTKZvV2iIWfN2bbWGmyuXzDo87Xjz2+0jvCLpKy3hr0IElC7VtJhcPI1jkgE3BkIk21qR9IQ==
-  dependencies:
-    "@qiwi/substrate-types" "2.0.3"
-    tslib "^2.5.0"
-
-"@qiwi/substrate-types@2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@qiwi/substrate-types/-/substrate-types-2.0.3.tgz#c6a4d3e76b34a73f3ec61d6f9860d566ca7f6b02"
-  integrity sha512-72THnWXH/ce2pHUKQiQp+jOHVBrAzGaWwOQ/4fYVhXAP5bCxyOCj8SCL0gB/SZ8vtCuCzOs8GHAb1UR9/FLH/g==
-
-"@qiwi/substrate@^2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@qiwi/substrate/-/substrate-2.0.3.tgz#5081c1ca4ab7dfc8d4a3c08a98855a7b5f803588"
-  integrity sha512-agjwPuyotfP83AQGP9nmIQwwhTSfwfLH0dcFmafIbcWcWPAP7SNN38W9LDAW5li64Hlo+T4jNSAjPtHKq6nrxg==
-  dependencies:
-    "@qiwi/substrate-abstract" "2.0.3"
-    "@qiwi/substrate-std" "2.0.3"
-    "@qiwi/substrate-types" "2.0.3"
-    tslib "^2.5.0"
-
 "@semrel-extra/topo@^1.6.0":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@semrel-extra/topo/-/topo-1.6.0.tgz#9acd50ce3ba921712a200bbe50f6a351175b4c95"
@@ -2270,12 +2240,11 @@ queue-microtask@^1.2.2:
   resolved "https://registry.yarnpkg.com/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
   integrity sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==
 
-queuefy@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/queuefy/-/queuefy-1.2.0.tgz#066e9a90224a31da978b0424132abea75ec3ab6e"
-  integrity sha512-KzJh/jHXWceRebclsKD5HFSrpS1l5c1ve+ealQidVuB049a3r0UiXVSeYs8aXV8BtsChPJrotP9WL367pJgGdA==
+queuefy@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/queuefy/-/queuefy-1.2.1.tgz#abe24c869898b933cc0df53cbcceca3ce4753335"
+  integrity sha512-/5BvkHo2waR923r7NZE+G1Z7+ddW8wENrPrzt1SJRPbibHyYAHy3ZlaPfE2oX993JRqpwGyEyUD4nYhX+PfC5Q==
   dependencies:
-    "@qiwi/substrate" "^2.0.3"
     tslib "^2.5.0"
 
 quick-format-unescaped@^4.0.3:
