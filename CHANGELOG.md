@@ -1,3 +1,8 @@
+## [2.1.4](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.3...v2.1.4) (2023-03-22)
+
+### Fixes & improvements
+* fix: separate `buildCmd` & `testCmd` directives ([1112d5c](https://github.com/semrel-extra/zx-bulk-release/commit/1112d5c4b16a7a1020402f77a33780627952be87))
+
 ## [2.1.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.2...v2.1.3) (2023-03-22)
 
 ### Fixes & improvements
