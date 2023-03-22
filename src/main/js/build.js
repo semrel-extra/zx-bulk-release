@@ -2,10 +2,10 @@ import {traverseDeps} from './deps.js'
 import {fetchPkg} from './npm.js'
 import {runCmd} from './processor.js'
 
-export const build = async (pkg, packages, run = runCmd) => {
+export const build = async (pkg, packages, run = runCmd, self = build) => {
   if (pkg.built) return true
 
-  await traverseDeps(pkg, packages, async (_, {pkg}) => build(pkg, packages))
+  await traverseDeps(pkg, packages, async (_, {pkg}) => self(pkg, packages))
 
   const {config} = pkg
 

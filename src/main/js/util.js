@@ -44,3 +44,14 @@ export const getPromise = () => {
 }
 
 export const keyByValue = (obj, value) => Object.keys(obj).find((key) => obj[key] === value)
+
+export const memoizeBy = (fn, memo = new Map(), getKey = v => v) => (...args) => {
+  const key = getKey(...args)
+  if (memo.has(key)) {
+    return memo.get(key)
+  }
+
+  const value = fn(...args)
+  memo.set(key, value)
+  return value
+}

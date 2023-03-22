@@ -1,22 +1,17 @@
 import os from 'node:os'
-import {$, fs, within} from 'zx-extra'
+import {$, within} from 'zx-extra'
 import {log} from './log.js'
-import {topo, traverse} from './topo.js'
-import {contextify} from './contextify.js'
+import {topo, traverseQueue} from './deps.js'
 import {analyze} from './analyze.js'
 import {build} from './build.js'
-import {publish} from './publish.js'
+import {getLatest, publish} from './publish.js'
 import {createState} from './state.js'
-import {tpl} from './util.js'
+import {memoizeBy, tpl} from './util.js'
 import {queuefy} from 'queuefy'
+import {getConfig} from "./config.js";
 
-export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = os.cpus().length} = {}) => within(async () => {
-  const state = createState({file: flags.report})
-  const _runCmd = queuefy(runCmd, concurrency)
-
-  $.state = state
-  $.env = {...process.env, ...env}
-  $.verbose = !!(flags.debug || $.env.DEBUG ) || $.verbose
+export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
+  const {state, build, publish} = createContext(flags, env)
 
   log()('zx-bulk-release')
 
@@ -26,7 +21,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = o
 
     state.setQueue(queue, packages)
 
-    await traverse({nodes, prev, async cb(name) {
+    await traverseQueue({queue, prev, async cb(name) {
       state.setStatus('analyzing', name)
       const pkg = packages[name]
       await contextify(pkg, packages, root)
@@ -40,7 +35,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = o
 
     state.setStatus('pending')
 
-    await traverse({nodes, prev, async cb(name) {
+    await traverseQueue({queue, prev, async cb(name) {
       const pkg = packages[name]
 
       if (!pkg.releaseType) {
@@ -49,7 +44,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = o
       }
 
       state.setStatus('building', name)
-      await build(pkg, packages, _runCmd)
+      await build(pkg, packages)
 
       if (flags.dryRun) {
         state.setStatus('success', name)
@@ -57,7 +52,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}, concurrency = o
       }
 
       state.setStatus('publishing', name)
-      await publish(pkg, _runCmd)
+      await publish(pkg)
 
       state.setStatus('success', name)
     }})
@@ -77,5 +72,37 @@ export const runCmd = async (pkg, name) => {
   if (cmd) {
     log({pkg})(`run ${name} '${cmd}'`)
     await $.o({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
+  }
+}
+
+const createContext = (flags, env) => {
+  const state = createState({file: flags.report})
+  const _runCmd = queuefy(runCmd, flags.concurrency || os.cpus().length)
+  const _build = memoizeBy((pkg, packages) => build(pkg, packages, _runCmd, _build))
+  const _publish = memoizeBy((pkg) => publish(pkg, _runCmd))
+
+  $.state = state
+  $.env = {...process.env, ...env}
+  $.verbose = !!(flags.debug || $.env.DEBUG ) || $.verbose
+
+  return {
+    state,
+    runCmd: _runCmd,
+    build: _build,
+    publish: _publish
+  }
+}
+
+// Inspired by https://docs.github.com/en/actions/learn-github-actions/contexts
+export const contextify = async (pkg, packages, root) => {
+  pkg.config = await getConfig(pkg.absPath, root.absPath)
+  pkg.latest = await getLatest(pkg)
+  pkg.context = {
+    git: {
+      sha: (await $`git rev-parse HEAD`).toString().trim(),
+      root: (await $`git rev-parse --show-toplevel`).toString().trim(),
+    },
+    env: $.env,
+    packages
   }
 }

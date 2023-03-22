@@ -1,21 +1,21 @@
 import {parseEnv} from './config.js'
 import {log} from './log.js'
-import {$, ctx, fs, path, tempy, INI, fetch} from 'zx-extra'
+import {$, ctx, fs, path, INI, fetch} from 'zx-extra'
 
 export const fetchPkg = async (pkg, {env = $.env} = {}) => {
+  const id = `${pkg.name}@${pkg.version}`
+
   try {
-    log({pkg})(`fetching '${pkg.name}@${pkg.version}'`)
+    log({pkg})(`fetching '${id}'`)
     const cwd = pkg.absPath
     const {npmRegistry, npmToken, npmConfig} = parseEnv(env)
-    const temp = tempy.temporaryDirectory()
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
-
     await $.raw`wget --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar xvz -C ${cwd} --strip-components=1 --exclude='package.json'`
 
     pkg.fetched = true
   } catch (e) {
-    log({pkg})(`fetching '${pkg.name}@${pkg.version}' failed`, e)
+    log({pkg})(`fetching '${id} failed`, e)
   }
 }
 

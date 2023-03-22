@@ -1,4 +1,5 @@
 import {semver} from 'zx-extra'
+import {topo as _topo} from '@semrel-extra/topo'
 
 export const depScopes = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
 
@@ -62,4 +63,31 @@ export const subsWorkspace = (decl, actual) => {
   }
 
   return decl
+}
+
+export const topo = async ({flags = {}, cwd} = {}) => {
+  const ignore = typeof flags.ignore === 'string'
+    ? flags.ignore.split(/\s*,\s*/)
+    : Array.isArray(flags.ignore)
+      ? flags.ignore
+      : []
+
+  const filter = flags.includePrivate
+    ? () => true
+    : ({manifest: {private: _private, name}}) =>
+      flags.includePrivate ? true : !_private &&
+        !ignore.includes(name)
+
+  return _topo({cwd, filter})
+}
+
+export const traverseQueue = async ({queue, prev, cb}) => {
+  const acc = {}
+
+  return Promise.all(queue.map((name) =>
+    (acc[name] = (async () => {
+      await Promise.all((prev.get(name) || []).map((p) => acc[p]))
+      await cb(name)
+    })()))
+  )
 }
