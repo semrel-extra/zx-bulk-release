@@ -1,3 +1,8 @@
+## [2.1.6](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.5...v2.1.6) (2023-03-22)
+
+### Fixes & improvements
+* fix: fix memoized build recursion ([413f2bf](https://github.com/semrel-extra/zx-bulk-release/commit/413f2bfcf456f4fefdab527ebe09112b6f26057c))
+
 ## [2.1.5](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.4...v2.1.5) (2023-03-22)
 
 ### Fixes & improvements
