@@ -1,3 +1,8 @@
+## [2.1.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.1...v2.1.2) (2023-03-22)
+
+### Fixes & improvements
+* perf: reduce pkg fetch timeout ([6c5ddb8](https://github.com/semrel-extra/zx-bulk-release/commit/6c5ddb8977f2f1bf6f0aa316014269f0e6745f19))
+
 ## [2.1.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.0...v2.1.1) (2023-03-22)
 
 ### Fixes & improvements
