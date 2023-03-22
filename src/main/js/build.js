@@ -5,11 +5,9 @@ import {runCmd} from './processor.js'
 export const build = async (pkg, packages, run = runCmd, self = build) => {
   if (pkg.built) return true
 
-  await traverseDeps(pkg, packages, async (_, {pkg}) => self(pkg, packages))
+  await traverseDeps(pkg, packages, async (_, {pkg}) => self(pkg, packages, run, self))
 
-  const {config} = pkg
-
-  if (pkg.changes.length === 0 && config.npmFetch) {
+  if (pkg.changes.length === 0 && pkg.config.npmFetch) {
     await fetchPkg(pkg)
   }
 
