@@ -11,11 +11,11 @@ export const fetchPkg = async (pkg, {env = $.env} = {}) => {
     const {npmRegistry, npmToken, npmConfig} = parseEnv(env)
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
-    await $.raw`wget --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
+    await $.raw`wget --timeout=10 --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar -xvzk --strip-components=1 --exclude='package.json' -C ${cwd}`
 
     pkg.fetched = true
   } catch (e) {
-    log({pkg})(`fetching '${id} failed`, e)
+    log({pkg, level: 'warn'})(`fetching '${id}' failed`, e)
   }
 }
 
