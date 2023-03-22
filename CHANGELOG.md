@@ -1,3 +1,8 @@
+## [2.1.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.0...v2.1.1) (2023-03-22)
+
+### Fixes & improvements
+* fix: fix tar opts ([6d17135](https://github.com/semrel-extra/zx-bulk-release/commit/6d1713521d1660a7d4085dc6a3a20f7c856e39db))
+
 ## [2.1.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.0.1...v2.1.0) (2023-03-22)
 
 ### Features
