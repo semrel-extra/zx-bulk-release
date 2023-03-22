@@ -1,3 +1,8 @@
+## [2.0.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.0.0...v2.0.1) (2023-03-22)
+
+### Fixes & improvements
+* perf: optimize pkg fetch ([749ea0b](https://github.com/semrel-extra/zx-bulk-release/commit/749ea0b29f854e57a447f4cdefe06ab32acba497))
+
 ## [2.0.0](https://github.com/semrel-extra/zx-bulk-release/compare/v1.26.2...v2.0.0) (2023-03-21)
 
 ### Features
