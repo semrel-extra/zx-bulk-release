@@ -1,3 +1,8 @@
+## [2.1.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.0.1...v2.1.0) (2023-03-22)
+
+### Features
+* feat: add memoize to avoid redundant builds ([151ea71](https://github.com/semrel-extra/zx-bulk-release/commit/151ea7118af3907aad73f395ac3fb2420e25b2c8))
+
 ## [2.0.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.0.0...v2.0.1) (2023-03-22)
 
 ### Fixes & improvements
