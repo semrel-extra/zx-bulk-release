@@ -13,8 +13,9 @@ export const build = async (pkg, packages, run = runCmd, self = build) => {
     await fetchPkg(pkg)
   }
 
-  if (!pkg.fetched && config.buildCmd) {
+  if (!pkg.fetched) {
     await run(pkg, 'buildCmd')
+    await run(pkg, 'testCmd')
   }
 
   pkg.built = true
