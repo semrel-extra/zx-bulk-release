@@ -1,3 +1,8 @@
+## [2.1.5](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.4...v2.1.5) (2023-03-22)
+
+### Fixes & improvements
+* fix: add `--ignore-failed-read` tar flag ([096134d](https://github.com/semrel-extra/zx-bulk-release/commit/096134dec953023373109d559b519efea2f41ca5))
+
 ## [2.1.4](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.3...v2.1.4) (2023-03-22)
 
 ### Fixes & improvements
