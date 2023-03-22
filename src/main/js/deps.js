@@ -72,11 +72,8 @@ export const topo = async ({flags = {}, cwd} = {}) => {
       ? flags.ignore
       : []
 
-  const filter = flags.includePrivate
-    ? () => true
-    : ({manifest: {private: _private, name}}) =>
-      flags.includePrivate ? true : !_private &&
-        !ignore.includes(name)
+  const filter = ({manifest: {private: _private, name}}) =>
+    !ignore.includes(name) && (flags.includePrivate || !_private)
 
   return _topo({cwd, filter})
 }
