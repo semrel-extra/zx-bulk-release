@@ -11,7 +11,7 @@ export const fetchPkg = async (pkg, {env = $.env} = {}) => {
     const {npmRegistry, npmToken, npmConfig} = parseEnv(env)
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
-    await $.raw`wget --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar xvz -C ${cwd} --strip-components=1 --exclude='package.json'`
+    await $.raw`wget --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
 
     pkg.fetched = true
   } catch (e) {
