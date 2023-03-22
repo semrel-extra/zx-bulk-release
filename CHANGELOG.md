@@ -1,3 +1,8 @@
+## [2.1.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.2...v2.1.3) (2023-03-22)
+
+### Fixes & improvements
+* refactor: simplify topo filter ([a69735c](https://github.com/semrel-extra/zx-bulk-release/commit/a69735cef0d6fed15ac8e1a10a3c0a7378b5874c))
+
 ## [2.1.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.1...v2.1.2) (2023-03-22)
 
 ### Fixes & improvements
