@@ -1,7 +1,8 @@
-import {ctx, semver} from 'zx-extra'
+import {semver} from 'zx-extra'
 import {updateDeps} from './deps.js'
 import {formatTag} from './tag.js';
 import {log} from './log.js'
+import {getCommits} from './repo.js'
 
 export const analyze = async (pkg, packages) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
@@ -25,22 +26,8 @@ export const semanticRules = [
   {group: 'BREAKING CHANGES', releaseType: 'major', keywords: ['BREAKING CHANGE', 'BREAKING CHANGES']},
 ]
 
-export const getPkgCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
-  const ref = from ? `${from}..${to}` : to
-
-  $.cwd = cwd
-  return (await $.raw`git log ${ref} --format=+++%s__%b__%h__%H -- .`)
-    .toString()
-    .split('+++')
-    .filter(Boolean)
-    .map(msg => {
-      const [subj, body, short, hash] = msg.split('__').map(raw => raw.trim())
-      return {subj, body, short, hash}
-    })
-})
-
 export const getSemanticChanges = async (cwd, from, to) => {
-  const commits = await getPkgCommits(cwd, from, to)
+  const commits = await getCommits(cwd, from, to)
 
   return analyzeCommits(commits)
 }

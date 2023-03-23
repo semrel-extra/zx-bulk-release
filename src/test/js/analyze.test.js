@@ -1,13 +1,14 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
-import { topo } from '@semrel-extra/topo'
-import {getPkgCommits, analyzeCommits} from '../../main/js/analyze.js'
+import {topo} from '@semrel-extra/topo'
+import {analyzeCommits} from '../../main/js/analyze.js'
+import {getCommits} from '../../main/js/repo.js'
 import {createFakeRepo} from './test-utils.js'
 
 const test = suite('analyze')
 
-test('`getPkgCommits` obtains commits for each package', async () => {
+test('`getCommits` obtains commits for each package', async () => {
   const cwd = await createFakeRepo({commits: [
     {
       msg: 'chore: initial commit',
@@ -108,7 +109,7 @@ commit details
   const {queue, packages} = await topo({cwd})
   const results = {}
   for (let pkg of queue) {
-    results[pkg] = (await getPkgCommits(packages[pkg].absPath, '2022.6.13-a.v1.0.0-f0'))
+    results[pkg] = (await getCommits(packages[pkg].absPath, '2022.6.13-a.v1.0.0-f0'))
       .map(({subj}) => subj)
   }
 

@@ -1,13 +1,13 @@
 import {log} from './log.js'
 import {$, ctx, fs, path, INI, fetch} from 'zx-extra'
 
-export const fetchPkg = async (pkg, {env} = {}) => {
+export const fetchPkg = async (pkg) => {
   const id = `${pkg.name}@${pkg.version}`
 
   try {
     log({pkg})(`fetching '${id}'`)
     const cwd = pkg.absPath
-    const {npmRegistry, npmToken, npmConfig} = env || pkg.config
+    const {npmRegistry, npmToken, npmConfig} = pkg.config
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
     await $.raw`wget --timeout=10 --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`

@@ -1,5 +1,4 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
-import {parseEnv} from './config.js'
 import {log} from './log.js'
 import {keyByValue} from './util.js'
 
@@ -96,3 +95,17 @@ export const getOrigin = async (cwd) => {
 export const getRoot = async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim()
 
 export const getSha = async (cwd) => (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
+
+export const getCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
+  const ref = from ? `${from}..${to}` : to
+
+  $.cwd = cwd
+  return (await $.raw`git log ${ref} --format=+++%s__%b__%h__%H -- .`)
+    .toString()
+    .split('+++')
+    .filter(Boolean)
+    .map(msg => {
+      const [subj, body, short, hash] = msg.split('__').map(raw => raw.trim())
+      return {subj, body, short, hash}
+    })
+})
