@@ -1,5 +1,5 @@
 import os from 'node:os'
-import {$, within} from 'zx-extra'
+import {$, fs, within} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {analyze} from './analyze.js'
 import {build} from './build.js'
@@ -8,8 +8,7 @@ import {topo, traverseQueue} from './deps.js'
 import {log} from './log.js'
 import {getLatest, publish} from './publish.js'
 import {getRoot, getSha} from './repo.js'
-import {createState} from './state.js'
-import {memoizeBy, tpl} from './util.js'
+import {get, memoizeBy, set, tpl} from './util.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   const {state, build, publish} = createContext(flags, env)
@@ -108,3 +107,57 @@ export const contextify = async (pkg, packages, root) => {
     packages
   }
 }
+
+export const createState = ({logger = console, file = null} = {}) => ({
+  logger,
+  file,
+  status: 'initial',
+  queue: [],
+  packages: [],
+  events: [],
+  setQueue(queue, packages) {
+    this.queue = queue
+    this.packages = queue.map(name => {
+      const {manifest: {version}, absPath, relPath} = packages[name]
+      return {
+        status: 'initial',
+        name,
+        version,
+        path: absPath,
+        relPath
+      }
+    })
+  },
+  get(key, pkgName) {
+    return get(
+      pkgName ? this.packages.find(({name}) => name === pkgName) : this,
+      key
+    )
+  },
+  set(key, value, pkgName) {
+    set(
+      pkgName ? this.packages.find(({name}) => name === pkgName) : this,
+      key,
+      value
+    )
+  },
+  setStatus(status, name) {
+    this.set('status', status, name)
+    this.save()
+  },
+  getStatus(status, name) {
+    return this.get('status', name)
+  },
+  log(ctx = {}) {
+    return function (...chunks) {
+      const {pkg, scope = pkg?.name || '~', level = 'info'} = ctx
+      const msg = chunks.map(c => typeof c === 'string' ? tpl(c, ctx) : c)
+      const event = {msg, scope, date: Date.now(), level}
+      this.events.push(event)
+      logger[level](`[${scope}]`, ...msg)
+    }.bind(this)
+  },
+  save() {
+    this.file && fs.outputJsonSync(this.file, this)
+  }
+})
