@@ -2,7 +2,7 @@ import {$} from 'zx-extra'
 import {log} from './log.js'
 import {fetchRepo, getRepo, pushCommit} from './repo.js'
 import {msgJoin} from './util.js'
-import {formatTag} from './tag.js'
+import {formatTag} from './meta.js'
 
 export const pushChangelog = async (pkg) => {
   const {absPath: cwd, config: {changelog: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg

@@ -1,13 +1,14 @@
 // Semantic tags processing
 
-import {ctx, semver, $} from 'zx-extra'
+import {ctx, semver, $, fs, path} from 'zx-extra'
 import {Buffer} from 'buffer'
 import {log} from './log.js'
+import {fetchRepo, pushCommit} from './repo.js'
+import {fetchManifest} from './npm.js'
 
 export const pushTag = (pkg) => ctx(async ($) => {
-  const {absPath: cwd, name, version, config} = pkg
+  const {absPath: cwd, name, version, config: {gitCommitterEmail, gitCommitterName}} = pkg
   const tag = formatTag({name, version})
-  const {gitCommitterEmail, gitCommitterName} = config
 
   pkg.context.git.tag = tag
   log({pkg})(`push release tag ${tag}`)
@@ -18,6 +19,41 @@ export const pushTag = (pkg) => ctx(async ($) => {
   await $`git tag -m ${tag} ${tag}`
   await $`git push origin ${tag}`
 })
+
+export const pushMeta = async (pkg) => {
+  log({pkg})('push artifact to branch \'meta\'')
+
+  const {name, version, absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
+  const tag = formatTag({name, version})
+  const to = '.'
+  const branch = 'meta'
+  const msg = `chore: release meta ${name} ${version}`
+  const hash = (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
+  const meta = {
+    META_VERSION: '1',
+    name: pkg.name,
+    hash,
+    version: pkg.version,
+    dependencies: pkg.dependencies,
+    devDependencies: pkg.devDependencies,
+    peerDependencies: pkg.peerDependencies,
+    optionalDependencies: pkg.optionalDependencies,
+  }
+  const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
+
+  await pushCommit({cwd, to, branch, msg, files, gitCommitterEmail, gitCommitterName, basicAuth})
+}
+
+export const getLatest = async (pkg) => {
+  const {absPath: cwd, name} = pkg
+  const tag = await getLatestTag(cwd, name)
+  const meta = await getLatestMeta(cwd, tag?.ref) || await fetchManifest(pkg, {nothrow: true})
+
+  return {
+    tag,
+    meta
+  }
+}
 
 const f0 = {
   parse(tag) {
@@ -117,3 +153,19 @@ export const getLatestTaggedVersion = async (cwd, name) =>
 export const formatDateTag = (date = new Date()) => `${date.getUTCFullYear()}.${date.getUTCMonth() + 1}.${date.getUTCDate()}`
 
 export const parseDateTag = (date) => new Date(date.replaceAll('.', '-')+'Z')
+
+export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+
+export const getLatestMeta = async (cwd, tag) => {
+  if (!tag) return null
+
+  try {
+    const _cwd = await fetchRepo({cwd, branch: 'meta'})
+    return await Promise.any([
+      fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
+      fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
+    ])
+  } catch {}
+
+  return null
+}
