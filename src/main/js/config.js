@@ -34,7 +34,7 @@ export const normalizePkgConfig = (config, env) => ({
   npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
   buildCmd: config.buildCmd || config.cmd,
   get ghBasicAuth() {
-    return this.ghUser && this.ghToken ? `${this.ghUser}: ${this.ghToken}` : false
+    return this.ghUser && this.ghToken ? `${this.ghUser}:${this.ghToken}` : false
   }
 })
 
