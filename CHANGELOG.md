@@ -1,3 +1,9 @@
+## [2.2.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.0...v2.2.1) (2023-03-23)
+
+### Fixes & improvements
+* perf: make parallel internal `publish` tasks ([87f388e](https://github.com/semrel-extra/zx-bulk-release/commit/87f388ea2ff5cce96cca600903d80260f13f0908))
+* refactor: improve internal reporter ([cc62df7](https://github.com/semrel-extra/zx-bulk-release/commit/cc62df762c0581db159ddd2fae8d90b085911884))
+
 ## [2.2.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.6...v2.2.0) (2023-03-23)
 
 ### Fixes & improvements
