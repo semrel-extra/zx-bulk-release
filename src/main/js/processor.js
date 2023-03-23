@@ -1,14 +1,15 @@
 import os from 'node:os'
-import {$, within} from 'zx-extra'
+import {$, fs, within} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {analyze} from './analyze.js'
-import {build} from './build.js'
+import {pushChangelog} from './changelog.js'
 import {getPkgConfig} from './config.js'
-import {topo, traverseQueue} from './deps.js'
-import {log, createReport} from './log.js'
-import {getLatest} from './meta.js'
-import {publish} from './publish.js'
+import {topo, traverseDeps, traverseQueue} from './deps.js'
+import {ghPages, ghRelease} from './gh.js'
 import {getRoot, getSha} from './git.js'
+import {log, createReport} from './log.js'
+import {getLatest, pushMeta, pushTag} from './meta.js'
+import {fetchPkg, npmPublish} from './npm.js'
 import {memoizeBy, tpl} from './util.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
@@ -17,7 +18,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
   report.log()('zx-bulk-release')
 
   try {
-    const {packages, queue, root, sources, next, prev, nodes, graphs, edges} = await topo({cwd, flags})
+    const {packages, queue, root, prev, graphs} = await topo({cwd, flags})
     report
       .log()('queue:', queue)
       .log()('graphs', graphs)
@@ -100,7 +101,7 @@ const createContext = (flags, env) => {
 }
 
 // Inspired by https://docs.github.com/en/actions/learn-github-actions/contexts
-export const contextify = async (pkg, packages, root) => {
+const contextify = async (pkg, packages, root) => {
   pkg.config = await getPkgConfig(pkg.absPath, root.absPath)
   pkg.latest = await getLatest(pkg)
   pkg.context = {
@@ -111,4 +112,36 @@ export const contextify = async (pkg, packages, root) => {
     env: $.env,
     packages
   }
+}
+
+const build = async (pkg, packages, run = runCmd, self = build) => {
+  if (pkg.built) return
+
+  await Promise.all([
+    traverseDeps(pkg, packages, async (_, {pkg}) => self(pkg, packages, run, self)),
+    pkg.changes.length === 0 && pkg.config.npmFetch
+      ? fetchPkg(pkg)
+      : Promise.resolve()
+  ])
+
+  if (!pkg.fetched) {
+    await run(pkg, 'buildCmd')
+    await run(pkg, 'testCmd')
+  }
+
+  pkg.built = true
+}
+
+const publish = async (pkg, run = runCmd) => {
+  await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
+  await pushTag(pkg)
+
+  await Promise.all([
+    pushMeta(pkg),
+    pushChangelog(pkg),
+    npmPublish(pkg),
+    ghRelease(pkg),
+    ghPages(pkg),
+    run(pkg, 'publishCmd')
+  ])
 }

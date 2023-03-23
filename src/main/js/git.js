@@ -30,7 +30,6 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
 
   while (retries > 0) {
     try {
-
       _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
 
       for (let {relpath, contents} of files) {
@@ -55,7 +54,7 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
     } catch (e) {
       retries -= 1
       branches[keyByValue(branches, _cwd)] = null
-      console.warn('git push failed', 'retries left', retries, e)
+      log({level: 'warn'})('git push failed', 'retries left', retries, e)
     }
   }
 })

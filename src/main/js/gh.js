@@ -1,23 +1,9 @@
-import {fs, path, $} from 'zx-extra'
-import {formatTag, pushTag} from './meta.js'
-import {pushCommit, getRepo} from './git.js'
-import {npmPublish} from './npm.js'
-import {pushChangelog, formatReleaseNotes} from './changelog.js'
-import {msgJoin} from './util.js'
-import {runCmd} from './processor.js'
 import {log} from './log.js'
-import {pushMeta} from './meta.js'
-
-export const publish = async (pkg, run = runCmd) => {
-  await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
-  await pushTag(pkg)
-  await pushMeta(pkg)
-  await pushChangelog(pkg)
-  await npmPublish(pkg)
-  await ghRelease(pkg)
-  await ghPages(pkg)
-  await run(pkg, 'publishCmd')
-}
+import {getRepo, pushCommit} from './git.js'
+import {formatTag} from './meta.js'
+import {formatReleaseNotes} from './changelog.js'
+import {$, path} from 'zx-extra'
+import {msgJoin} from './util.js'
 
 export const ghRelease = async (pkg) => {
   log({pkg})(`create gh release`)
@@ -35,10 +21,10 @@ export const ghRelease = async (pkg) => {
     body: releaseNotes
   })
 
-  await $.o({cwd})`curl -H "Authorization: token ${ghToken}" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
+  await $.o({cwd})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
 }
 
-const ghPages = async (pkg) => {
+export const ghPages = async (pkg) => {
   const {config: {ghPages: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   if (!opts) return
 
