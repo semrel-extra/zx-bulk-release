@@ -6,7 +6,8 @@ import {build} from './build.js'
 import {getPkgConfig} from './config.js'
 import {topo, traverseQueue} from './deps.js'
 import {log} from './log.js'
-import {getLatest, publish} from './publish.js'
+import {getLatest} from './meta.js'
+import {publish} from './publish.js'
 import {getRoot, getSha} from './repo.js'
 import {get, memoizeBy, set, tpl} from './util.js'
 
@@ -20,18 +21,21 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     log()('queue:', queue)
     log()('graphs', graphs)
 
-    state.setQueue(queue, packages)
+    state
+      .setQueue(queue)
+      .setPackages(packages)
 
     await traverseQueue({queue, prev, async cb(name) {
       state.setStatus('analyzing', name)
       const pkg = packages[name]
       await contextify(pkg, packages, root)
       await analyze(pkg, packages)
-      state.set('config', pkg.config, name)
-      state.set('version', pkg.version, name)
-      state.set('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
-      state.set('releaseType', pkg.releaseType, name)
-      state.set('tag', pkg.tag, name)
+      state
+        .set('config', pkg.config, name)
+        .set('version', pkg.version, name)
+        .set('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
+        .set('releaseType', pkg.releaseType, name)
+        .set('tag', pkg.tag, name)
     }})
 
     state.setStatus('pending')
@@ -59,8 +63,9 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     }})
   } catch (e) {
     log({level: 'error'})(e)
-    state.set('error', e)
-    state.setStatus('failure')
+    state
+      .set('error', e)
+      .setStatus('failure')
     throw e
   }
   state.setStatus('success')
@@ -113,37 +118,43 @@ export const createState = ({logger = console, file = null} = {}) => ({
   file,
   status: 'initial',
   queue: [],
-  packages: [],
+  packages: {},
   events: [],
-  setQueue(queue, packages) {
+  setQueue(queue) {
     this.queue = queue
-    this.packages = queue.map(name => {
-      const {manifest: {version}, absPath, relPath} = packages[name]
-      return {
+    return this
+  },
+  setPackages(packages) {
+    this.packages = Object.entries(packages).reduce((acc, [name, {manifest: {version}, absPath, relPath}]) => {
+      acc[name] = {
         status: 'initial',
         name,
         version,
         path: absPath,
         relPath
       }
-    })
+      return acc
+    }, {})
+    return this
   },
   get(key, pkgName) {
     return get(
-      pkgName ? this.packages.find(({name}) => name === pkgName) : this,
+      pkgName ? this.packages[pkgName] : this,
       key
     )
   },
   set(key, value, pkgName) {
     set(
-      pkgName ? this.packages.find(({name}) => name === pkgName) : this,
+      pkgName ? this.packages[pkgName] : this,
       key,
       value
     )
+    return this
   },
   setStatus(status, name) {
     this.set('status', status, name)
     this.save()
+    return this
   },
   getStatus(status, name) {
     return this.get('status', name)
@@ -159,5 +170,6 @@ export const createState = ({logger = console, file = null} = {}) => ({
   },
   save() {
     this.file && fs.outputJsonSync(this.file, this)
+    return this
   }
 })

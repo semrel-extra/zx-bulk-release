@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 
 import {ctx, tempy, fs, path, $} from 'zx-extra'
 import {run} from '../../main/js/index.js'
-import {formatTag} from '../../main/js/tag.js'
+import {formatTag} from '../../main/js/meta.js'
 import {addCommits, createFakeRepo, createNpmRegistry, fixtures} from './test-utils.js'
 
 const test = suite('integration')
@@ -165,7 +165,7 @@ await $`yarn install`
 test('run() dry-run', async () => {
   await run({cwd, flags: {dryRun: true, report}})
   const r = await fs.readJson(report)
-  const [a, b] = r.packages
+  const {a, b} = r.packages
 
   assert.equal(r.queue, ['a', 'b'])
   assert.equal(r.status, 'success')

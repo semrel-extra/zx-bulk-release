@@ -1,11 +1,12 @@
 import {fs, path, $} from 'zx-extra'
-import {formatTag, getLatestTag, pushTag} from './tag.js'
-import {pushCommit, fetchRepo, getRepo} from './repo.js'
-import {fetchManifest, npmPublish} from './npm.js'
+import {formatTag, pushTag} from './meta.js'
+import {pushCommit, getRepo} from './repo.js'
+import {npmPublish} from './npm.js'
 import {pushChangelog, formatReleaseNotes} from './changelog.js'
 import {msgJoin} from './util.js'
 import {runCmd} from './processor.js'
 import {log} from './log.js'
+import {pushMeta} from './meta.js'
 
 export const publish = async (pkg, run = runCmd) => {
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
@@ -16,30 +17,6 @@ export const publish = async (pkg, run = runCmd) => {
   await ghRelease(pkg)
   await ghPages(pkg)
   await run(pkg, 'publishCmd')
-}
-
-export const pushMeta = async (pkg) => {
-  log({pkg})('push artifact to branch \'meta\'')
-
-  const {name, version, absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
-  const tag = formatTag({name, version})
-  const to = '.'
-  const branch = 'meta'
-  const msg = `chore: release meta ${name} ${version}`
-  const hash = (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
-  const meta = {
-    META_VERSION: '1',
-    name: pkg.name,
-    hash,
-    version: pkg.version,
-    dependencies: pkg.dependencies,
-    devDependencies: pkg.devDependencies,
-    peerDependencies: pkg.peerDependencies,
-    optionalDependencies: pkg.optionalDependencies,
-  }
-  const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
-
-  await pushCommit({cwd, to, branch, msg, files, gitCommitterEmail, gitCommitterName, basicAuth})
 }
 
 export const ghRelease = async (pkg) => {
@@ -82,31 +59,4 @@ const ghPages = async (pkg) => {
     gitCommitterName,
     basicAuth
   })
-}
-
-export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
-
-export const getLatestMeta = async (cwd, tag) => {
-  if (!tag) return null
-
-  try {
-    const _cwd = await fetchRepo({cwd, branch: 'meta'})
-    return await Promise.any([
-      fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
-      fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
-    ])
-  } catch {}
-
-  return null
-}
-
-export const getLatest = async (pkg) => {
-  const {absPath: cwd, name} = pkg
-  const tag = await getLatestTag(cwd, name)
-  const meta = await getLatestMeta(cwd, tag?.ref) || await fetchManifest(pkg, {nothrow: true})
-
-  return {
-    tag,
-    meta
-  }
 }

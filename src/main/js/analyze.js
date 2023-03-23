@@ -1,6 +1,6 @@
 import {semver} from 'zx-extra'
 import {updateDeps} from './deps.js'
-import {formatTag} from './tag.js';
+import {formatTag} from './meta.js';
 import {log} from './log.js'
 import {getCommits} from './repo.js'
 
