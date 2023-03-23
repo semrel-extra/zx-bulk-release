@@ -102,8 +102,8 @@ export const parseTag = (tag) => f0.parse(tag) || f1.parse(tag) || lerna.parse(t
 
 export const formatTag = (tag) => f0.format(tag) || f1.format(tag) || null
 
-export const getTags = async (cwd) =>
-  (await $.o({cwd})`git tag -l`).toString()
+export const getTags = async (cwd, ref = '') =>
+  (await $.o({cwd})`git tag -l ${ref}`).toString()
     .split('\n')
     .map(tag => parseTag(tag.trim()))
     .filter(Boolean)

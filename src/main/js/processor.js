@@ -16,8 +16,9 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
   log()('zx-bulk-release')
 
   try {
-    const {packages, queue, root, sources, next, prev, nodes} = await topo({cwd, flags})
+    const {packages, queue, root, sources, next, prev, nodes, graphs, edges} = await topo({cwd, flags})
     log()('queue:', queue)
+    log()('graphs', graphs)
 
     state.setQueue(queue, packages)
 
