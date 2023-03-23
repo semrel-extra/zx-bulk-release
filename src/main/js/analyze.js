@@ -25,11 +25,11 @@ export const semanticRules = [
   {group: 'BREAKING CHANGES', releaseType: 'major', keywords: ['BREAKING CHANGE', 'BREAKING CHANGES']},
 ]
 
-export const getPkgCommits = async (cwd, since) => ctx(async ($) => {
-  const range = since ? `${since}..HEAD` : 'HEAD'
+export const getPkgCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
+  const ref = from ? `${from}..${to}` : to
 
   $.cwd = cwd
-  return (await $.raw`git log ${range} --format=+++%s__%b__%h__%H -- .`)
+  return (await $.raw`git log ${ref} --format=+++%s__%b__%h__%H -- .`)
     .toString()
     .split('+++')
     .filter(Boolean)
@@ -39,8 +39,8 @@ export const getPkgCommits = async (cwd, since) => ctx(async ($) => {
     })
 })
 
-export const getSemanticChanges = async (cwd, since) => {
-  const commits = await getPkgCommits(cwd, since)
+export const getSemanticChanges = async (cwd, from, to) => {
+  const commits = await getPkgCommits(cwd, from, to)
 
   return analyzeCommits(commits)
 }
