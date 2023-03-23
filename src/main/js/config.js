@@ -1,4 +1,5 @@
 import { cosmiconfig } from 'cosmiconfig'
+import { camelize } from './util.js'
 
 const CONFIG_NAME = 'release'
 const CONFIG_FILES = [
@@ -15,22 +16,26 @@ const CONFIG_FILES = [
 
 export const defaultConfig = {
   cmd: 'yarn && yarn build && yarn test',
-  npmFetch: true,
   changelog: 'changelog',
+  npmFetch: true,
   ghRelease: true,
   // npmPublish: true,
   // ghPages: 'gh-pages'
 }
 
-export const getConfig = async (...cwds) =>
-  normalizeConfig((await Promise.all(cwds.map(
+export const getPkgConfig = async (...cwds) =>
+  normalizePkgConfig((await Promise.all(cwds.map(
     cwd => cosmiconfig(CONFIG_NAME, { searchPlaces: CONFIG_FILES }).search(cwd).then(r => r?.config)
   ))).find(Boolean) || defaultConfig)
 
-export const normalizeConfig = config => ({
+export const normalizePkgConfig = (config, env) => ({
+  ...parseEnv(env),
   ...config,
   npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
-  buildCmd: config.buildCmd || config.cmd
+  buildCmd: config.buildCmd || config.cmd,
+  get ghBasicAuth() {
+    return this.ghUser && this.ghToken ? `${this.ghUser}: ${this.ghToken}` : false
+  }
 })
 
 export const parseEnv = (env = process.env) => {
@@ -47,5 +52,4 @@ export const parseEnv = (env = process.env) => {
   }
 }
 
-const camelize = s => s.replace(/-./g, x => x[1].toUpperCase())
 export const normalizeFlags = (flags = {}) => Object.entries(flags).reduce((acc, [k, v]) => ({...acc, [camelize(k)]: v}), {})

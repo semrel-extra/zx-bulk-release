@@ -1,7 +1,6 @@
 import {fs, path, $} from 'zx-extra'
 import {formatTag, getLatestTag, pushTag} from './tag.js'
-import {push, fetch, parseRepo} from './repo.js'
-import {parseEnv} from './config.js'
+import {pushCommit, fetchRepo, getRepo} from './repo.js'
 import {fetchManifest, npmPublish} from './npm.js'
 import {msgJoin} from './util.js'
 import {runCmd} from './processor.js'
@@ -21,7 +20,7 @@ export const publish = async (pkg, run = runCmd) => {
 export const pushMeta = async (pkg) => {
   log({pkg})('push artifact to branch \'meta\'')
 
-  const {name, version, absPath: cwd} = pkg
+  const {name, version, absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   const tag = formatTag({name, version})
   const to = '.'
   const branch = 'meta'
@@ -39,17 +38,17 @@ export const pushMeta = async (pkg) => {
   }
   const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
-  await push({cwd, to, branch, msg, files})
+  await pushCommit({cwd, to, branch, msg, files, gitCommitterEmail, gitCommitterName, basicAuth})
 }
 
 export const ghRelease = async (pkg) => {
   log({pkg})(`create gh release`)
 
-  const {ghToken} = parseEnv($.env)
+  const {ghBasicAuth: basicAuth, ghToken} = pkg.config
   if (!ghToken) return null
 
   const {name, version, absPath: cwd} = pkg
-  const {repoName} = await parseRepo(cwd)
+  const {repoName} = await getRepo(cwd, {basicAuth})
   const tag = formatTag({name, version})
   const releaseNotes = await formatReleaseNotes(pkg)
   const releaseData = JSON.stringify({
@@ -62,24 +61,24 @@ export const ghRelease = async (pkg) => {
 }
 
 const pushChangelog = async (pkg) => {
-  const {config: {changelog: opts}} = pkg
+  const {absPath: cwd, config: {changelog: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   if (!opts) return
 
   log({pkg})('push changelog')
   const [branch = 'changelog', file = `${pkg.name.replace(/[^a-z0-9-]/ig, '')}-changelog.md`, ..._msg] = typeof opts === 'string'
     ? opts.split(' ')
     : [opts.branch, opts.file, opts.msg]
-  const _cwd = await fetch({cwd: pkg.absPath, branch})
+  const _cwd = await fetchRepo({cwd, branch, basicAuth})
   const msg = msgJoin(_msg, pkg, 'chore: update changelog ${{name}}')
   const releaseNotes = await formatReleaseNotes(pkg)
 
   await $.o({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
-  await push({cwd: pkg.absPath, branch, msg})
+  await pushCommit({cwd, branch, msg, gitCommitterEmail, gitCommitterName, basicAuth})
 }
 
 const formatReleaseNotes = async (pkg) => {
-  const {name, version, absPath: cwd} = pkg
-  const {repoPublicUrl} = await parseRepo(cwd)
+  const {name, version, absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
+  const {repoPublicUrl} = await getRepo(cwd, {basicAuth})
   const tag = formatTag({name, version})
   const releaseDiffRef = `## [${name}@${version}](${repoPublicUrl}/compare/${pkg.latest.tag?.ref}...${tag}) (${new Date().toISOString().slice(0, 10)})`
   const releaseDetails = Object.values(pkg.changes
@@ -99,7 +98,7 @@ ${commits.join('\n')}`).join('\n')
 }
 
 const ghPages = async (pkg) => {
-  const {config: {ghPages: opts}} = pkg
+  const {config: {ghPages: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   if (!opts) return
 
   const [branch = 'gh-pages', from = 'docs', to = '.', ..._msg] = typeof opts === 'string'
@@ -109,12 +108,15 @@ const ghPages = async (pkg) => {
 
   log({pkg})(`publish docs to ${branch}`)
 
-  await push({
+  await pushCommit({
     cwd: path.join(pkg.absPath, from),
     from: '.',
     to,
     branch,
-    msg
+    msg,
+    gitCommitterEmail,
+    gitCommitterName,
+    basicAuth
   })
 }
 
@@ -124,7 +126,7 @@ export const getLatestMeta = async (cwd, tag) => {
   if (!tag) return null
 
   try {
-    const _cwd = await fetch({cwd, branch: 'meta'})
+    const _cwd = await fetchRepo({cwd, branch: 'meta'})
     return await Promise.any([
       fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
       fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))

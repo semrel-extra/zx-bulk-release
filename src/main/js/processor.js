@@ -1,14 +1,15 @@
 import os from 'node:os'
 import {$, within} from 'zx-extra'
-import {log} from './log.js'
-import {topo, traverseQueue} from './deps.js'
+import {queuefy} from 'queuefy'
 import {analyze} from './analyze.js'
 import {build} from './build.js'
+import {getPkgConfig} from './config.js'
+import {topo, traverseQueue} from './deps.js'
+import {log} from './log.js'
 import {getLatest, publish} from './publish.js'
+import {getRoot, getSha} from './repo.js'
 import {createState} from './state.js'
 import {memoizeBy, tpl} from './util.js'
-import {queuefy} from 'queuefy'
-import {getConfig} from "./config.js";
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   const {state, build, publish} = createContext(flags, env)
@@ -96,12 +97,12 @@ const createContext = (flags, env) => {
 
 // Inspired by https://docs.github.com/en/actions/learn-github-actions/contexts
 export const contextify = async (pkg, packages, root) => {
-  pkg.config = await getConfig(pkg.absPath, root.absPath)
+  pkg.config = await getPkgConfig(pkg.absPath, root.absPath)
   pkg.latest = await getLatest(pkg)
   pkg.context = {
     git: {
-      sha: (await $`git rev-parse HEAD`).toString().trim(),
-      root: (await $`git rev-parse --show-toplevel`).toString().trim(),
+      sha: await getSha(pkg.absPath),
+      root: await getRoot(pkg.absPath)
     },
     env: $.env,
     packages

@@ -146,9 +146,10 @@ By default, it omits the packages marked as `private`. You can override this by 
 
 ### `analyze`
 Determines pkg changes, release type, next version etc.
+
 ```js
 export const analyze = async (pkg, packages, root) => {
-  pkg.config = await getConfig(pkg.absPath, root.absPath)
+  pkg.config = await getPkgConfig(pkg.absPath, root.absPath)
   pkg.latest = await getLatest(pkg)
 
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)

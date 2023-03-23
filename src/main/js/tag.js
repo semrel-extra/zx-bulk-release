@@ -6,9 +6,9 @@ import {parseEnv} from './config.js'
 import {log} from './log.js'
 
 export const pushTag = (pkg) => ctx(async ($) => {
-  const {absPath: cwd, name, version} = pkg
+  const {absPath: cwd, name, version, config} = pkg
   const tag = formatTag({name, version})
-  const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
+  const {gitCommitterEmail, gitCommitterName} = config
 
   pkg.context.git.tag = tag
   log({pkg})(`push release tag ${tag}`)

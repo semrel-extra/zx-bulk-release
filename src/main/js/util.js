@@ -55,3 +55,5 @@ export const memoizeBy = (fn, memo = new Map(), getKey = v => v) => (...args) =>
   memo.set(key, value)
   return value
 }
+
+export const camelize = s => s.replace(/-./g, x => x[1].toUpperCase())

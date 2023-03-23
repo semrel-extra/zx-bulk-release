@@ -1,14 +1,13 @@
-import {parseEnv} from './config.js'
 import {log} from './log.js'
 import {$, ctx, fs, path, INI, fetch} from 'zx-extra'
 
-export const fetchPkg = async (pkg, {env = $.env} = {}) => {
+export const fetchPkg = async (pkg, {env} = {}) => {
   const id = `${pkg.name}@${pkg.version}`
 
   try {
     log({pkg})(`fetching '${id}'`)
     const cwd = pkg.absPath
-    const {npmRegistry, npmToken, npmConfig} = parseEnv(env)
+    const {npmRegistry, npmToken, npmConfig} = env || pkg.config
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
     await $.raw`wget --timeout=10 --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
@@ -19,8 +18,8 @@ export const fetchPkg = async (pkg, {env = $.env} = {}) => {
   }
 }
 
-export const fetchManifest = async (pkg, {nothrow, env = $.env} = {}) => {
-  const {npmRegistry, npmToken, npmConfig} = parseEnv(env)
+export const fetchManifest = async (pkg, {nothrow} = {}) => {
+  const {npmRegistry, npmToken, npmConfig} = pkg.config
   const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
   const url = getManifestUrl(npmRegistry, pkg.name, pkg.version)
 
@@ -36,9 +35,9 @@ export const fetchManifest = async (pkg, {nothrow, env = $.env} = {}) => {
 }
 
 export const npmPublish = (pkg) => ctx(async ($) => {
-  const {absPath: cwd, name, version, manifest} = pkg
-  if (manifest.private || pkg.config?.npmPublish === false) return
-  const {npmRegistry, npmToken, npmConfig} = parseEnv($.env)
+  const {absPath: cwd, name, version, manifest, config} = pkg
+  if (manifest.private || config?.npmPublish === false) return
+  const {npmRegistry, npmToken, npmConfig} = config
   const npmrc = npmConfig ? npmConfig : path.resolve(cwd, '.npmrc')
 
   log({pkg})(`publish npm package ${name} ${version} to ${npmRegistry}`)
