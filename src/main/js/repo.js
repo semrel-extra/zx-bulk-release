@@ -4,13 +4,13 @@ import {log} from './log.js'
 import {keyByValue} from './util.js'
 
 const branches = {}
-export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async ($) => {
+export const fetchRepo = async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => ctx(async ($) => {
   const root = await getRoot(_cwd)
   const id = `${root}:${branch}`
 
   if (branches[id]) return branches[id]
 
-  const origin = _origin || (await parseRepo(_cwd)).repoAuthedUrl
+  const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl
   const cwd = tempy.temporaryDirectory()
   $.cwd = cwd
   try {
@@ -25,14 +25,14 @@ export const fetch = async ({cwd: _cwd, branch, origin: _origin}) => ctx(async (
   return branches[id]
 })
 
-export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = []}) => ctx(async ($) => {
+export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => ctx(async ($) => {
   let retries = 3
   let _cwd
 
   while (retries > 0) {
     try {
-      const {gitCommitterEmail, gitCommitterName} = parseEnv($.env)
-      _cwd = await fetch({cwd, branch, origin})
+
+      _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
 
       for (let {relpath, contents} of files) {
         const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
@@ -62,16 +62,15 @@ export const push = async ({cwd, from, to, branch, origin, msg, ignoreFiles, fil
 })
 
 const repos = {}
-export const parseRepo = async (_cwd) => {
+export const getRepo = async (_cwd, {basicAuth} = {}) => {
   const cwd = await getRoot(_cwd)
   if (repos[cwd]) return repos[cwd]
 
-  const {ghToken, ghUser} = parseEnv($.env)
   const originUrl = await getOrigin(cwd)
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
-  const repoAuthedUrl = ghToken && ghUser && repoHost && repoName
-    ? `https://${ghUser}:${ghToken}@${repoHost}/${repoName}.git`
+  const repoAuthedUrl = basicAuth && repoHost && repoName
+    ? `https://${basicAuth}@${repoHost}/${repoName}.git`
     : originUrl
 
   repos[cwd] = {
@@ -95,3 +94,5 @@ export const getOrigin = async (cwd) => {
 }
 
 export const getRoot = async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim()
+
+export const getSha = async (cwd) => (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
