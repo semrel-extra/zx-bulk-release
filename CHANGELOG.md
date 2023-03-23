@@ -1,3 +1,11 @@
+## [2.2.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.6...v2.2.0) (2023-03-23)
+
+### Fixes & improvements
+* fix: fix basicAuth tpl ([b6af2f5](https://github.com/semrel-extra/zx-bulk-release/commit/b6af2f51a2e13ddb5a3b6b1ef288595aae61e746))
+
+### Features
+* feat: inherit gh and npm creds from pkg release configs ([f07dd4f](https://github.com/semrel-extra/zx-bulk-release/commit/f07dd4fa0cf9d26942780ccf0c34406b345dae39))
+
 ## [2.1.6](https://github.com/semrel-extra/zx-bulk-release/compare/v2.1.5...v2.1.6) (2023-03-22)
 
 ### Fixes & improvements
