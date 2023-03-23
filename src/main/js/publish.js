@@ -1,6 +1,6 @@
 import {fs, path, $} from 'zx-extra'
 import {formatTag, pushTag} from './meta.js'
-import {pushCommit, getRepo} from './repo.js'
+import {pushCommit, getRepo} from './git.js'
 import {npmPublish} from './npm.js'
 import {pushChangelog, formatReleaseNotes} from './changelog.js'
 import {msgJoin} from './util.js'

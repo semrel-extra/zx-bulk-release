@@ -1,6 +1,6 @@
 import {$} from 'zx-extra'
 import {log} from './log.js'
-import {fetchRepo, getRepo, pushCommit} from './repo.js'
+import {fetchRepo, getRepo, pushCommit} from './git.js'
 import {msgJoin} from './util.js'
 import {formatTag} from './meta.js'
 

@@ -3,7 +3,7 @@
 import {ctx, semver, $, fs, path} from 'zx-extra'
 import {Buffer} from 'buffer'
 import {log} from './log.js'
-import {fetchRepo, pushCommit} from './repo.js'
+import {fetchRepo, pushCommit, getTags as getGitTags} from './git.js'
 import {fetchManifest} from './npm.js'
 
 export const pushTag = (pkg) => ctx(async ($) => {
@@ -138,8 +138,7 @@ export const parseTag = (tag) => f0.parse(tag) || f1.parse(tag) || lerna.parse(t
 export const formatTag = (tag) => f0.format(tag) || f1.format(tag) || null
 
 export const getTags = async (cwd, ref = '') =>
-  (await $.o({cwd})`git tag -l ${ref}`).toString()
-    .split('\n')
+  (await getGitTags(cwd, ref))
     .map(tag => parseTag(tag.trim()))
     .filter(Boolean)
     .sort((a, b) => semver.rcompare(a.version, b.version))

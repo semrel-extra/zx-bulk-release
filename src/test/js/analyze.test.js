@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 
 import {topo} from '@semrel-extra/topo'
 import {analyzeCommits} from '../../main/js/analyze.js'
-import {getCommits} from '../../main/js/repo.js'
+import {getCommits} from '../../main/js/git.js'
 import {createFakeRepo} from './test-utils.js'
 
 const test = suite('analyze')
