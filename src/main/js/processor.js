@@ -114,7 +114,8 @@ const contextify = async (pkg, packages, root) => {
   }
 }
 
-const build = async (pkg, packages, run = runCmd, self = build) => {
+const build = async (pkg, packages, run = runCmd, self = build) => within(async () => {
+  $.scope = pkg.name
   if (pkg.built) return
 
   await Promise.all([
@@ -130,9 +131,10 @@ const build = async (pkg, packages, run = runCmd, self = build) => {
   }
 
   pkg.built = true
-}
+})
 
-const publish = async (pkg, run = runCmd) => {
+const publish = async (pkg, run = runCmd) => within(async () => {
+  $.scope = pkg.name
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
   await pushTag(pkg)
 
@@ -144,4 +146,4 @@ const publish = async (pkg, run = runCmd) => {
     ghPages(pkg),
     run(pkg, 'publishCmd')
   ])
-}
+})

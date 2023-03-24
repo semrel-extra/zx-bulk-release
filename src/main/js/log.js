@@ -53,7 +53,7 @@ export const createReport = ({logger = console, file = null} = {}) => ({
   },
   log(ctx = {}) {
     return function (...chunks) {
-      const {pkg, scope = pkg?.name || '~', level = 'info'} = ctx
+      const {pkg, scope = pkg?.name || $.scope || '~', level = 'info'} = ctx
       const msg = chunks.map(c => typeof c === 'string' ? tpl(c, ctx) : c)
       const event = {msg, scope, date: Date.now(), level}
       this.events.push(event)

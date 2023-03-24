@@ -53,8 +53,12 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
       return await $.raw`git push origin HEAD:refs/heads/${branch}`
     } catch (e) {
       retries -= 1
+      log({level: 'error'})('git push failed', 'branch', branch, 'retries left', retries, e)
       branches[keyByValue(branches, _cwd)] = null
-      log({level: 'warn'})('git push failed', 'retries left', retries, e)
+
+      if (retries === 0) {
+        throw e
+      }
     }
   }
 })
@@ -64,6 +68,7 @@ export const getRepo = async (_cwd, {basicAuth} = {}) => {
   const cwd = await getRoot(_cwd)
   if (repos[cwd]) return repos[cwd]
 
+  console.log('!!! has basic auth', !!basicAuth)
   const originUrl = await getOrigin(cwd)
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
