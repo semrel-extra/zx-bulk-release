@@ -1,3 +1,8 @@
+## [2.2.5](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.4...v2.2.5) (2023-03-24)
+
+### Fixes & improvements
+* perf: print err.stack on process failure ([5f3271f](https://github.com/semrel-extra/zx-bulk-release/commit/5f3271fa4e85d6d8f0b23ad240c9d566fddf69be))
+
 ## [2.2.4](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.3...v2.2.4) (2023-03-24)
 
 ### Fixes & improvements
