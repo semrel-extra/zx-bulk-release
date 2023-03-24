@@ -1,14 +1,8 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import {log} from './log.js'
-import {keyByValue} from './util.js'
+import {keyByValue, memoizeBy} from './util.js'
 
-const branches = {}
-export const fetchRepo = async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => ctx(async ($) => {
-  const root = await getRoot(_cwd)
-  const id = `${root}:${branch}`
-
-  if (branches[id]) return branches[id]
-
+export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => ctx(async ($) => {
   const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl
   const cwd = tempy.temporaryDirectory()
   $.cwd = cwd
@@ -19,10 +13,9 @@ export const fetchRepo = async ({cwd: _cwd, branch, origin: _origin, basicAuth})
     await $`git init .`
     await $`git remote add origin ${origin}`
   }
-  branches[id] = cwd
 
-  return branches[id]
-})
+  return cwd
+}), async ({cwd, branch}) => `${await getRoot(cwd)}:${branch}`)
 
 export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => ctx(async ($) => {
   let retries = 3
@@ -54,7 +47,6 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
     } catch (e) {
       retries -= 1
       log({level: 'error'})('git push failed', 'branch', branch, 'retries left', retries, e)
-      branches[keyByValue(branches, _cwd)] = null
 
       if (retries === 0) {
         throw e
@@ -63,11 +55,11 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
   }
 })
 
-const repos = {}
-export const getRepo = async (_cwd, {basicAuth} = {}) => {
-  const cwd = await getRoot(_cwd)
-  if (repos[cwd]) return repos[cwd]
+export const getRoot = async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim()
 
+export const getSha = async (cwd) => (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
+
+export const getRepo = memoizeBy(async (cwd, {basicAuth} = {}) => {
   const originUrl = await getOrigin(cwd)
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
@@ -75,29 +67,18 @@ export const getRepo = async (_cwd, {basicAuth} = {}) => {
     ? `https://${basicAuth}@${repoHost}/${repoName}.git`
     : originUrl
 
-  repos[cwd] = {
+  return {
     repoName,
     repoHost,
     repoPublicUrl,
     repoAuthedUrl,
     originUrl,
   }
+}, getRoot)
 
-  return repos[cwd]
-}
-
-const origins = {}
-export const getOrigin = async (cwd) => {
-  if (!origins[cwd]) {
-    origins[cwd] = $.o({cwd})`git config --get remote.origin.url`.then(r => r.toString().trim())
-  }
-
-  return origins[cwd]
-}
-
-export const getRoot = async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim()
-
-export const getSha = async (cwd) => (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
+export const getOrigin = memoizeBy(async (cwd) =>
+  $.o({cwd})`git config --get remote.origin.url`.then(r => r.toString().trim())
+)
 
 export const getCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
   const ref = from ? `${from}..${to}` : to
