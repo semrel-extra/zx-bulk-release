@@ -45,8 +45,8 @@ export const getPromise = () => {
 
 export const keyByValue = (obj, value) => Object.keys(obj).find((key) => obj[key] === value)
 
-export const memoizeBy = (fn, memo = new Map(), getKey = v => v) => (...args) => {
-  const key = getKey(...args)
+export const memoizeBy = (fn, getKey = v => v, memo = new Map()) => async (...args) => {
+  const key = await getKey(...args)
   if (memo.has(key)) {
     return memo.get(key)
   }
