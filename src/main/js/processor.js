@@ -63,7 +63,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     }})
   } catch (e) {
     report
-      .log({level: 'error'})(e)
+      .log({level: 'error'})(e, e.stack)
       .set('error', e)
       .setStatus('failure')
     throw e

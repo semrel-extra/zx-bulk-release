@@ -45,9 +45,9 @@ export const pushMeta = async (pkg) => {
 }
 
 export const getLatest = async (pkg) => {
-  const {absPath: cwd, name} = pkg
+  const {absPath: cwd, name, config: {ghBasicAuth: basicAuth}} = pkg
   const tag = await getLatestTag(cwd, name)
-  const meta = await getLatestMeta(cwd, tag?.ref) || await fetchManifest(pkg, {nothrow: true})
+  const meta = await getLatestMeta(cwd, tag?.ref, basicAuth) || await fetchManifest(pkg, {nothrow: true})
 
   return {
     tag,
@@ -155,11 +155,11 @@ export const parseDateTag = (date) => new Date(date.replaceAll('.', '-')+'Z')
 
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
-export const getLatestMeta = async (cwd, tag) => {
+export const getLatestMeta = async (cwd, tag, basicAuth) => {
   if (!tag) return null
 
   try {
-    const _cwd = await fetchRepo({cwd, branch: 'meta'})
+    const _cwd = await fetchRepo({cwd, branch: 'meta', basicAuth})
     return await Promise.any([
       fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
       fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))

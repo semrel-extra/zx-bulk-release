@@ -68,9 +68,6 @@ export const getRepo = async (_cwd, {basicAuth} = {}) => {
   const cwd = await getRoot(_cwd)
   if (repos[cwd]) return repos[cwd]
 
-  const e = new Error()
-  console.log('!!! has basic auth', !!basicAuth, e.stack)
-
   const originUrl = await getOrigin(cwd)
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
   const repoPublicUrl = `https://${repoHost}/${repoName}`
@@ -92,7 +89,7 @@ export const getRepo = async (_cwd, {basicAuth} = {}) => {
 const origins = {}
 export const getOrigin = async (cwd) => {
   if (!origins[cwd]) {
-    origins[cwd] = (await $.o({cwd})`git config --get remote.origin.url`).toString().trim()
+    origins[cwd] = $.o({cwd})`git config --get remote.origin.url`.then(r => r.toString().trim())
   }
 
   return origins[cwd]
