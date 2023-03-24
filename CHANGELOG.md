@@ -1,3 +1,8 @@
+## [2.2.10](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.9...v2.2.10) (2023-03-24)
+
+### Fixes & improvements
+* fix: debug point for publish step ([c4eedf9](https://github.com/semrel-extra/zx-bulk-release/commit/c4eedf9ddbe2120961ffc5f55b723cbbdc41cef8))
+
 ## [2.2.9](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.8...v2.2.9) (2023-03-24)
 
 ### Fixes & improvements
