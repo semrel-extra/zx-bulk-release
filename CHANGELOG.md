@@ -1,3 +1,8 @@
+## [2.2.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.1...v2.2.2) (2023-03-24)
+
+### Fixes & improvements
+* fix: fix gitPush retry ([268da72](https://github.com/semrel-extra/zx-bulk-release/commit/268da727036b0d3bf20b1ef10053440c5f56dad0))
+
 ## [2.2.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.0...v2.2.1) (2023-03-23)
 
 ### Fixes & improvements
