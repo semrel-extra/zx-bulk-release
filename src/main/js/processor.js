@@ -14,7 +14,8 @@ import {memoizeBy, tpl} from './util.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   const context = await createContext({flags, env, cwd})
-  const {report, build, publish, packages, queue, prev, graphs} = context
+  const {report, packages, queue, prev, graphs} = context
+  const _runCmd = queuefy(runCmd, flags.concurrency || os.cpus().length)
 
   report
     .log()('zx-bulk-release')
@@ -46,11 +47,11 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
       }
       if (!flags.noBuild) {
         report.setStatus('building', name)
-        await build(pkg)
+        await build(pkg, _runCmd)
       }
       if (!flags.dryRun && !flags.noPublish) {
         report.setStatus('publishing', name)
-        await publish(pkg)
+        await publish(pkg, _runCmd)
       }
 
       report.setStatus('success', name)
@@ -79,9 +80,6 @@ export const runCmd = async (pkg, name) => {
 const createContext = async ({flags, env, cwd}) => {
   const { packages, queue, root, prev, graphs } = await topo({cwd, flags})
   const report =    createReport({packages, queue, flags})
-  const run =       queuefy(runCmd, flags.concurrency || os.cpus().length)
-  const _build =    memoizeBy((pkg) => build(pkg, run, _build, flags))
-  const _publish =  memoizeBy((pkg) => publish(pkg, run))
 
   $.report =        report
   $.env =           {...process.env, ...env}
@@ -89,13 +87,12 @@ const createContext = async ({flags, env, cwd}) => {
 
   return {
     report,
-    build: _build,
-    publish: _publish,
     packages,
     root,
     queue,
     prev,
-    graphs
+    graphs,
+    flags
   }
 }
 
@@ -113,11 +110,11 @@ const contextify = async (pkg, {packages, root}) => {
   }
 }
 
-const build = async (pkg, run = runCmd, self = build, flags = {}) => within(async () => {
+const build = memoizeBy(async (pkg, run = runCmd, flags = {}, self = build) => within(async () => {
   $.scope = pkg.name
 
   await Promise.all([
-    traverseDeps(pkg, pkg.context.packages, async (_, {pkg}) => self(pkg, run, self, flags)),
+    traverseDeps(pkg, pkg.context.packages, async (_, {pkg}) => self(pkg, run, flags, self)),
     pkg.changes.length === 0 && pkg.config.npmFetch && !flags.noNpmFetch
       ? fetchPkg(pkg)
       : Promise.resolve()
@@ -129,10 +126,11 @@ const build = async (pkg, run = runCmd, self = build, flags = {}) => within(asyn
   }
 
   pkg.built = true
-})
+}))
 
-const publish = async (pkg, run = runCmd) => within(async () => {
+const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
   $.scope = pkg.name
+
   await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
   await pushTag(pkg)
 
@@ -146,4 +144,4 @@ const publish = async (pkg, run = runCmd) => within(async () => {
   ])
 
   pkg.published = true
-})
+}))

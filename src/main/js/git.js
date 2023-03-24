@@ -1,6 +1,7 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import {log} from './log.js'
-import {keyByValue, memoizeBy} from './util.js'
+import {memoizeBy} from './util.js'
+import {queuefy} from 'queuefy'
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => ctx(async ($) => {
   const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl
@@ -17,32 +18,30 @@ export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, b
   return cwd
 }), async ({cwd, branch}) => `${await getRoot(cwd)}:${branch}`)
 
-export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => ctx(async ($) => {
+export const pushCommit = queuefy(async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => ctx(async ($) => {
   let retries = 3
-  let _cwd
+
+  const _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
+  $.cwd = _cwd
+
+  for (let {relpath, contents} of files) {
+    const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
+    await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
+  }
+  if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
+
+  try {
+    await $`git config user.name ${gitCommitterName} &&
+            git config user.email ${gitCommitterEmail} &&
+            git add . &&
+            git commit -m ${msg}`
+  } catch {
+    log({level: 'warn'})(`no changes to commit to ${branch}`)
+    return
+  }
 
   while (retries > 0) {
     try {
-      _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
-
-      for (let {relpath, contents} of files) {
-        const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
-        await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
-      }
-      if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
-
-      $.cwd = _cwd
-
-      await $`git config user.name ${gitCommitterName}`
-      await $`git config user.email ${gitCommitterEmail}`
-      await $`git add .`
-      try {
-        await $`git commit -m ${msg}`
-      } catch {
-        log({level: 'warn'})(`no changes to commit to ${branch}`)
-        return
-      }
-
       return await $.raw`git push origin HEAD:refs/heads/${branch}`
     } catch (e) {
       retries -= 1
@@ -51,9 +50,11 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
       if (retries === 0) {
         throw e
       }
+
+      await $`git pull --rebase origin ${branch}`
     }
   }
-})
+}))
 
 export const getRoot = async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim()
 
