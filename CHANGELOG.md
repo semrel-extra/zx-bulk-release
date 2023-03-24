@@ -1,3 +1,8 @@
+## [2.2.6](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.5...v2.2.6) (2023-03-24)
+
+### Fixes & improvements
+* refactor: apply memoize to git utils ([ff8ff78](https://github.com/semrel-extra/zx-bulk-release/commit/ff8ff7840eb65171b7d69d45cafed944627bfd20))
+
 ## [2.2.5](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.4...v2.2.5) (2023-03-24)
 
 ### Fixes & improvements
