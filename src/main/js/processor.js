@@ -13,23 +13,20 @@ import {fetchPkg, npmPublish} from './npm.js'
 import {memoizeBy, tpl} from './util.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
-  const {report, build, publish} = createContext(flags, env)
+  const context = await createContext({flags, env, cwd})
+  const {report, build, publish, packages, queue, prev, graphs} = context
 
-  report.log()('zx-bulk-release')
+  report
+    .log()('zx-bulk-release')
+    .log()('queue:', queue)
+    .log()('graphs', graphs)
 
   try {
-    const {packages, queue, root, prev, graphs} = await topo({cwd, flags})
-    report
-      .log()('queue:', queue)
-      .log()('graphs', graphs)
-      .set('queue', queue)
-      .setPackages(packages)
-
     await traverseQueue({queue, prev, async cb(name) {
       report.setStatus('analyzing', name)
       const pkg = packages[name]
-      await contextify(pkg, packages, root)
-      await analyze(pkg, packages)
+      await contextify(pkg, context)
+      await analyze(pkg)
       report
         .set('config', pkg.config, name)
         .set('version', pkg.version, name)
@@ -47,17 +44,14 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
         report.setStatus('skipped', name)
         return
       }
-
-      report.setStatus('building', name)
-      await build(pkg, packages)
-
-      if (flags.dryRun) {
-        report.setStatus('success', name)
-        return
+      if (!flags.noBuild) {
+        report.setStatus('building', name)
+        await build(pkg)
       }
-
-      report.setStatus('publishing', name)
-      await publish(pkg)
+      if (!flags.dryRun && !flags.noPublish) {
+        report.setStatus('publishing', name)
+        await publish(pkg)
+      }
 
       report.setStatus('success', name)
     }})
@@ -78,30 +72,35 @@ export const runCmd = async (pkg, name) => {
 
   if (cmd) {
     log({pkg})(`run ${name} '${cmd}'`)
-    await $.o({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
+    return $.o({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
   }
 }
 
-const createContext = (flags, env) => {
-  const report = createReport({file: flags.report})
-  const _runCmd = queuefy(runCmd, flags.concurrency || os.cpus().length)
-  const _build = memoizeBy((pkg, packages) => build(pkg, packages, _runCmd, _build))
-  const _publish = memoizeBy((pkg) => publish(pkg, _runCmd))
+const createContext = async ({flags, env, cwd}) => {
+  const { packages, queue, root, prev, graphs } = await topo({cwd, flags})
+  const report =    createReport({packages, queue, flags})
+  const run =       queuefy(runCmd, flags.concurrency || os.cpus().length)
+  const _build =    memoizeBy((pkg) => build(pkg, run, _build, flags))
+  const _publish =  memoizeBy((pkg) => publish(pkg, run))
 
-  $.report = report
-  $.env = {...process.env, ...env}
-  $.verbose = !!(flags.debug || $.env.DEBUG ) || $.verbose
+  $.report =        report
+  $.env =           {...process.env, ...env}
+  $.verbose =       !!(flags.debug || $.env.DEBUG ) || $.verbose
 
   return {
     report,
-    runCmd: _runCmd,
     build: _build,
-    publish: _publish
+    publish: _publish,
+    packages,
+    root,
+    queue,
+    prev,
+    graphs
   }
 }
 
 // Inspired by https://docs.github.com/en/actions/learn-github-actions/contexts
-const contextify = async (pkg, packages, root) => {
+const contextify = async (pkg, {packages, root}) => {
   pkg.config = await getPkgConfig(pkg.absPath, root.absPath)
   pkg.latest = await getLatest(pkg)
   pkg.context = {
@@ -114,13 +113,12 @@ const contextify = async (pkg, packages, root) => {
   }
 }
 
-const build = async (pkg, packages, run = runCmd, self = build) => within(async () => {
+const build = async (pkg, run = runCmd, self = build, flags = {}) => within(async () => {
   $.scope = pkg.name
-  if (pkg.built) return
 
   await Promise.all([
-    traverseDeps(pkg, packages, async (_, {pkg}) => self(pkg, packages, run, self)),
-    pkg.changes.length === 0 && pkg.config.npmFetch
+    traverseDeps(pkg, pkg.context.packages, async (_, {pkg}) => self(pkg, run, self, flags)),
+    pkg.changes.length === 0 && pkg.config.npmFetch && !flags.noNpmFetch
       ? fetchPkg(pkg)
       : Promise.resolve()
   ])
@@ -146,4 +144,6 @@ const publish = async (pkg, run = runCmd) => within(async () => {
     ghPages(pkg),
     run(pkg, 'publishCmd')
   ])
+
+  pkg.published = true
 })

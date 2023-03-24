@@ -1,34 +1,28 @@
 import {$, fs} from 'zx-extra'
 import {get, set, tpl} from './util.js'
 
-export const log = (ctx) => {
-  if ($.report) {
-    return $.report.log(ctx)
-  }
+export const log = (ctx) =>
+  $.report
+    ? $.report.log(ctx)
+    : console.log
 
-  return console.log
-}
-
-export const createReport = ({logger = console, file = null} = {}) => ({
+export const createReport = ({logger = console, packages = {}, queue = [], flags} = {}) => ({
   logger,
-  file,
+  flags,
+  file: flags.report || flags.file,
   status: 'initial',
-  queue: [],
-  packages: {},
   events: [],
-  setPackages(packages) {
-    this.packages = Object.entries(packages).reduce((acc, [name, {manifest: {version}, absPath, relPath}]) => {
-      acc[name] = {
-        status: 'initial',
-        name,
-        version,
-        path: absPath,
-        relPath
-      }
-      return acc
-    }, {})
-    return this
-  },
+  queue,
+  packages: Object.entries(packages).reduce((acc, [name, {manifest: {version}, absPath, relPath}]) => {
+    acc[name] = {
+      status: 'initial',
+      name,
+      version,
+      path: absPath,
+      relPath
+    }
+    return acc
+  }, {}),
   get(key, pkgName) {
     return get(
       pkgName ? this.packages[pkgName] : this,

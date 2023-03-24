@@ -30,19 +30,6 @@ export const set = (obj, path, value) => {
 
 export const msgJoin = (rest, context, def) => tpl(rest.filter(Boolean).join(' ') || def, context)
 
-export const getPromise = () => {
-    let resolve, reject
-    const promise = new Promise((...args) => {
-        [resolve, reject] = args
-    })
-
-    return {
-        resolve,
-        reject,
-        promise,
-    }
-}
-
 export const keyByValue = (obj, value) => Object.keys(obj).find((key) => obj[key] === value)
 
 export const memoizeBy = (fn, getKey = v => v, memo = new Map()) => async (...args) => {

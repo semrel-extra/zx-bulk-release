@@ -6,7 +6,7 @@ import {getCommits} from './git.js'
 
 export const analyze = async (pkg, packages) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
-  const depsChanges = await updateDeps(pkg, packages)
+  const depsChanges = await updateDeps(pkg, pkg.context.packages)
   const changes = [...semanticChanges, ...depsChanges]
   const releaseType = getNextReleaseType(changes)
 

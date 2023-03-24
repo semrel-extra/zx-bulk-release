@@ -15,10 +15,10 @@ const CONFIG_FILES = [
 ]
 
 export const defaultConfig = {
-  cmd: 'yarn && yarn build && yarn test',
-  changelog: 'changelog',
-  npmFetch: true,
-  ghRelease: true,
+  cmd:        'yarn && yarn build && yarn test',
+  changelog:  'changelog',
+  npmFetch:   true,
+  ghRelease:  true,
   // npmPublish: true,
   // ghPages: 'gh-pages'
 }
@@ -38,10 +38,8 @@ export const normalizePkgConfig = (config, env) => ({
   }
 })
 
-export const parseEnv = (env = process.env) => {
-  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
-
-  return {
+export const parseEnv = ({GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) =>
+  ({
     ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
     ghToken:            GH_TOKEN || GITHUB_TOKEN,
     npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
@@ -49,7 +47,6 @@ export const parseEnv = (env = process.env) => {
     npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
     gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
     gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
-  }
-}
+  })
 
 export const normalizeFlags = (flags = {}) => Object.entries(flags).reduce((acc, [k, v]) => ({...acc, [camelize(k)]: v}), {})
