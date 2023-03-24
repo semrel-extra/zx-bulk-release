@@ -4,7 +4,7 @@ import {formatTag} from './meta.js';
 import {log} from './log.js'
 import {getCommits} from './git.js'
 
-export const analyze = async (pkg, packages) => {
+export const analyze = async (pkg) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
   const depsChanges = await updateDeps(pkg, pkg.context.packages)
   const changes = [...semanticChanges, ...depsChanges]
