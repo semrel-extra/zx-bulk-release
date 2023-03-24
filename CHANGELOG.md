@@ -1,3 +1,9 @@
+## [2.2.7](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.6...v2.2.7) (2023-03-24)
+
+### Fixes & improvements
+* docs: describe more CLI flags ([6f7a053](https://github.com/semrel-extra/zx-bulk-release/commit/6f7a053ae2fe2da8fd71858b132ef4ac4d1456ad))
+* refactor: move `topo` to ctx builder ([6fec83c](https://github.com/semrel-extra/zx-bulk-release/commit/6fec83c10dd76feb93a3148eb2c032c6eaa902f1))
+
 ## [2.2.6](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.5...v2.2.6) (2023-03-24)
 
 ### Fixes & improvements
