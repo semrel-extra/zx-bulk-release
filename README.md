@@ -18,10 +18,10 @@
 * No extra builds. The required deps are fetched from the pkg registry (`npmFetch` config opt).
 
 ## Roadmap
+* [x] Store release metrics to `meta`.
+* [ ] ~~Self-repair. Restore broken/missing metadata from external registries (npm, pypi, m2)~~. Tags should be the only source of truth
 * [ ] Multistack. Add support for java/kt/py.
-* [ ] Self-repair. Restore broken/missing metadata from external registries (npm, pypi, m2).
 * [ ] Semaphore. Let several release agents to serve the monorepo at the same time.
-* [ ] Stats. Store release metrics to `meta`.
 
 ## Requirements
 * macOS / linux
@@ -37,11 +37,16 @@ yarn add zx-bulk-release
 ```shell
 GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
-| Flag                | Description                | Default  |
-|---------------------|----------------------------|----------|
-| `--dry-run`         | Dry run mode               | `false`  |
-| `--ignore`          | Packages to ignore: `a, b` |          |
-| `--include-private` | Include private pkgs       | `false`  |
+| Flag                         | Description                                                    | Default          |
+|------------------------------|----------------------------------------------------------------|------------------|
+| `--ignore`                   | Packages to ignore: `a, b`                                     |                  |
+| `--include-private`          | Include `private` packages                                       | `false`          |
+| `--concurrency`              | `build/publish` threads limit                                  | `os.cpus.length` |
+| `--no-build`                 | Skip `buildCmd` invoke                                         |                  |
+| `--no-npm-fetch`             | Disable npm artifacts fetching                                 |                  |                      
+| `--dry-run` / `--no-publish` | Disable any publish logic                                      |                  |
+| `--report`                   | Persist release state to file                                  |                  |
+| `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode |                  |
 
 ### JS API
 ```js
