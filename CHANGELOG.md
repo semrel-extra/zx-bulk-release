@@ -1,3 +1,8 @@
+## [2.2.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.2...v2.2.3) (2023-03-24)
+
+### Fixes & improvements
+* fix: debug ([c1699e6](https://github.com/semrel-extra/zx-bulk-release/commit/c1699e6c7d8bbc180c4ef17dfdb9f25816814578))
+
 ## [2.2.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.1...v2.2.2) (2023-03-24)
 
 ### Fixes & improvements
