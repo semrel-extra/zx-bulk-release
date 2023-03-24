@@ -1,8 +1,9 @@
+import {queuefy} from 'queuefy'
+import {$, path} from 'zx-extra'
 import {log} from './log.js'
 import {getRepo, pushCommit} from './git.js'
 import {formatTag} from './meta.js'
 import {formatReleaseNotes} from './changelog.js'
-import {$, path} from 'zx-extra'
 import {msgJoin} from './util.js'
 
 export const ghRelease = async (pkg) => {
@@ -24,7 +25,7 @@ export const ghRelease = async (pkg) => {
   await $.o({cwd})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
 }
 
-export const ghPages = async (pkg) => {
+export const ghPages = queuefy(async (pkg) => {
   const {config: {ghPages: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   if (!opts) return
 
@@ -45,4 +46,4 @@ export const ghPages = async (pkg) => {
     gitCommitterName,
     basicAuth
   })
-}
+})

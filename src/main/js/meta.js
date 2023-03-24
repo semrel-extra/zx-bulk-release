@@ -1,7 +1,8 @@
 // Semantic tags processing
 
+import {Buffer} from 'node:buffer'
+import {queuefy} from 'queuefy'
 import {ctx, semver, $, fs, path} from 'zx-extra'
-import {Buffer} from 'buffer'
 import {log} from './log.js'
 import {fetchRepo, pushCommit, getTags as getGitTags} from './git.js'
 import {fetchManifest} from './npm.js'
@@ -20,7 +21,7 @@ export const pushTag = (pkg) => ctx(async ($) => {
   await $`git push origin ${tag}`
 })
 
-export const pushMeta = async (pkg) => {
+export const pushMeta = queuefy(async (pkg) => {
   log({pkg})('push artifact to branch \'meta\'')
 
   const {name, version, absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
@@ -42,7 +43,7 @@ export const pushMeta = async (pkg) => {
   const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
   await pushCommit({cwd, to, branch, msg, files, gitCommitterEmail, gitCommitterName, basicAuth})
-}
+})
 
 export const getLatest = async (pkg) => {
   const {absPath: cwd, name, config: {ghBasicAuth: basicAuth}} = pkg

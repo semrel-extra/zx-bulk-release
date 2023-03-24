@@ -1,7 +1,6 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
 import {log} from './log.js'
 import {memoizeBy} from './util.js'
-import {queuefy} from 'queuefy'
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => ctx(async ($) => {
   const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl
@@ -18,7 +17,7 @@ export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, b
   return cwd
 }), async ({cwd, branch}) => `${await getRoot(cwd)}:${branch}`)
 
-export const pushCommit = queuefy(async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => ctx(async ($) => {
+export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => ctx(async ($) => {
   let retries = 3
 
   const _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
@@ -54,7 +53,7 @@ export const pushCommit = queuefy(async ({cwd, from, to, branch, origin, msg, ig
       await $`git pull --rebase origin ${branch}`
     }
   }
-}))
+})
 
 export const getRoot = async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim()
 
