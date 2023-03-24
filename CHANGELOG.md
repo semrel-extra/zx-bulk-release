@@ -1,3 +1,8 @@
+## [2.2.8](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.7...v2.2.8) (2023-03-24)
+
+### Fixes & improvements
+* fix: fix git-push-rebase-retry hook ([30df2f1](https://github.com/semrel-extra/zx-bulk-release/commit/30df2f1d25d43145343e47f2f96d4a00955d6b76))
+
 ## [2.2.7](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.6...v2.2.7) (2023-03-24)
 
 ### Fixes & improvements
