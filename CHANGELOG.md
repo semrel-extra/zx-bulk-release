@@ -1,3 +1,8 @@
+## [2.2.9](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.8...v2.2.9) (2023-03-24)
+
+### Fixes & improvements
+* refactor: wrap git pushers with queuefy ([2e9355f](https://github.com/semrel-extra/zx-bulk-release/commit/2e9355f69724a8ba097024456cbe5a80f37ea2a7))
+
 ## [2.2.8](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.7...v2.2.8) (2023-03-24)
 
 ### Fixes & improvements
