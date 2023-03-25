@@ -1,3 +1,8 @@
+## [2.2.11](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.10...v2.2.11) (2023-03-25)
+
+### Fixes & improvements
+* perf: apply memoize to `gitRoot` ([4f3488b](https://github.com/semrel-extra/zx-bulk-release/commit/4f3488bd4a7faea756e7c5b6ad6e59bbdf81846b))
+
 ## [2.2.10](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.9...v2.2.10) (2023-03-24)
 
 ### Fixes & improvements
