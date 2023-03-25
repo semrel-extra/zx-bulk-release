@@ -55,9 +55,9 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
   }
 })
 
-export const getRoot = async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim()
-
 export const getSha = async (cwd) => (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
+
+export const getRoot = memoizeBy(async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim())
 
 export const getRepo = memoizeBy(async (cwd, {basicAuth} = {}) => {
   const originUrl = await getOrigin(cwd)
