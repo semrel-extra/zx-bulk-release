@@ -1,3 +1,8 @@
+## [2.2.13](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.12...v2.2.13) (2023-03-27)
+
+### Fixes & improvements
+* perf: republish as `bulk-release` ([7927df7](https://github.com/semrel-extra/zx-bulk-release/commit/7927df77eb5ac1898d7df1156f0ab17e42d26464))
+
 ## [2.2.12](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.11...v2.2.12) (2023-03-27)
 
 ### Fixes & improvements
