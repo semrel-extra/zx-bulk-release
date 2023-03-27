@@ -50,7 +50,8 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
         throw e
       }
 
-      await $`git pull --rebase origin ${branch}`
+      await $`git fetch origin ${branch} &&
+              git rebase origin/${branch}`
     }
   }
 })
