@@ -10,8 +10,8 @@ export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, b
     await $`git clone --single-branch --branch ${branch} --depth 1 ${origin} .`
   } catch (e) {
     log({level: 'warn'})(`ref '${branch}' does not exist in ${origin}`)
-    await $`git init .`
-    await $`git remote add origin ${origin}`
+    await $`git init . &&
+            git remote add origin ${origin}`
   }
 
   return cwd

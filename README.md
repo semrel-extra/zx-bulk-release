@@ -40,7 +40,7 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 | Flag                         | Description                                                    | Default          |
 |------------------------------|----------------------------------------------------------------|------------------|
 | `--ignore`                   | Packages to ignore: `a, b`                                     |                  |
-| `--include-private`          | Include `private` packages                                       | `false`          |
+| `--include-private`          | Include `private` packages                                     | `false`          |
 | `--concurrency`              | `build/publish` threads limit                                  | `os.cpus.length` |
 | `--no-build`                 | Skip `buildCmd` invoke                                         |                  |
 | `--no-npm-fetch`             | Disable npm artifacts fetching                                 |                  |                      
