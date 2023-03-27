@@ -1,3 +1,8 @@
+## [2.2.12](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.11...v2.2.12) (2023-03-27)
+
+### Fixes & improvements
+* fix: fix git push ([5cc1d8f](https://github.com/semrel-extra/zx-bulk-release/commit/5cc1d8fb25a399a2c69e8fd990f1a6ee73011b28))
+
 ## [2.2.11](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.10...v2.2.11) (2023-03-25)
 
 ### Fixes & improvements
