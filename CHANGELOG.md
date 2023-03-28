@@ -1,3 +1,8 @@
+## [2.2.14](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.13...v2.2.14) (2023-03-28)
+
+### Fixes & improvements
+* fix: apply memoize to git config ops ([b46bec0](https://github.com/semrel-extra/zx-bulk-release/commit/b46bec030e711f840f143392c64f6330e6588f8d))
+
 ## [2.2.13](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.12...v2.2.13) (2023-03-27)
 
 ### Fixes & improvements
