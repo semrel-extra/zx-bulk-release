@@ -1,10 +1,11 @@
 import {$} from 'zx-extra'
-import {log} from './log.js'
+import {queuefy} from 'queuefy'
 import {fetchRepo, getRepo, pushCommit} from './git.js'
-import {msgJoin} from './util.js'
+import {log} from './log.js'
 import {formatTag} from './meta.js'
+import {msgJoin} from './util.js'
 
-export const pushChangelog = async (pkg) => {
+export const pushChangelog = queuefy(async (pkg) => {
   const {absPath: cwd, config: {changelog: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   if (!opts) return
 
@@ -18,7 +19,7 @@ export const pushChangelog = async (pkg) => {
 
   await $.o({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
   await pushCommit({cwd, branch, msg, gitCommitterEmail, gitCommitterName, basicAuth})
-}
+})
 
 export const formatReleaseNotes = async (pkg) => {
   const {name, version, absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
