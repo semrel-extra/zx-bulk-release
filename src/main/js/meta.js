@@ -2,24 +2,21 @@
 
 import {Buffer} from 'node:buffer'
 import {queuefy} from 'queuefy'
-import {ctx, semver, $, fs, path} from 'zx-extra'
+import {semver, $, fs, path} from 'zx-extra'
 import {log} from './log.js'
-import {fetchRepo, pushCommit, getTags as getGitTags} from './git.js'
+import {fetchRepo, pushCommit, getTags as getGitTags, pushTag} from './git.js'
 import {fetchManifest} from './npm.js'
 
-export const pushTag = (pkg) => ctx(async ($) => {
-  const {absPath: cwd, name, version, config: {gitCommitterEmail, gitCommitterName}} = pkg
+export const pushReleaseTag = async (pkg) => {
+  const {name, version, config: {gitCommitterEmail, gitCommitterName}} = pkg
   const tag = formatTag({name, version})
+  const cwd = pkg.context.git.root
 
   pkg.context.git.tag = tag
   log({pkg})(`push release tag ${tag}`)
 
-  $.cwd = cwd
-  await $`git config user.name ${gitCommitterName}`
-  await $`git config user.email ${gitCommitterEmail}`
-  await $`git tag -m ${tag} ${tag}`
-  await $`git push origin ${tag}`
-})
+  await pushTag({cwd, tag, gitCommitterEmail, gitCommitterName})
+}
 
 export const pushMeta = queuefy(async (pkg) => {
   log({pkg})('push artifact to branch \'meta\'')

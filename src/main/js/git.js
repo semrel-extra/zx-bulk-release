@@ -30,9 +30,8 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
   if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
 
   try {
-    await $`git config user.name ${gitCommitterName} &&
-            git config user.email ${gitCommitterEmail} &&
-            git add . &&
+    await setUserConfig(_cwd, gitCommitterName, gitCommitterEmail)
+    await $`git add . &&
             git commit -m ${msg}`
   } catch {
     log({level: 'warn'})(`no changes to commit to ${branch}`)
@@ -99,3 +98,21 @@ export const getTags = async (cwd, ref = '') =>
   (await $.o({cwd})`git tag -l ${ref}`)
     .toString()
     .split('\n')
+
+export const pushTag = async ({cwd, tag, gitCommitterName, gitCommitterEmail}) => {
+  await setUserConfig(cwd, gitCommitterName, gitCommitterEmail)
+  await $.o({cwd})`
+    git tag -m ${tag} ${tag} &&
+    git push origin ${tag}`
+}
+
+// Memoize prevents .git/config lock
+// https://github.com/qiwi/packasso/actions/runs/4539987310/jobs/8000403413#step:7:282
+export const setUserConfig = memoizeBy(async(cwd, gitCommitterName, gitCommitterEmail) => $.o({cwd})`
+  git config user.name ${gitCommitterName} &&
+  git config user.email ${gitCommitterEmail}
+`)
+
+export const unsetUserConfig = async(cwd) => $.o({cwd})`
+  git config --unset user.name &&
+  git config --unset user.email`

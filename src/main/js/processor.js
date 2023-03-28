@@ -6,9 +6,9 @@ import {pushChangelog} from './changelog.js'
 import {getPkgConfig} from './config.js'
 import {topo, traverseDeps, traverseQueue} from './deps.js'
 import {ghPages, ghRelease} from './gh.js'
-import {getRoot, getSha} from './git.js'
+import {getRoot, getSha, unsetUserConfig} from './git.js'
 import {log, createReport} from './log.js'
-import {getLatest, pushMeta, pushTag} from './meta.js'
+import {getLatest, pushMeta, pushReleaseTag} from './meta.js'
 import {fetchPkg, npmPublish} from './npm.js'
 import {memoizeBy, tpl} from './util.js'
 
@@ -62,6 +62,8 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
       .set('error', e)
       .setStatus('failure')
     throw e
+  } finally {
+    await unsetUserConfig(cwd)
   }
   report
     .setStatus('success')
@@ -140,7 +142,7 @@ const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
   }
 
   fs.writeJsonSync(pkg.manifestPath, pkg.manifest, {spaces: 2})
-  await pushTag(pkg)
+  await pushReleaseTag(pkg)
 
   await Promise.all([
     pushMeta(pkg),
