@@ -9,8 +9,8 @@ export const fetchPkg = async (pkg) => {
     const cwd = pkg.absPath
     const {npmRegistry, npmToken, npmConfig} = pkg.config
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
-    const tarball = getTarballUrl(npmRegistry, pkg.name, pkg.version)
-    await $.raw`wget --timeout=10 --header='Authorization: ${bearerToken}' -qO- ${tarball} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
+    const tarballUrl = getTarballUrl(npmRegistry, pkg.name, pkg.version)
+    await $.raw`wget --timeout=10 --header='Authorization: ${bearerToken}' -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
 
     pkg.fetched = true
   } catch (e) {
@@ -24,7 +24,7 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
   const url = getManifestUrl(npmRegistry, pkg.name, pkg.version)
 
   try {
-    const res = await fetch(url, {authorization: bearerToken})
+    const res = await fetch(url, {headers: {authorization: bearerToken}})
     if (!res.ok) throw res
 
     return res.json() // NOTE .json() is async too
@@ -53,9 +53,9 @@ export const getTarballUrl = (registry, name, version) => `${registry}/${name}/-
 
 export const getManifestUrl = (registry, name, version) => `${registry}/${name}/${version}`
 
-export const getBearerToken = async (npmRegistry, npmToken, npmConfig) => {
+export const getBearerToken = (npmRegistry, npmToken, npmConfig) => {
   const token = npmConfig
-    ? getAuthToken(npmRegistry, INI.parse(await fs.readFile(npmConfig, 'utf8')))
+    ? getAuthToken(npmRegistry, INI.parse(fs.readFileSync(npmConfig, 'utf8')))
     : npmToken
   return `Bearer ${token}`
 }

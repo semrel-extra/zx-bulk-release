@@ -12,7 +12,7 @@ export const analyze = async (pkg) => {
 
   pkg.changes = changes
   pkg.releaseType = releaseType
-  pkg.version = resolvePkgVersion(releaseType, pkg.latest.tag?.version || pkg.manifest.version)
+  pkg.version = resolvePkgVersion(releaseType, pkg.latest.tag?.version || pkg.latest.meta?.version)
   pkg.manifest.version = pkg.version
   pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version}) : null
 
