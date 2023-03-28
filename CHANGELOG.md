@@ -1,3 +1,8 @@
+## [2.2.15](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.14...v2.2.15) (2023-03-28)
+
+### Fixes & improvements
+* fix: apply queuefy to changelog push ([b8b353d](https://github.com/semrel-extra/zx-bulk-release/commit/b8b353d439916ac57f717a3d463c710702b00d4d))
+
 ## [2.2.14](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.13...v2.2.14) (2023-03-28)
 
 ### Fixes & improvements
