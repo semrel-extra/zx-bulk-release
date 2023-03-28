@@ -188,7 +188,7 @@ test('run()', async () => {
 
   await registry.start()
 
-  await run({cwd})
+  await run({cwd, flags: {onlyWorkspaceDeps: true}})
 
   await ctx(async ($) => {
     $.cwd = cwd
@@ -238,7 +238,7 @@ ${gitRoot}
     }
   ]})
 
-  await run({cwd})
+  await run({cwd, flags: {onlyWorkspaceDeps: true}})
 
   await ctx(async ($) => {
     $.cwd = cwd

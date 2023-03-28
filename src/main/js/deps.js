@@ -72,10 +72,11 @@ export const topo = async ({flags = {}, cwd} = {}) => {
       ? flags.ignore
       : []
 
-  const filter = ({manifest: {private: _private, name}}) =>
+  const depFilter = flags.onlyWorkspaceDeps ? ({version}) => version.startsWith('workspace:') : undefined
+  const pkgFilter = ({manifest: {private: _private, name}}) =>
     !ignore.includes(name) && (flags.includePrivate || !_private)
 
-  return _topo({cwd, filter})
+  return _topo({cwd, pkgFilter, depFilter})
 }
 
 export const traverseQueue = async ({queue, prev, cb}) => {
