@@ -12,7 +12,11 @@ export const analyze = async (pkg) => {
 
   pkg.changes = changes
   pkg.releaseType = releaseType
-  pkg.version = resolvePkgVersion(releaseType, pkg.latest.tag?.version || pkg.latest.meta?.version)
+  pkg.version = resolvePkgVersion(
+    releaseType,
+    pkg.latest.tag?.version || pkg.latest.meta?.version,
+    pkg.manifest.version
+  )
   pkg.manifest.version = pkg.version
   pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version}) : null
 
@@ -58,13 +62,13 @@ export const getNextReleaseType = (changes) => changes.length
   ? releaseSeverityOrder.find(type => changes.find(({releaseType}) => type === releaseType))
   : null
 
-export const getNextVersion = (releaseType, prevVersion) => {
-  if (!prevVersion) return '1.0.0'
+export const getNextVersion = (releaseType, prevVersion, defaultVersion = '1.0.0') => {
+  if (!prevVersion) return defaultVersion
 
   return semver.inc(prevVersion, releaseType)
 }
 
-export const resolvePkgVersion = (releaseType, prevVersion) =>
+export const resolvePkgVersion = (releaseType, prevVersion, defaultVersion) =>
   releaseType
-    ? getNextVersion(releaseType, prevVersion)
+    ? getNextVersion(releaseType, prevVersion, defaultVersion)
     : prevVersion || null

@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
 import {topo} from '@semrel-extra/topo'
-import {analyzeCommits} from '../../main/js/analyze.js'
+import {analyzeCommits, getNextVersion, resolvePkgVersion} from '../../main/js/analyze.js'
 import {getCommits} from '../../main/js/git.js'
 import {createFakeRepo} from './test-utils.js'
 
@@ -200,6 +200,19 @@ test('`analyzeCommits` analyzes commits for each package', async () => {
       hash: 'e296ecddfcb70a4fd44c8372461e3a1447655c2e'
     }
   ])
+})
+
+test('resolvePkgVersion()', async () => {
+  const cases = [
+    ['minor', '1.0.0', '0.0.0', '1.1.0'],
+    ['patch', '1.0.0', '0.0.0', '1.0.1'],
+    ['major', undefined, '0.0.0', '0.0.0'],
+    ['minor', undefined, undefined, '1.0.0'],
+  ]
+
+  cases.forEach(([releaseType, prev, def, expected]) => {
+    assert.is(resolvePkgVersion(releaseType, prev, def), expected)
+  })
 })
 
 test.run()

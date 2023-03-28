@@ -104,7 +104,7 @@ const cwd = await createFakeRepo({
           relpath: './packages/b/package.json',
           contents: {
             name: 'b',
-            version: '',
+            version: '1.0.0',
             dependencies: {
               a: 'workspace:^'
             },

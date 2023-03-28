@@ -142,10 +142,10 @@ export const getTags = async (cwd, ref = '') =>
     .sort((a, b) => semver.rcompare(a.version, b.version))
 
 export const getLatestTag = async (cwd, name) =>
-  (await getTags(cwd)).find(tag => tag.name === name) || null
+  (await getTags(cwd)).find(tag => tag.name === name)
 
 export const getLatestTaggedVersion = async (cwd, name) =>
-  (await getLatestTag(cwd, name))?.version || null
+  (await getLatestTag(cwd, name))?.version || undefined
 
 export const formatDateTag = (date = new Date()) => `${date.getUTCFullYear()}.${date.getUTCMonth() + 1}.${date.getUTCDate()}`
 
@@ -154,7 +154,7 @@ export const parseDateTag = (date) => new Date(date.replaceAll('.', '-')+'Z')
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
 export const getLatestMeta = async (cwd, tag, basicAuth) => {
-  if (!tag) return null
+  if (!tag) return
 
   try {
     const _cwd = await fetchRepo({cwd, branch: 'meta', basicAuth})
@@ -163,6 +163,4 @@ export const getLatestMeta = async (cwd, tag, basicAuth) => {
       fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
     ])
   } catch {}
-
-  return null
 }
