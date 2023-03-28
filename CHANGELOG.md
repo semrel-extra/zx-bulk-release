@@ -1,3 +1,8 @@
+## [2.2.16](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.15...v2.2.16) (2023-03-28)
+
+### Fixes & improvements
+* fix: fix pkg version resolver ([0b7bd4b](https://github.com/semrel-extra/zx-bulk-release/commit/0b7bd4b765b87c4e05d7da838831006506e27e30))
+
 ## [2.2.15](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.14...v2.2.15) (2023-03-28)
 
 ### Fixes & improvements
