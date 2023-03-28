@@ -1,3 +1,8 @@
+## [2.3.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.17...v2.3.0) (2023-03-28)
+
+### Features
+* feat: introduce `onlyWorkspaceDeps` flag to identify `workspace` deps as the only graph edges ([b4aa4b5](https://github.com/semrel-extra/zx-bulk-release/commit/b4aa4b5e81c7ecc6658bac53b2188727e087aed6))
+
 ## [2.2.17](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.16...v2.2.17) (2023-03-28)
 
 ### Fixes & improvements
