@@ -116,7 +116,7 @@ const build = memoizeBy(async (pkg, run = runCmd, flags = {}, self = build) => w
   $.scope = pkg.name
 
   await Promise.all([
-    traverseDeps(pkg, pkg.context.packages, async (_, {pkg}) => self(pkg, run, flags, self)),
+    traverseDeps({pkg, packages: pkg.context.packages, cb: async({pkg}) => self(pkg, run, flags, self)}),
     pkg.changes.length === 0 && pkg.config.npmFetch && !flags.noNpmFetch
       ? fetchPkg(pkg)
       : Promise.resolve()
