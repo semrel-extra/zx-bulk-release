@@ -1,3 +1,8 @@
+## [2.3.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.1...v2.3.2) (2023-04-02)
+
+### Fixes & improvements
+* perf: update @semrel-extra/topo to v1.9.0 ([b6fcd15](https://github.com/semrel-extra/zx-bulk-release/commit/b6fcd15f449d1588522a68b9d51555d8966c925a))
+
 ## [2.3.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.0...v2.3.1) (2023-04-02)
 
 ### Fixes & improvements
