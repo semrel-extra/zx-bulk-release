@@ -1,3 +1,8 @@
+## [2.3.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.0...v2.3.1) (2023-04-02)
+
+### Fixes & improvements
+* refactor: use `traverseQueue`, `traverseDeps` from @semrel-extra/topo ([70d6cf4](https://github.com/semrel-extra/zx-bulk-release/commit/70d6cf41fdfd1436b561f9eb1d94254408e6d6e5))
+
 ## [2.3.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.2.17...v2.3.0) (2023-03-28)
 
 ### Features
