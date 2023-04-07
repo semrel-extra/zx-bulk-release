@@ -62,11 +62,10 @@ export const getNextReleaseType = (changes) => changes.length
   ? releaseSeverityOrder.find(type => changes.find(({releaseType}) => type === releaseType))
   : null
 
-export const getNextVersion = (releaseType, prevVersion, defaultVersion = '1.0.0') => {
-  if (!prevVersion) return defaultVersion
-
-  return semver.inc(prevVersion, releaseType)
-}
+export const getNextVersion = (releaseType, prevVersion, defaultVersion = '1.0.0') =>
+  prevVersion
+    ? semver.inc(prevVersion, releaseType)
+    : defaultVersion
 
 export const resolvePkgVersion = (releaseType, prevVersion, defaultVersion) =>
   releaseType
