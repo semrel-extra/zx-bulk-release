@@ -1,5 +1,5 @@
 import {log} from './log.js'
-import {$, ctx, fs, path, INI, fetch} from 'zx-extra'
+import {$, fs, INI, fetch, tempy} from 'zx-extra'
 
 export const fetchPkg = async (pkg) => {
   const id = `${pkg.name}@${pkg.version}`
@@ -34,19 +34,20 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
   }
 }
 
-export const npmPublish = (pkg) => ctx(async ($) => {
+export const npmPublish = async (pkg) => {
   const {absPath: cwd, name, version, manifest, config} = pkg
   if (manifest.private || config?.npmPublish === false) return
+
   const {npmRegistry, npmToken, npmConfig} = config
-  const npmrc = npmConfig ? npmConfig : path.resolve(cwd, '.npmrc')
+  const npmrc = npmConfig ? npmConfig : tempy.temporaryFile({name: '.npmrc'})
 
   log({pkg})(`publish npm package ${name} ${version} to ${npmRegistry}`)
-  $.cwd = cwd
+
   if (!npmConfig) {
-    await $.raw`echo ${npmRegistry.replace(/https?:/, '')}/:_authToken=${npmToken} >> ${npmrc}`
+    await fs.writeFile(npmrc, `${npmRegistry.replace(/^https?:\/\//, '//')}/:_authToken=${npmToken}`, {encoding: 'utf8'})
   }
-  await $`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
-})
+  await $.o({cwd})`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
+}
 
 // $`npm view ${name}@${version} dist.tarball`
 export const getTarballUrl = (registry, name, version) => `${registry}/${name}/-/${name.replace(/^.+(%2f|\/)/,'')}-${version}.tgz`
