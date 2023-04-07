@@ -1,3 +1,8 @@
+## [2.3.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.2...v2.3.3) (2023-04-07)
+
+### Fixes & improvements
+* fix: use tmp for `.npmrc` creation ([06ae101](https://github.com/semrel-extra/zx-bulk-release/commit/06ae10187e4f1bdef30c6490ce03077b2ac8b44d))
+
 ## [2.3.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.1...v2.3.2) (2023-04-02)
 
 ### Fixes & improvements
