@@ -22,7 +22,7 @@
     "docs": "mkdir -p docs && cp ./README.md ./docs/README.md"
   },
   "dependencies": {
-    "@semrel-extra/topo": "^1.9.0",
+    "@semrel-extra/topo": "^1.9.1",
     "cosmiconfig": "^8.1.3",
     "queuefy": "^1.2.1",
     "zx-extra": "^2.5.4"

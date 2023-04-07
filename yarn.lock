@@ -86,10 +86,10 @@
   dependencies:
     tslib "^2.4.1"
 
-"@semrel-extra/topo@^1.9.0":
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/@semrel-extra/topo/-/topo-1.9.0.tgz#9ca8cce1153fa0e746dbfb6b99de5715b784f916"
-  integrity sha512-R4jwDTWPaODKuDJfUws6wCN3jNmKgGro0q0XfitoSIeCpib7QmC2mP2MDIL5+PdrJtbPPnZQw0ccQJre5InWfg==
+"@semrel-extra/topo@^1.9.1":
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/@semrel-extra/topo/-/topo-1.9.1.tgz#a60bf685fb0738e2e0aae41c59817ab23d4a56a7"
+  integrity sha512-5ya0CpvCzM+N8Rl54hNMwtuXij9IIYzbSTKhAPCqRgOGPjSktl8r1Lev4dLNl1D0bkGvACcMkiXKghZQfHYFgg==
   dependencies:
     fast-glob "^3.2.12"
     toposource "^1.1.3"
