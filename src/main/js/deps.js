@@ -3,14 +3,15 @@ import {topo as _topo, traverseDeps} from '@semrel-extra/topo'
 
 export {traverseQueue, traverseDeps} from '@semrel-extra/topo'
 
-export const updateDeps = async (pkg, packages) => {
+export const updateDeps = async (pkg) => {
   const changes = []
+  const {context: {packages}} = pkg
 
   await traverseDeps({pkg, packages, cb: async ({name, version, deps, scope, pkg: dep}) => {
     const prev = pkg.latest.meta?.[scope]?.[name]
     const actual = dep?.version
     const next = resolveNextVersion(version, actual, prev)
-    const _version = next || subsWorkspace(version, actual)
+    const _version = dep?.preversion || next || subsWorkspace(version, actual) // NOTE preversion should always be pinned
 
     pkg[scope] = {...pkg[scope], [name]: _version}  // Update pkg context
     deps[name] = _version                           // Update manifest

@@ -99,7 +99,7 @@ const createContext = async ({flags, env, cwd}) => {
 }
 
 // Inspired by https://docs.github.com/en/actions/learn-github-actions/contexts
-const contextify = async (pkg, {packages, root}) => {
+const contextify = async (pkg, {packages, root, flags}) => {
   pkg.config = await getPkgConfig(pkg.absPath, root.absPath)
   pkg.latest = await getLatest(pkg)
   pkg.context = {
@@ -108,6 +108,7 @@ const contextify = async (pkg, {packages, root}) => {
       root: await getRoot(pkg.absPath)
     },
     env: $.env,
+    flags,
     packages
   }
 }
@@ -141,17 +142,19 @@ const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
     throw new Error('package.json version not synced')
   }
 
-  fs.writeJsonSync(pkg.manifestPath, pkg.manifest, {spaces: 2})
-  await pushReleaseTag(pkg)
-
-  await Promise.all([
-    pushMeta(pkg),
-    pushChangelog(pkg),
-    npmPublish(pkg),
-    ghRelease(pkg),
-    ghPages(pkg),
-    run(pkg, 'publishCmd')
-  ])
+  if (pkg.context.flags.snapshot) {
+    await npmPublish(pkg)
+  } else {
+    await pushReleaseTag(pkg)
+    await Promise.all([
+      pushMeta(pkg),
+      pushChangelog(pkg),
+      npmPublish(pkg),
+      ghRelease(pkg),
+      ghPages(pkg),
+      run(pkg, 'publishCmd')
+    ])
+  }
 
   pkg.published = true
 }))

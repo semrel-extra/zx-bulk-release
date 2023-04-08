@@ -35,18 +35,30 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
 }
 
 export const npmPublish = async (pkg) => {
-  const {absPath: cwd, name, version, manifest, config} = pkg
-  if (manifest.private || config?.npmPublish === false) return
+  const {absPath: cwd, name, version, manifest, manifestPath, manifestRaw, config: {npmPublish, npmRegistry, npmToken, npmConfig} } = pkg
 
-  const {npmRegistry, npmToken, npmConfig} = config
-  const npmrc = npmConfig ? npmConfig : tempy.temporaryFile({name: '.npmrc'})
+  if (manifest.private || npmPublish === false) return
 
-  log({pkg})(`publish npm package ${name} ${version} to ${npmRegistry}`)
+  log({pkg})(`publishing npm package ${name} ${version} to ${npmRegistry}`)
 
-  if (!npmConfig) {
-    await fs.writeFile(npmrc, `${npmRegistry.replace(/^https?:\/\//, '//')}/:_authToken=${npmToken}`, {encoding: 'utf8'})
+  await fs.writeJson(manifestPath, manifest, {spaces: 2})
+
+  const npmTag = pkg.preversion ? 'snapshot' : 'latest'
+  const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})
+
+  await $.o({cwd})`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --tag ${npmTag} --no-workspaces`
+  await fs.writeFile(manifestPath, manifestRaw, {encoding: 'utf8'})
+}
+
+export const getNpmrc = async ({npmConfig, npmToken, npmRegistry}) => {
+  if (npmConfig) {
+    return npmConfig
   }
-  await $.o({cwd})`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --no-workspaces`
+
+  const npmrc =  tempy.temporaryFile({name: '.npmrc'})
+  await fs.writeFile(npmrc, `${npmRegistry.replace(/^https?:\/\//, '//')}/:_authToken=${npmToken}`, {encoding: 'utf8'})
+
+  return npmrc
 }
 
 // $`npm view ${name}@${version} dist.tarball`
