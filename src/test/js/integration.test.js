@@ -264,6 +264,29 @@ ${gitRoot}
     assert.is((await fs.readFile(`${ghp}/b/readme.md`, 'utf-8')).trim(), '# docs')
   })
 
+  await addCommits({cwd, commits: [
+    {
+      msg: 'refactor(a): refactorings',
+      files: [
+        {
+          relpath: './packages/a/refactored.txt',
+          contents: 'refactored'
+        }
+      ]
+    }
+  ]})
+
+  await run({cwd, flags: {onlyWorkspaceDeps: true, snapshot: true}})
+
+  await ctx(async ($) => {
+    $.cwd = cwd
+    const digestA = JSON.parse((await $`npm view a --registry=${registry.address} --json`).toString())
+    const digestB = JSON.parse((await $`npm view b --registry=${registry.address} --json`).toString())
+
+    assert.ok(digestA['dist-tags'].snapshot.startsWith('1.0.2-snap.'))
+    assert.ok(digestB['dist-tags'].snapshot.startsWith, '1.1.1-snap.')
+  })
+
   await registry.stop()
 })
 

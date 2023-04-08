@@ -6,17 +6,20 @@ import {getCommits} from './git.js'
 
 export const analyze = async (pkg) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
-  const depsChanges = await updateDeps(pkg, pkg.context.packages)
+  const depsChanges = await updateDeps(pkg)
   const changes = [...semanticChanges, ...depsChanges]
   const releaseType = getNextReleaseType(changes)
+  const pre = pkg.context.flags.snapshot ? `-snap.${pkg.context.git.sha.slice(0, 7)}` : undefined
 
   pkg.changes = changes
   pkg.releaseType = releaseType
   pkg.version = resolvePkgVersion(
     releaseType,
     pkg.latest.tag?.version || pkg.latest.meta?.version,
-    pkg.manifest.version
+    pkg.manifest.version,
+    pre
   )
+  pkg.preversion = pre && pkg.version
   pkg.manifest.version = pkg.version
   pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version}) : null
 
@@ -62,12 +65,12 @@ export const getNextReleaseType = (changes) => changes.length
   ? releaseSeverityOrder.find(type => changes.find(({releaseType}) => type === releaseType))
   : null
 
-export const getNextVersion = (releaseType, prevVersion, defaultVersion = '1.0.0') =>
-  prevVersion
+export const getNextVersion = (releaseType, prevVersion, defaultVersion = '1.0.0', pre = '') =>
+  (prevVersion
     ? semver.inc(prevVersion, releaseType)
-    : defaultVersion
+    : defaultVersion) + pre
 
-export const resolvePkgVersion = (releaseType, prevVersion, defaultVersion) =>
+export const resolvePkgVersion = (releaseType, prevVersion, defaultVersion, pre) =>
   releaseType
-    ? getNextVersion(releaseType, prevVersion, defaultVersion)
+    ? getNextVersion(releaseType, prevVersion, defaultVersion, pre)
     : prevVersion || null
