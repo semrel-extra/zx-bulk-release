@@ -1,3 +1,8 @@
+## [2.4.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.3...v2.4.0) (2023-04-09)
+
+### Features
+* feat: support npm preversions (snapshots) publishing ([3ad7df7](https://github.com/semrel-extra/zx-bulk-release/commit/3ad7df752f6085ca010bcb6e0b4ac31260ce512b))
+
 ## [2.3.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.2...v2.3.3) (2023-04-07)
 
 ### Fixes & improvements
