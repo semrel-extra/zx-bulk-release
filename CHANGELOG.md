@@ -1,3 +1,8 @@
+## [2.4.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.4.0...v2.4.1) (2023-04-09)
+
+### Fixes & improvements
+* fix: revert pkg.json state after publishing asap ([7e28b3e](https://github.com/semrel-extra/zx-bulk-release/commit/7e28b3eb3f0685bbe2133a6a0a1103ff19edca18))
+
 ## [2.4.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.3.3...v2.4.0) (2023-04-09)
 
 ### Features
