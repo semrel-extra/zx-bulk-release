@@ -47,7 +47,7 @@ export const npmPublish = async (pkg) => {
   const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})
 
   await $.o({cwd})`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --tag ${npmTag} --no-workspaces`
-  fs.writeFileSync(manifestPath, manifestRaw, {encoding: 'utf8'})
+  await fs.writeFile(manifestPath, manifestRaw, {encoding: 'utf8'})
 }
 
 export const getNpmrc = async ({npmConfig, npmToken, npmRegistry}) => {

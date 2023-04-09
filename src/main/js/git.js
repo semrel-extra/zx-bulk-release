@@ -113,6 +113,6 @@ export const setUserConfig = memoizeBy(async(cwd, gitCommitterName, gitCommitter
   git config user.email ${gitCommitterEmail}
 `)
 
-export const unsetUserConfig = async(cwd) => $.o({cwd})`
+export const unsetUserConfig = async(cwd) => $.o({cwd, nothrow: true})`
   git config --unset user.name &&
   git config --unset user.email`
