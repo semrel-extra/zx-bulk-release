@@ -35,19 +35,16 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
 }
 
 export const npmPublish = async (pkg) => {
-  const {absPath: cwd, name, version, manifest, manifestPath, manifestRaw, config: {npmPublish, npmRegistry, npmToken, npmConfig} } = pkg
+  const {absPath: cwd, name, version, manifest, config: {npmPublish, npmRegistry, npmToken, npmConfig} } = pkg
 
   if (manifest.private || npmPublish === false) return
 
   log({pkg})(`publishing npm package ${name} ${version} to ${npmRegistry}`)
 
-  await fs.writeJson(manifestPath, manifest, {spaces: 2})
-
   const npmTag = pkg.preversion ? 'snapshot' : 'latest'
   const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})
 
   await $.o({cwd})`npm publish --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --tag ${npmTag} --no-workspaces`
-  await fs.writeFile(manifestPath, manifestRaw, {encoding: 'utf8'})
 }
 
 export const getNpmrc = async ({npmConfig, npmToken, npmRegistry}) => {

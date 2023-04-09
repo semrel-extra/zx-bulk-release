@@ -63,7 +63,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
       .setStatus('failure')
     throw e
   } finally {
-    await unsetUserConfig(cwd)
+    await clean(cwd, packages)
   }
   report
     .setStatus('success')
@@ -142,8 +142,13 @@ const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
     throw new Error('package.json version not synced')
   }
 
+  await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
+
   if (pkg.context.flags.snapshot) {
-    await npmPublish(pkg)
+    await Promise.all([
+      npmPublish(pkg),
+      run(pkg, 'publishCmd')
+    ])
   } else {
     await pushReleaseTag(pkg)
     await Promise.all([
@@ -155,6 +160,12 @@ const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
       run(pkg, 'publishCmd')
     ])
   }
-
   pkg.published = true
 }))
+
+const clean = async (cwd, packages) => {
+  await unsetUserConfig(cwd)
+  await Promise.all(Object.values(packages).map(({manifestPath, manifestRaw}) =>
+    fs.writeFile(manifestPath, manifestRaw, {encoding: 'utf8'})
+  ))
+}

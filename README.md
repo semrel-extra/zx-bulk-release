@@ -35,18 +35,18 @@ yarn add zx-bulk-release
 ```shell
 GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
-| Flag                         | Description                                                                            | Default          |
-|------------------------------|----------------------------------------------------------------------------------------|------------------|
-| `--ignore`                   | Packages to ignore: `a, b`                                                             |                  |
-| `--include-private`          | Include `private` packages                                                             | `false`          |
-| `--concurrency`              | `build/publish` threads limit                                                          | `os.cpus.length` |
-| `--no-build`                 | Skip `buildCmd` invoke                                                                 |                  |
-| `--no-npm-fetch`             | Disable npm artifacts fetching                                                         |                  |                      
-| `--only-workspace-deps`      | Recognize only `workspace:` deps as graph edges                                        |                  |
-| `--dry-run` / `--no-publish` | Disable any publish logic                                                              |                  |
-| `--report`                   | Persist release state to file                                                          |                  |
-| `--snapshot`                 | Disable any publishing steps except of npm and push packages to the `snapshot` channel |                  |  
-| `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode                         |                  |
+| Flag                         | Description                                                                                                               | Default          |
+|------------------------------|---------------------------------------------------------------------------------------------------------------------------|------------------|
+| `--ignore`                   | Packages to ignore: `a, b`                                                                                                |                  |
+| `--include-private`          | Include `private` packages                                                                                                | `false`          |
+| `--concurrency`              | `build/publish` threads limit                                                                                             | `os.cpus.length` |
+| `--no-build`                 | Skip `buildCmd` invoke                                                                                                    |                  |
+| `--no-npm-fetch`             | Disable npm artifacts fetching                                                                                            |                  |                      
+| `--only-workspace-deps`      | Recognize only `workspace:` deps as graph edges                                                                           |                  |
+| `--dry-run` / `--no-publish` | Disable any publish logic                                                                                                 |                  |
+| `--report`                   | Persist release state to file                                                                                             |                  |
+| `--snapshot`                 | Disable any publishing steps except of `npm` and `publishCmd` (if defined), then  push packages to the `snapshot` channel |                  |  
+| `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode                                                            |                  |
 
 ### JS API
 ```js
