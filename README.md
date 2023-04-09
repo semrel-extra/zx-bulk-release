@@ -6,8 +6,6 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/bb94e929b1b6430781b5/test_coverage)](https://codeclimate.com/github/semrel-extra/zx-bulk-release/test_coverage)
 [![npm (tag)](https://img.shields.io/npm/v/zx-bulk-release)](https://www.npmjs.com/package/zx-bulk-release)
 
-🚧 Work in progress. Early access preview
-
 ## Key features
 * [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger semantic releases.
 * Automated cross-pkg version bumping.
@@ -309,6 +307,7 @@ Release process state is reported to the console and to a file if `--report` fla
 * [nrwl/nx](https://github.com/nrwl/nx)
 * [moonrepo/moon](https://github.com/moonrepo/moon)
 * [ojkelly/yarn.build](https://github.com/ojkelly/yarn.build)
+* [antfu/bumpp](https://github.com/antfu/bumpp)
 
 ## License 
 [MIT](./LICENSE)
