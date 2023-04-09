@@ -1,3 +1,8 @@
+## [2.4.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.4.1...v2.4.2) (2023-04-09)
+
+### Fixes & improvements
+* fix: make safe `git config unset` ([562083d](https://github.com/semrel-extra/zx-bulk-release/commit/562083d14ede6db93e0e19853aa8baf3a1e0f578))
+
 ## [2.4.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.4.0...v2.4.1) (2023-04-09)
 
 ### Fixes & improvements
