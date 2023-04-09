@@ -1,3 +1,8 @@
+## [2.5.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.4.2...v2.5.0) (2023-04-09)
+
+### Features
+* feat: respect `publishCmd` also with `--snapshot` flag ([50521d2](https://github.com/semrel-extra/zx-bulk-release/commit/50521d28220df2e98978dfaa76efb8a5346470d0))
+
 ## [2.4.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.4.1...v2.4.2) (2023-04-09)
 
 ### Fixes & improvements
