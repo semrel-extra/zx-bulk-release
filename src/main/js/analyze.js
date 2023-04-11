@@ -10,12 +10,13 @@ export const analyze = async (pkg) => {
   const changes = [...semanticChanges, ...depsChanges]
   const releaseType = getNextReleaseType(changes)
   const pre = pkg.context.flags.snapshot ? `-snap.${pkg.context.git.sha.slice(0, 7)}` : undefined
+  const latestVersion = pkg.latest.tag?.version || pkg.latest.meta?.versio
 
   pkg.changes = changes
   pkg.releaseType = releaseType
   pkg.version = resolvePkgVersion(
     releaseType,
-    pkg.latest.tag?.version || pkg.latest.meta?.version,
+    latestVersion,
     pkg.manifest.version,
     pre
   )
@@ -23,7 +24,7 @@ export const analyze = async (pkg) => {
   pkg.manifest.version = pkg.version
   pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version}) : null
 
-  log({pkg})('semantic changes', changes)
+  log({pkg})('semantic changes', changes, 'nextVersion', pkg.version, 'latestVersion', latestVersion)
 }
 
 export const releaseSeverityOrder = ['major', 'minor', 'patch']

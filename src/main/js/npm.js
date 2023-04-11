@@ -5,12 +5,12 @@ export const fetchPkg = async (pkg) => {
   const id = `${pkg.name}@${pkg.version}`
 
   try {
-    log({pkg})(`fetching '${id}'`)
     const cwd = pkg.absPath
     const {npmRegistry, npmToken, npmConfig} = pkg.config
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarballUrl = getTarballUrl(npmRegistry, pkg.name, pkg.version)
-    await $.raw`wget --timeout=10 --header='Authorization: ${bearerToken}' -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
+    log({pkg})(`fetching '${id}' from ${npmRegistry}`)
+    await $.raw`wget --timeout=10 --connect-timeout=5 --header='Authorization: ${bearerToken}' -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
 
     pkg.fetched = true
   } catch (e) {
