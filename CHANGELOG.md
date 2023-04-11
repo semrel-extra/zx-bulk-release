@@ -1,3 +1,9 @@
+## [2.5.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.1...v2.5.2) (2023-04-11)
+
+### Fixes & improvements
+* perf: add `scope` to version bump commit msg tpl ([a671e59](https://github.com/semrel-extra/zx-bulk-release/commit/a671e59d5008440626e8f280fd9bfd0ac284f720))
+* fix: let npmFetch be called w/o auth (dry-run mode) ([7008d19](https://github.com/semrel-extra/zx-bulk-release/commit/7008d19361cd2cdbd73df9420edd096fd4fda1a6))
+
 ## [2.5.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.0...v2.5.1) (2023-04-11)
 
 ### Fixes & improvements
