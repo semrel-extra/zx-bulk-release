@@ -7,10 +7,11 @@ export const fetchPkg = async (pkg) => {
   try {
     const cwd = pkg.absPath
     const {npmRegistry, npmToken, npmConfig} = pkg.config
-    const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const tarballUrl = getTarballUrl(npmRegistry, pkg.name, pkg.version)
+    const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
+    const authorization = bearerToken ? `--header='Authorization: ${bearerToken}'` : ''
     log({pkg})(`fetching '${id}' from ${npmRegistry}`)
-    await $.raw`wget --timeout=10 --connect-timeout=5 --header='Authorization: ${bearerToken}' -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
+    await $.raw`wget --timeout=10 --connect-timeout=5 ${authorization} -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
 
     pkg.fetched = true
   } catch (e) {
@@ -22,9 +23,10 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
   const {npmRegistry, npmToken, npmConfig} = pkg.config
   const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
   const url = getManifestUrl(npmRegistry, pkg.name, pkg.version)
+  const reqOpts = bearerToken ? {headers: {authorization: bearerToken}} : {}
 
   try {
-    const res = await fetch(url, {headers: {authorization: bearerToken}})
+    const res = await fetch(url, reqOpts)
     if (!res.ok) throw res
 
     return res.json() // NOTE .json() is async too
@@ -67,7 +69,7 @@ export const getBearerToken = (npmRegistry, npmToken, npmConfig) => {
   const token = npmConfig
     ? getAuthToken(npmRegistry, INI.parse(fs.readFileSync(npmConfig, 'utf8')))
     : npmToken
-  return `Bearer ${token}`
+  return token ? `Bearer ${token}` : null
 }
 
 // NOTE registry-auth-token does not work with localhost:4873
