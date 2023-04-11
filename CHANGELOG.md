@@ -1,3 +1,8 @@
+## [2.5.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.0...v2.5.1) (2023-04-11)
+
+### Fixes & improvements
+* perf: set connect timeout for npmFetch ([ab5a4eb](https://github.com/semrel-extra/zx-bulk-release/commit/ab5a4eba2ce8ee1b4257eff7d048fc905ddd98d1))
+
 ## [2.5.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.4.2...v2.5.0) (2023-04-09)
 
 ### Features
