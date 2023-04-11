@@ -21,7 +21,7 @@ export const updateDeps = async (pkg) => {
       group: 'Dependencies',
       releaseType: 'patch',
       change: 'perf',
-      subj: `perf: ${name} updated to ${next}`,
+      subj: `perf: ${scope} ${name} updated to ${next}`,
     })
   }})
 
