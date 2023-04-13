@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/main/js/index.js",
-    "./test-utils": "./src/test/js/test-utils.js"
+    "./test-utils": "./src/test/js/test-utils.js",
+    "./meta": "./src/main/js/meta.js"
   },
   "bin": "./src/main/js/cli.js",
   "files": [
