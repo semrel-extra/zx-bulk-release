@@ -1,3 +1,8 @@
+## [2.5.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.2...v2.5.3) (2023-04-13)
+
+### Fixes & improvements
+* perf: export meta utils (#25) ([9c682db](https://github.com/semrel-extra/zx-bulk-release/commit/9c682dbd987ba0dfce0c4d0e6754a8d4e73b47bc))
+
 ## [2.5.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.1...v2.5.2) (2023-04-11)
 
 ### Fixes & improvements
