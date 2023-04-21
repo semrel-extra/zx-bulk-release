@@ -1,3 +1,8 @@
+## [2.6.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.3...v2.6.0) (2023-04-21)
+
+### Features
+* feat: enable npm `--provenance` via `NPM_PROVENANCE` env var ([c61ff88](https://github.com/semrel-extra/zx-bulk-release/commit/c61ff88a47c3fee6102ea19de47cdcecdda8833d))
+
 ## [2.5.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.2...v2.5.3) (2023-04-13)
 
 ### Fixes & improvements
