@@ -25,6 +25,9 @@
 * macOS / linux
 * Node.js >= 16.0.0
 * npm >=7 / yarn >= 3
+* wget
+* tar
+* git
 
 ## Usage
 ### Install
@@ -63,23 +66,9 @@ await run({
 })
 ```
 
-### ENV
-```ts
-export const parseEnv = ({GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) =>
-  ({
-    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
-    ghToken:            GH_TOKEN || GITHUB_TOKEN,
-    npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
-    npmToken:           NPM_TOKEN,
-    npmProvenance:      NPM_PROVENANCE,
-    npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
-    gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
-    gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
-  })
-```
-
-### Config
-Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format: `.releaserc`, `.release.json`, `.release.yaml`, etc.
+## Config
+### cosmiconfig
+Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format: `.releaserc`, `.release.json`, `.release.yaml`, etc in the package root or in the repo root dir.
 ```json
 {
   "cmd": "yarn && yarn build && yarn test",
@@ -89,50 +78,28 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
 }
 ```
 
-### Demo
+### env vars
+```js
+export const parseEnv = (env = process.env) => {
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
+
+  return {
+    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
+    ghToken:            GH_TOKEN || GITHUB_TOKEN,
+    npmToken:           NPM_TOKEN,
+    // npmConfig suppresses npmToken
+    npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
+    npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
+    npmProvenance:      NPM_PROVENANCE,
+    gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
+    gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
+  }
+}
+```
+
+## Demo
 * [demo-zx-bulk-release](https://github.com/semrel-extra/demo-zx-bulk-release)
 * [qiwi/pijma](https://github.com/qiwi/pijma)
-
-### Output
-
-[Compact and clear logs](https://github.com/semrel-extra/demo-zx-bulk-release/runs/7090161341?check_suite_focus=true#step:6:1)
-
-```shell
-Run npm_config_yes=true npx zx-bulk-release
-zx-bulk-release
-[@semrel-extra/zxbr-test-a] semantic changes [
-  {
-    group: 'Fixes & improvements',
-    releaseType: 'patch',
-    change: 'fix(a): random',
-    subj: 'fix(a): random',
-    body: '',
-    short: '6ff25bd',
-    hash: '6ff25bd421755b929ef2b58f35c727670fd93849'
-  }
-]
-[@semrel-extra/zxbr-test-a] run cmd 'yarn && yarn build && yarn test'
-[@semrel-extra/zxbr-test-a] push release tag 2022.6.27-semrel-extra.zxbr-test-a.1.8.1-f0
-[@semrel-extra/zxbr-test-a] push artifact to branch 'meta'
-[@semrel-extra/zxbr-test-a] push changelog
-[@semrel-extra/zxbr-test-a] publish npm package @semrel-extra/zxbr-test-a 1.8.1 to https://registry.npmjs.org
-[@semrel-extra/zxbr-test-a] create gh release
-[@semrel-extra/zxbr-test-b] semantic changes [
-  {
-    group: 'Dependencies',
-    releaseType: 'patch',
-    change: 'perf',
-    subj: 'perf: @semrel-extra/zxbr-test-a updated to 1.8.1'
-  }
-]
-[@semrel-extra/zxbr-test-b] run cmd 'yarn && yarn build && yarn test'
-[@semrel-extra/zxbr-test-b] push release tag 2022.6.27-semrel-extra.zxbr-test-b.1.3.5-f0
-[@semrel-extra/zxbr-test-b] push artifact to branch 'meta'
-[@semrel-extra/zxbr-test-b] push changelog
-[@semrel-extra/zxbr-test-b] publish npm package @semrel-extra/zxbr-test-b 1.3.5 to https://registry.npmjs.org
-[@semrel-extra/zxbr-test-b] create gh release
-[@semrel-extra/zxbr-test-d] semantic changes [
-```
 
 ## Implementation notes
 ### Flow
@@ -223,25 +190,6 @@ Note, [npm-package-name charset](https://www.npmjs.com/package/validate-npm-pack
 // date    name       ver    b64             format
 ```
 
-### env vars
-
-```js
-export const parseEnv = (env = process.env) => {
-  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
-
-  return {
-    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
-    ghToken:            GH_TOKEN || GITHUB_TOKEN,
-    npmToken:           NPM_TOKEN,
-    // npmConfig suppresses npmToken
-    npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
-    npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
-    gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
-    gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
-  }
-}
-```
-
 ### Meta
 
 Each release stores its result into the `meta` branch.  
@@ -303,6 +251,46 @@ Release process state is reported to the console and to a file if `--report` fla
     // ...
   ]
 }
+```
+
+### Output
+[Compact and clear logs](https://github.com/semrel-extra/demo-zx-bulk-release/runs/7090161341?check_suite_focus=true#step:6:1)
+
+```shell
+Run npm_config_yes=true npx zx-bulk-release
+zx-bulk-release
+[@semrel-extra/zxbr-test-a] semantic changes [
+  {
+    group: 'Fixes & improvements',
+    releaseType: 'patch',
+    change: 'fix(a): random',
+    subj: 'fix(a): random',
+    body: '',
+    short: '6ff25bd',
+    hash: '6ff25bd421755b929ef2b58f35c727670fd93849'
+  }
+]
+[@semrel-extra/zxbr-test-a] run cmd 'yarn && yarn build && yarn test'
+[@semrel-extra/zxbr-test-a] push release tag 2022.6.27-semrel-extra.zxbr-test-a.1.8.1-f0
+[@semrel-extra/zxbr-test-a] push artifact to branch 'meta'
+[@semrel-extra/zxbr-test-a] push changelog
+[@semrel-extra/zxbr-test-a] publish npm package @semrel-extra/zxbr-test-a 1.8.1 to https://registry.npmjs.org
+[@semrel-extra/zxbr-test-a] create gh release
+[@semrel-extra/zxbr-test-b] semantic changes [
+  {
+    group: 'Dependencies',
+    releaseType: 'patch',
+    change: 'perf',
+    subj: 'perf: @semrel-extra/zxbr-test-a updated to 1.8.1'
+  }
+]
+[@semrel-extra/zxbr-test-b] run cmd 'yarn && yarn build && yarn test'
+[@semrel-extra/zxbr-test-b] push release tag 2022.6.27-semrel-extra.zxbr-test-b.1.3.5-f0
+[@semrel-extra/zxbr-test-b] push artifact to branch 'meta'
+[@semrel-extra/zxbr-test-b] push changelog
+[@semrel-extra/zxbr-test-b] publish npm package @semrel-extra/zxbr-test-b 1.3.5 to https://registry.npmjs.org
+[@semrel-extra/zxbr-test-b] create gh release
+[@semrel-extra/zxbr-test-d] semantic changes [
 ```
 
 ## References
