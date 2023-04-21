@@ -1,3 +1,8 @@
+## [2.6.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.6.0...v2.6.1) (2023-04-21)
+
+### Fixes & improvements
+* docs: readme struct edits, mention `wget` and `git` as requirements ([2f76f12](https://github.com/semrel-extra/zx-bulk-release/commit/2f76f12b142a700dd53045fc4d268d6d8e64b721))
+
 ## [2.6.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.5.3...v2.6.0) (2023-04-21)
 
 ### Features
