@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
 import {topo} from '@semrel-extra/topo'
-import {analyzeCommits, getNextVersion, resolvePkgVersion} from '../../main/js/analyze.js'
+import {analyzeCommits, getNextVersion, resolvePkgVersion, semanticRules} from '../../main/js/analyze.js'
 import {getCommits} from '../../main/js/git.js'
 import {createFakeRepo} from './test-utils.js'
 
@@ -156,7 +156,7 @@ test('`analyzeCommits` analyzes commits for each package', async () => {
       short: 'e296ecd',
       hash: 'e296ecddfcb70a4fd44c8372461e3a1447655c2e'
     }
-  ])
+  ], semanticRules)
 
   assert.equal(result, [
     {

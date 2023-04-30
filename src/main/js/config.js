@@ -31,6 +31,7 @@ export const getPkgConfig = async (...cwds) =>
 export const normalizePkgConfig = (config, env) => ({
   ...parseEnv(env),
   ...config,
+  releaseRules: config.releaseRules || config.semanticRules,
   npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
   buildCmd: config.buildCmd || config.cmd,
   get ghBasicAuth() {
