@@ -1,3 +1,11 @@
+## [2.7.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.6.1...v2.7.0) (2023-04-30)
+
+### Fixes & improvements
+* fix: fix `latestVersion` fallback value ([9d25129](https://github.com/semrel-extra/zx-bulk-release/commit/9d25129dcf41c74cdd2d0670e86d20a32f7734c0))
+
+### Features
+* feat: let `releaseRules` be configured via opts ([4ae4606](https://github.com/semrel-extra/zx-bulk-release/commit/4ae4606678d13cf619e36861ce889e4e73c8a370))
+
 ## [2.6.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.6.0...v2.6.1) (2023-04-21)
 
 ### Fixes & improvements
