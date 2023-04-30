@@ -311,6 +311,7 @@ zx-bulk-release
 * [moonrepo/moon](https://github.com/moonrepo/moon)
 * [ojkelly/yarn.build](https://github.com/ojkelly/yarn.build)
 * [antfu/bumpp](https://github.com/antfu/bumpp)
+* [googleapis/release-please](https://github.com/googleapis/release-please)
 
 ## License 
 [MIT](./LICENSE)
