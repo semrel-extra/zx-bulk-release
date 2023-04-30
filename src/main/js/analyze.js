@@ -10,7 +10,7 @@ export const analyze = async (pkg) => {
   const changes = [...semanticChanges, ...depsChanges]
   const releaseType = getNextReleaseType(changes)
   const pre = pkg.context.flags.snapshot ? `-snap.${pkg.context.git.sha.slice(0, 7)}` : undefined
-  const latestVersion = pkg.latest.tag?.version || pkg.latest.meta?.versio
+  const latestVersion = pkg.latest.tag?.version || pkg.latest.meta?.version
 
   pkg.changes = changes
   pkg.releaseType = releaseType
