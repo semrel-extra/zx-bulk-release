@@ -5,7 +5,7 @@ import {log} from './log.js'
 import {getCommits} from './git.js'
 
 export const analyze = async (pkg) => {
-  const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
+  const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref, undefined, pkg.config.releaseRules)
   const depsChanges = await updateDeps(pkg)
   const changes = [...semanticChanges, ...depsChanges]
   const releaseType = getNextReleaseType(changes)
@@ -34,15 +34,15 @@ export const semanticRules = [
   {group: 'BREAKING CHANGES', releaseType: 'major', keywords: ['BREAKING CHANGE', 'BREAKING CHANGES']},
 ]
 
-export const getSemanticChanges = async (cwd, from, to) => {
+export const getSemanticChanges = async (cwd, from, to, rules = semanticRules) => {
   const commits = await getCommits(cwd, from, to)
 
-  return analyzeCommits(commits)
+  return analyzeCommits(commits, rules)
 }
 
-export const analyzeCommits = (commits) =>
+export const analyzeCommits = (commits, rules) =>
   commits.reduce((acc, {subj, body, short, hash}) => {
-    semanticRules.forEach(({group, releaseType, prefixes, keywords}) => {
+    rules.forEach(({group, releaseType, prefixes, keywords}) => {
       const prefixMatcher = prefixes && new RegExp(`^(${prefixes.join('|')})(\\([a-z0-9\\-_,]+\\))?:\\s.+$`)
       const keywordsMatcher = keywords && new RegExp(`(${keywords.join('|')}):\\s(.+)`)
       const change = subj.match(prefixMatcher)?.[0] || body.match(keywordsMatcher)?.[2]

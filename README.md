@@ -151,6 +151,15 @@ export const analyze = async (pkg, packages, root) => {
 }
 ```
 
+Set `config.releaseRules` to override the default rules preset:
+```ts
+[
+  {group: 'Features', releaseType: 'minor', prefixes: ['feat']},
+  {group: 'Fixes & improvements', releaseType: 'patch', prefixes: ['fix', 'perf', 'refactor', 'docs', 'patch']},
+  {group: 'BREAKING CHANGES', releaseType: 'major', keywords: ['BREAKING CHANGE', 'BREAKING CHANGES']},
+]
+```
+
 ### `build`
 Applies `config.cmd` to build pkg assets: bundles, docs, etc.
 ```js
