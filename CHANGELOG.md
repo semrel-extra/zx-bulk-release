@@ -1,3 +1,8 @@
+## [2.8.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.7.0...v2.8.0) (2023-05-25)
+
+### Features
+* feat: support bolt and pnpm monorepos via @semrel-extra/topo >= 1.11.0 ([a0f2af9](https://github.com/semrel-extra/zx-bulk-release/commit/a0f2af9d832516d14322953518bf5d8842ee14da))
+
 ## [2.7.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.6.1...v2.7.0) (2023-04-30)
 
 ### Fixes & improvements
