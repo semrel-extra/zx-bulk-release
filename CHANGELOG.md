@@ -1,3 +1,8 @@
+## [2.9.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.8.0...v2.9.0) (2023-05-29)
+
+### Features
+* feat: introduce `-v` flag to print own version ([a921559](https://github.com/semrel-extra/zx-bulk-release/commit/a9215598aedb204136d3c28ef3f8c2a1cbebff54))
+
 ## [2.8.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.7.0...v2.8.0) (2023-05-25)
 
 ### Features
