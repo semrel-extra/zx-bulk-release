@@ -8,3 +8,4 @@ test('index has proper exports', () => {
   assert.instance(run, Function)
 })
 
+test.run()

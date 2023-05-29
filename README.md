@@ -50,6 +50,7 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 | `--report`                   | Persist release state to file                                                                                             |                  |
 | `--snapshot`                 | Disable any publishing steps except of `npm` and `publishCmd` (if defined), then  push packages to the `snapshot` channel |                  |  
 | `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode                                                            |                  |
+| `--version` / `-v`           | Print own version                                                                                                         |                  |
 
 ### JS API
 ```js

@@ -1,4 +1,5 @@
 import os from 'node:os'
+import {createRequire} from 'node:module'
 import {$, fs, within} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {analyze} from './analyze.js'
@@ -13,12 +14,18 @@ import {fetchPkg, npmPublish} from './npm.js'
 import {memoizeBy, tpl} from './util.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
+  const {version: zbrVersion} = createRequire(import.meta.url)('../../../package.json')
+  if (flags.v || flags.version) {
+    console.log(zbrVersion)
+    return
+  }
+
   const context = await createContext({flags, env, cwd})
   const {report, packages, queue, prev, graphs} = context
   const _runCmd = queuefy(runCmd, flags.concurrency || os.cpus().length)
 
   report
-    .log()('zx-bulk-release')
+    .log()(`zx-bulk-release@${zbrVersion}`)
     .log()('queue:', queue)
     .log()('graphs', graphs)
 
