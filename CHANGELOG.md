@@ -1,3 +1,8 @@
+## [2.9.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.0...v2.9.1) (2023-06-09)
+
+### Fixes & improvements
+* fix: set default build. cmd to `exit 0` ([23d8ee2](https://github.com/semrel-extra/zx-bulk-release/commit/23d8ee2f64f98ce0d8d4f57d97dbed1c4696a389))
+
 ## [2.9.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.8.0...v2.9.0) (2023-05-29)
 
 ### Features
