@@ -15,7 +15,7 @@ const CONFIG_FILES = [
 ]
 
 export const defaultConfig = {
-  cmd:        'yarn && yarn build && yarn test',
+  cmd:        'exit 0',
   changelog:  'changelog',
   npmFetch:   true,
   ghRelease:  true,
