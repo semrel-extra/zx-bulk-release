@@ -1,3 +1,8 @@
+## [2.9.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.1...v2.9.2) (2023-06-10)
+
+### Fixes & improvements
+* fix: respect --no-prefixed flags ([57c42a9](https://github.com/semrel-extra/zx-bulk-release/commit/57c42a97718cb594da5c90199706a71919e49e1e))
+
 ## [2.9.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.0...v2.9.1) (2023-06-09)
 
 ### Fixes & improvements
