@@ -52,11 +52,11 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
         report.setStatus('skipped', name)
         return
       }
-      if (!flags.noBuild) {
+      if (flags.build !== false) {
         report.setStatus('building', name)
         await build(pkg, _runCmd)
       }
-      if (!flags.dryRun && !flags.noPublish) {
+      if (!flags.dryRun && flags.publish !== false) {
         report.setStatus('publishing', name)
         await publish(pkg, _runCmd)
       }
@@ -125,7 +125,7 @@ const build = memoizeBy(async (pkg, run = runCmd, flags = {}, self = build) => w
 
   await Promise.all([
     traverseDeps({pkg, packages: pkg.context.packages, cb: async({pkg}) => self(pkg, run, flags, self)}),
-    pkg.changes.length === 0 && pkg.config.npmFetch && !flags.noNpmFetch
+    pkg.changes.length === 0 && pkg.config.npmFetch && flags.npmFetch !== false
       ? fetchPkg(pkg)
       : Promise.resolve()
   ])
