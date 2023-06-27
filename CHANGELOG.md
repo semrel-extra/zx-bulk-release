@@ -1,3 +1,8 @@
+## [2.11.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.10.0...v2.11.0) (2023-06-27)
+
+### Features
+* feat: introduce gh assets uploader ([4967fd9](https://github.com/semrel-extra/zx-bulk-release/commit/4967fd9895db684c6832c6055a716c7c7eb1a313))
+
 ## [2.10.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.3...v2.10.0) (2023-06-27)
 
 ### Features
