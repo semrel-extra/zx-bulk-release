@@ -3,6 +3,7 @@ import {$, fs, INI, fetch, tempy} from 'zx-extra'
 
 export const fetchPkg = async (pkg) => {
   const id = `${pkg.name}@${pkg.version}`
+  const now = Date.now()
 
   try {
     const cwd = pkg.absPath
@@ -11,8 +12,9 @@ export const fetchPkg = async (pkg) => {
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const authorization = bearerToken ? `--header='Authorization: ${bearerToken}'` : ''
     log({pkg})(`fetching '${id}' from ${npmRegistry}`)
-    await $.raw`wget --timeout=10 --connect-timeout=5 ${authorization} -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
+    await $.raw`wget --timeout=15 --connect-timeout=5 ${authorization} -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
 
+    log({pkg})(`fetch duration '${id}': ${Date.now() - now}`)
     pkg.fetched = true
   } catch (e) {
     log({pkg, level: 'warn'})(`fetching '${id}' failed`, e)

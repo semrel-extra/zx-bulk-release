@@ -79,10 +79,14 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
 
 export const runCmd = async (pkg, name) => {
   const cmd = tpl(pkg.config[name], {...pkg, ...pkg.context})
+  const now = Date.now()
 
   if (cmd) {
     log({pkg})(`run ${name} '${cmd}'`)
-    return $.o({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
+    const result = await $.o({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
+
+    log({pkg})(`duration ${name}: ${Date.now() - now}`)
+    return result
   }
 }
 
