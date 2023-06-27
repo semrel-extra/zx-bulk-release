@@ -44,3 +44,5 @@ export const memoizeBy = (fn, getKey = v => v, memo = new Map()) => async (...ar
 }
 
 export const camelize = s => s.replace(/-./g, x => x[1].toUpperCase())
+
+export const asArray = v => Array.isArray(v) ? v : [v]
