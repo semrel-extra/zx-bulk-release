@@ -13,9 +13,9 @@ test('`prepareAssets()` preprocesses files for publishing', async () => {
 
   const temp = await ghPrepareAssets([
     { name: 'jsons.zip', source: ['*.json'], zip: true, cwd},
-    { name: 'a.zip', source: 'a.json', cwd, zip: true },
+    { name: 'a.zip', source: 'a.json', zip: true },
     { name: 'a.json', source: 'a.json', cwd },
-  ])
+  ], cwd)
 
   assert.equal(await fs.readFile(path.resolve(temp, 'a.json'), 'utf8'), '{"foo": "bar"}')
 })

@@ -30,7 +30,7 @@ export const ghRelease = async (pkg) => {
   log({pkg})('gh release url:', res.url, res.html_url, res.upload_url)
 
   if (ghAssets) {
-    await ghUploadAssets({ghToken, uploadUrl: res.upload_url})
+    await ghUploadAssets({ghToken, uploadUrl: res.upload_url, cwd})
   }
 
   log({pkg})(`duration gh release: ${Date.now() - now}`)
@@ -60,10 +60,10 @@ export const ghPages = queuefy(async (pkg) => {
 })
 
 // https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset8
-export const ghPrepareAssets = async (assets) => {
+export const ghPrepareAssets = async (assets, _cwd) => {
   const temp = tempy.temporaryDirectory()
 
-  await Promise.all(assets.map(async ({name, source = 'target/**/*', zip, cwd}) => {
+  await Promise.all(assets.map(async ({name, source = 'target/**/*', zip, cwd = _cwd}) => {
     const patterns = asArray(source)
     const target = path.join(temp, name)
     if (patterns.some(s => s.includes('*'))) {
@@ -82,12 +82,12 @@ export const ghPrepareAssets = async (assets) => {
   return temp
 }
 
-export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl}) => {
-  const cwd = await ghPrepareAssets(ghAssets)
+export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
+  const temp = await ghPrepareAssets(ghAssets, cwd)
 
   return Promise.all(ghAssets.map(async ({name}) => {
     const url = `${uploadUrl}?name=${name}`
-    return $.o({cwd})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' -H 'Content-Type: application/octet-stream' ${url} --data-binary '@${name}'`
+    return $.o({cwd: temp})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' -H 'Content-Type: application/octet-stream' ${url} --data-binary '@${name}'`
   }))
 }
 
