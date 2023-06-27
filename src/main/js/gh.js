@@ -27,10 +27,10 @@ export const ghRelease = async (pkg) => {
   const {stdout} = await $.o({cwd})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
   const res = JSON.parse(stdout.toString().trim())
 
-  log({pkg})('gh release url:', res.url, res.html_url, res.upload_url)
-
   if (ghAssets) {
-    await ghUploadAssets({ghToken, uploadUrl: res.upload_url, cwd})
+    // Lol. GH API literally returns pseudourl `...releases/110103594/assets{?name,label}` as shown in the docs
+    const uploadUrl = res.upload_url.slice(0, res.upload_url.indexOf('{'))
+    await ghUploadAssets({ghToken, ghAssets, uploadUrl, cwd})
   }
 
   log({pkg})(`duration gh release: ${Date.now() - now}`)
