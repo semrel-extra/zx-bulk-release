@@ -1,3 +1,8 @@
+## [2.11.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.2...v2.11.3) (2023-06-27)
+
+### Fixes & improvements
+* fix: apply dir strip to tar inners ([3f5ccd8](https://github.com/semrel-extra/zx-bulk-release/commit/3f5ccd89134331604859969c8d10887d27d9aa6f))
+
 ## [2.11.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.1...v2.11.2) (2023-06-27)
 
 ### Fixes & improvements

@@ -1,7 +1,7 @@
 {
   "name": "zx-bulk-release",
   "alias": "bulk-release",
-  "version": "2.11.2",
+  "version": "2.11.3",
   "description": "zx-based alternative for multi-semantic-release",
   "type": "module",
   "exports": {
