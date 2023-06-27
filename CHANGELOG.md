@@ -1,3 +1,8 @@
+## [2.11.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.1...v2.11.2) (2023-06-27)
+
+### Fixes & improvements
+* fix: handle gh release `upload_url` ([c853ca4](https://github.com/semrel-extra/zx-bulk-release/commit/c853ca4b6978d73402d43c60c30de4523b3c2662))
+
 ## [2.11.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.0...v2.11.1) (2023-06-27)
 
 ### Fixes & improvements
