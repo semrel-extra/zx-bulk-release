@@ -1,3 +1,8 @@
+## [2.10.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.3...v2.10.0) (2023-06-27)
+
+### Features
+* feat: log `fetch`, `build` & `test` steps duration ([b7b3db3](https://github.com/semrel-extra/zx-bulk-release/commit/b7b3db3af378f3153f8ad8fa62eec79852da6c0b))
+
 ## [2.9.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.2...v2.9.3) (2023-06-27)
 
 ### Fixes & improvements
