@@ -8,16 +8,21 @@ const test = suite('gh')
 
 test('`prepareAssets()` preprocesses files for publishing', async () => {
   const cwd = tempy.temporaryDirectory()
-  await fs.outputFile(path.resolve(cwd, 'a.json'), '{"foo": "bar"}')
-  await fs.outputFile(path.resolve(cwd, 'b.json'), '{"baz": "qux"}')
+  await fs.outputFile(path.resolve(cwd, 'target/json/a.json'), '{"foo": "bar"}')
+  await fs.outputFile(path.resolve(cwd, 'target/json/b.json'), '{"baz": "qux"}')
+  await fs.outputFile(path.resolve(cwd, 'c.json'), '{"quuux": "quuux"}')
+  await fs.outputFile(path.resolve(cwd, 'd.json'), '{"duuux": "duuux"}')
 
   const temp = await ghPrepareAssets([
-    { name: 'jsons.zip', source: ['*.json'], zip: true, cwd},
-    { name: 'a.zip', source: 'a.json', zip: true },
-    { name: 'a.json', source: 'a.json', cwd },
+    { name: 'jsons.zip', source: ['target/**/*.json'], zip: true, cwd},
+    { name: 'a.zip', source: 'target/json/a.json', zip: true },
+    { name: 'a.json', source: 'target/json/a.json', cwd },
+    { name: 'c.json', source: 'c.json', cwd },
+    { name: 'jsons2.zip', source: '*.json', cwd },
   ], cwd)
 
   assert.equal(await fs.readFile(path.resolve(temp, 'a.json'), 'utf8'), '{"foo": "bar"}')
+  assert.equal(await fs.readFile(path.resolve(temp, 'c.json'), 'utf8'), '{"quuux": "quuux"}')
 })
 
 test.run()

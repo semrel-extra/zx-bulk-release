@@ -63,20 +63,24 @@ export const ghPages = queuefy(async (pkg) => {
 export const ghPrepareAssets = async (assets, _cwd) => {
   const temp = tempy.temporaryDirectory()
 
-  await Promise.all(assets.map(async ({name, source = 'target/**/*', zip, cwd = _cwd}) => {
+  await Promise.all(assets.map(async ({name, source = 'target/**/*', zip, cwd = _cwd, strip = true}) => {
     const patterns = asArray(source)
     const target = path.join(temp, name)
     if (patterns.some(s => s.includes('*'))) {
       zip = true
     }
-    const files = await glob(patterns, {cwd, absolute: true, onlyFiles: true})
-
+    const files = await glob(patterns, {cwd, absolute: false, onlyFiles: true})
     if (!zip && files.length === 1) {
-      await fs.copy(files[0], target)
+      await fs.copy(path.join(cwd, files[0]), target)
       return
     }
 
-    return $.raw`tar -C ${cwd} -cv${zip ? 'z' : ''}f ${target} ${files.join(' ')}`
+    const common = files.length === 1
+      ? files[0].lastIndexOf('/') + 1
+      : [...(files[0])].findIndex((c, i) => files.some(f => f.charAt(i) !== c))
+    const prefix = files[0].slice(0, common)
+
+    return $.raw`tar -C ${common ? path.join(cwd, prefix) : cwd} -cv${zip ? 'z' : ''}f ${target} ${files.map(f => common ? f.slice(common) : f).join(' ')}`
   }))
 
   return temp
