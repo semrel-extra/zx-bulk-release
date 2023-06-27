@@ -7,7 +7,7 @@ import {formatReleaseNotes} from './changelog.js'
 import {msgJoin} from './util.js'
 
 export const ghRelease = async (pkg) => {
-  log({pkg})(`create gh release`)
+  log({pkg})('create gh release')
 
   const {ghBasicAuth: basicAuth, ghToken} = pkg.config
   if (!ghToken) return null
@@ -22,7 +22,10 @@ export const ghRelease = async (pkg) => {
     body: releaseNotes
   })
 
-  await $.o({cwd})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
+  const {stdout} = await $.o({cwd})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
+  const res = JSON.parse(stdout.toString().trim())
+
+  log({pkg})('gh release url:', res.url, res.html_url)
 }
 
 export const ghPages = queuefy(async (pkg) => {
