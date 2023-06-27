@@ -1,3 +1,8 @@
+## [2.9.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.2...v2.9.3) (2023-06-27)
+
+### Fixes & improvements
+* perf: print gh release url in log ([08edaef](https://github.com/semrel-extra/zx-bulk-release/commit/08edaef76e67a7b7109c9fa1e1f0140f5e932d3b))
+
 ## [2.9.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.9.1...v2.9.2) (2023-06-10)
 
 ### Fixes & improvements
