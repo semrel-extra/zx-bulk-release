@@ -1,3 +1,8 @@
+## [2.11.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.0...v2.11.1) (2023-06-27)
+
+### Fixes & improvements
+* fix: pass pkg root to `ghAssets` resolver ([b0ba371](https://github.com/semrel-extra/zx-bulk-release/commit/b0ba371263544b7b4081481024fc94413c1a0409))
+
 ## [2.11.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.10.0...v2.11.0) (2023-06-27)
 
 ### Features
