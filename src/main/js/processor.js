@@ -129,7 +129,7 @@ const build = memoizeBy(async (pkg, run = runCmd, flags = {}, self = build) => w
 
   await Promise.all([
     traverseDeps({pkg, packages: pkg.context.packages, cb: async({pkg}) => self(pkg, run, flags, self)}),
-    pkg.changes.length === 0 && pkg.config.npmFetch && flags.npmFetch !== false
+    pkg.manifest.private !== true && pkg.changes.length === 0 && pkg.config.npmFetch && flags.npmFetch !== false
       ? fetchPkg(pkg)
       : Promise.resolve()
   ])
