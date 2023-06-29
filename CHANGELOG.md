@@ -1,3 +1,8 @@
+## [2.11.4](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.3...v2.11.4) (2023-06-29)
+
+### Fixes & improvements
+* fix: do not try to fetch private packages ([a6889bb](https://github.com/semrel-extra/zx-bulk-release/commit/a6889bb45e2bd05f82a05d20c4153baa5c6f1ab3))
+
 ## [2.11.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.2...v2.11.3) (2023-06-27)
 
 ### Fixes & improvements
