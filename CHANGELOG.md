@@ -1,3 +1,8 @@
+## [2.11.5](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.4...v2.11.5) (2023-07-07)
+
+### Fixes & improvements
+* fix(assets): handle `commonPath` corner case ([1e9ac5e](https://github.com/semrel-extra/zx-bulk-release/commit/1e9ac5e64ac1c26a049f28b35c7c98db5bea7d34))
+
 ## [2.11.4](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.3...v2.11.4) (2023-06-29)
 
 ### Fixes & improvements
