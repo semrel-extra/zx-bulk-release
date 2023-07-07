@@ -4,7 +4,7 @@ import {log} from './log.js'
 import {getRepo, pushCommit} from './git.js'
 import {formatTag} from './meta.js'
 import {formatReleaseNotes} from './changelog.js'
-import {asArray, msgJoin} from './util.js'
+import {asArray, getCommonPath, msgJoin} from './util.js'
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release
 export const ghRelease = async (pkg) => {
@@ -74,13 +74,9 @@ export const ghPrepareAssets = async (assets, _cwd) => {
       await fs.copy(path.join(cwd, files[0]), target)
       return
     }
+    const prefix = getCommonPath(files)
 
-    const common = files.length === 1
-      ? files[0].lastIndexOf('/') + 1
-      : [...(files[0])].findIndex((c, i) => files.some(f => f.charAt(i) !== c))
-    const prefix = files[0].slice(0, common)
-
-    return $.raw`tar -C ${common ? path.join(cwd, prefix) : cwd} -cv${zip ? 'z' : ''}f ${target} ${files.map(f => common ? f.slice(common) : f).join(' ')}`
+    return $.raw`tar -C ${path.join(cwd, prefix)} -cv${zip ? 'z' : ''}f ${target} ${files.map(f => f.slice(prefix.length)).join(' ')}`
   }))
 
   return temp

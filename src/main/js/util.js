@@ -46,3 +46,17 @@ export const memoizeBy = (fn, getKey = v => v, memo = new Map()) => async (...ar
 export const camelize = s => s.replace(/-./g, x => x[1].toUpperCase())
 
 export const asArray = v => Array.isArray(v) ? v : [v]
+
+export const getCommonPath = files => {
+  const f0 = files[0]
+  const common = files.length === 1
+    ? f0.lastIndexOf('/') + 1
+    : [...(f0)].findIndex((c, i) => files.some(f => f.charAt(i) !== c))
+
+  const p = f0.slice(0, common)
+  if (p.endsWith('/')) {
+    return p
+  }
+
+  return p.slice(0, p.lastIndexOf('/') + 1)
+}
