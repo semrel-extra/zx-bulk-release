@@ -323,6 +323,7 @@ zx-bulk-release
 * [antfu/bumpp](https://github.com/antfu/bumpp)
 * [googleapis/release-please](https://github.com/googleapis/release-please)
 * [generic-semantic-version-processing](https://about.gitlab.com/blog/2021/09/28/generic-semantic-version-processing/)
+* [jchip/fynpo](https://github.com/jchip/fynpo)
 
 ## License 
 [MIT](./LICENSE)
