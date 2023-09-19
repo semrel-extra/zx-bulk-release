@@ -22,9 +22,15 @@ export const analyze = async (pkg) => {
   )
   pkg.preversion = pre && pkg.version
   pkg.manifest.version = pkg.version
-  pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version}) : null
+  pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version, format: pkg.config.tagFormat}) : null
 
-  log({pkg})('semantic changes', changes, 'nextVersion', pkg.version, 'latestVersion', latestVersion)
+  log({pkg})(
+    'semantic changes', changes,
+    'releaseType', releaseType,
+    'prevVersion', latestVersion,
+    'nextVersion', pkg.version,
+    'nextTag', pkg.tag
+  )
 }
 
 export const releaseSeverityOrder = ['major', 'minor', 'patch']

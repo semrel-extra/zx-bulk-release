@@ -14,9 +14,8 @@ export const ghRelease = async (pkg) => {
   log({pkg})('create gh release')
 
   const now = Date.now()
-  const {name, version, absPath: cwd} = pkg
+  const {name, version, absPath: cwd, tag = formatTag({name, version})} = pkg
   const {repoName} = await getRepo(cwd, {basicAuth})
-  const tag = formatTag({name, version})
   const releaseNotes = await formatReleaseNotes(pkg)
   const releaseData = JSON.stringify({
     name: tag,

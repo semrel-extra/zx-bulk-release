@@ -199,10 +199,19 @@ Note, [npm-package-name charset](https://www.npmjs.com/package/validate-npm-pack
 '2022.6.13-examplecom.v1.0.0.ZXhhbXBsZS5jb20-f1'
 // date    name       ver    b64             format
 ```
+Anyway, it's still possible to override the default config by `tagFormat` option:
+
+| tagFormat | Example                                              |
+|-----------|------------------------------------------------------|
+| f0        | 2022.6.22-qiwi.pijma-native.v1.0.0-beta.0+foo.bar-f0 |
+| f1        | 2022.6.13-examplecom.v1.0.0.ZXhhbXBsZS5jb20-f1       |
+| lerna     | @qiwi/pijma-ssr@1.1.12                               |
+| pure      | 1.2.3-my.package                                     | 
+
 
 ### Meta
 
-Each release stores its result into the `meta` branch.  
+Each release pushes its result to the `meta` branch.  
 `2022-6-26-semrel-extra-zxbr-test-c-1-3-1-f0.json`
 ```json
 {

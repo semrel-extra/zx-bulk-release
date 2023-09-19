@@ -160,18 +160,25 @@ test('formatTag() / parseTag()', () => {
         version: '1.1.12',
         format: 'lerna',
         ref: '@qiwi/pijma-ssr@1.1.12'
-      },
-      true
+      }
+    ],
+    [
+      '1.2.3-my.package',
+      {
+        name: '@my/package',
+        version: '1.2.3',
+        format: 'pure',
+        ref: '1.2.3-my.package'
+      }
     ]
   ]
 
-  cases.forEach(([tag, meta, parseonly]) => {
+  cases.forEach(([tag, meta]) => {
     const parsed = parseTag(tag)
     assert.equal(parsed, meta)
 
-    if (meta !== null && !parseonly) {
+    if (meta !== null) {
       assert.is(formatTag(meta), tag)
-      assert.ok(semver.valid(tag))
     }
   })
 })

@@ -22,9 +22,8 @@ export const pushChangelog = queuefy(async (pkg) => {
 })
 
 export const formatReleaseNotes = async (pkg) => {
-  const {name, version, absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
+  const {name, version, tag = formatTag({name, version}), absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
   const {repoPublicUrl} = await getRepo(cwd, {basicAuth})
-  const tag = formatTag({name, version})
   const releaseDiffRef = `## [${name}@${version}](${repoPublicUrl}/compare/${pkg.latest.tag?.ref}...${tag}) (${new Date().toISOString().slice(0, 10)})`
   const releaseDetails = Object.values(pkg.changes
     .reduce((acc, {group, subj, short, hash}) => {

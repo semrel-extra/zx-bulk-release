@@ -8,8 +8,7 @@ import {fetchRepo, pushCommit, getTags as getGitTags, pushTag} from './git.js'
 import {fetchManifest} from './npm.js'
 
 export const pushReleaseTag = async (pkg) => {
-  const {name, version, config: {gitCommitterEmail, gitCommitterName}} = pkg
-  const tag = formatTag({name, version})
+  const {name, version, tag = formatTag({name, version}),config: {gitCommitterEmail, gitCommitterName}} = pkg
   const cwd = pkg.context.git.root
 
   pkg.context.git.tag = tag
@@ -21,8 +20,7 @@ export const pushReleaseTag = async (pkg) => {
 export const pushMeta = queuefy(async (pkg) => {
   log({pkg})('push artifact to branch \'meta\'')
 
-  const {name, version, absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
-  const tag = formatTag({name, version})
+  const {name, version, tag = formatTag({name, version}), absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   const to = '.'
   const branch = 'meta'
   const msg = `chore: release meta ${name} ${version}`
@@ -53,7 +51,10 @@ export const getLatest = async (pkg) => {
   }
 }
 
+const isSafeName = n => /^(@?[a-z0-9-]+\/)?[a-z0-9-]+$/.test(n)
+
 const f0 = {
+  name: 'f0',
   parse(tag) {
     if (!tag.endsWith('-f0')) return null
 
@@ -66,10 +67,10 @@ const f0 = {
     const date = parseDateTag(_date)
     const name = _name.includes('.') ? `@${_name.replace('.', '/')}` : _name
 
-    return {date, name, version, format: 'f0', ref: tag}
+    return {date, name, version, format: this.name, ref: tag}
   },
   format({name, date = new Date(), version}) {
-    if (!/^(@?[a-z0-9-]+\/)?[a-z0-9-]+$/.test(name) || !semver.valid(version)) return null
+    if (!isSafeName(name) || !semver.valid(version)) return null
 
     const d = formatDateTag(date)
     const n = name.replace('@', '').replace('/', '.')
@@ -79,6 +80,7 @@ const f0 = {
 }
 
 const f1 = {
+  name: 'f1',
   parse(tag) {
     if (!tag.endsWith('-f1')) return null
 
@@ -91,7 +93,7 @@ const f1 = {
     const date = parseDateTag(_date)
     const name = Buffer.from(b64, 'base64url').toString('utf8')
 
-    return {date, name, version, format: 'f1', ref: tag}
+    return {date, name, version, format: this.name, ref: tag}
   },
   format({name, date = new Date(), version}) {
     if (!semver.valid(version)) return null
@@ -105,35 +107,72 @@ const f1 = {
 }
 
 const lerna = {
+  name: 'lerna',
   parse(tag) {
     const pattern = /^(@?[a-z0-9-]+(?:\/[a-z0-9-]+)?)@(v?\d+\.\d+\.\d+.*)/
     const [, name, version] = pattern.exec(tag) || []
 
     if (!semver.valid(version)) return null
 
-    return {name, version, format: 'lerna', ref: tag}
+    return {name, version, format: this.name, ref: tag}
   },
-  // format({name, version}) {
-  //   if (!semver.valid(version)) return null
-  //
-  //   return `${name}@${version}`
-  // }
+  format({name, version}) {
+    if (!semver.valid(version)) return null
+
+    return `${name}@${version}`
+  }
 }
 
-// TODO
-// const variants = [f0, f1]
-// export const parseTag = (tag) => {
-//   for (const variant of variants) {
-//     const parsed = variant.parse(tag)
-//     if (parsed) return parsed
-//   }
-//
-//   return null
-// }
+const pure = {
+  name: 'pure',
+  parse(tag) {
+    if (tag.endsWith('-f0') || tag.endsWith('-f1')) {
+      return null
+    }
+    const parsed = semver.parse(tag) || {}
+    const {prerelease} = parsed
+    if (!prerelease?.length) {
+      return null
+    }
 
-export const parseTag = (tag) => f0.parse(tag) || f1.parse(tag) || lerna.parse(tag) || null
+    const [n, o = ''] = prerelease.reverse()
+    const name = o === 'x' ? n : `@${o}/${n}`
+    const version = tag.slice(0, -1 - n.length - (o ? o.length + 1 : 0))
 
-export const formatTag = (tag) => f0.format(tag) || f1.format(tag) || null
+    return {format: this.name, ref: tag, name, version}
+  },
+  format({name, version}) {
+    const parsed = semver.parse(version)
+    if (!parsed || !isSafeName(name)) {
+      return null
+    }
+    const {prerelease} = parsed
+    const [n, o] = name.slice(name[0] === '@' ? 1 : 0).split('/').reverse()
+    const extra = prerelease.length
+      ? '.' + [o || 'x', n].join('.')
+      : '-' + [o, n].filter(Boolean).join('.')
+    return version + extra
+  }
+}
+
+const getFormatter = (tagFormat) => {
+  if (!tagFormat) {
+    return {
+      parse() {},
+      format() {}
+    }
+  }
+  const formatter = [f0, f1, pure, lerna].find(f => f.name === tagFormat)
+  if (!formatter) {
+    throw new Error(`Unsupported tag format: ${tagFormat}`)
+  }
+
+  return formatter
+}
+
+export const parseTag = (tag) => f0.parse(tag) || f1.parse(tag) || lerna.parse(tag) || pure.parse(tag) || null
+
+export const formatTag = (tag, tagFormat = tag.format) => getFormatter(tagFormat).format(tag) || f0.format(tag) || f1.format(tag) || null
 
 export const getTags = async (cwd, ref = '') =>
   (await getGitTags(cwd, ref))
