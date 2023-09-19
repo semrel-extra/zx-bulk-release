@@ -1,3 +1,8 @@
+## [2.11.6](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.5...v2.11.6) (2023-09-19)
+
+### Fixes & improvements
+* docs: mention generic-semantic-version-processing ([f9e1750](https://github.com/semrel-extra/zx-bulk-release/commit/f9e175094910f8fb27f5bed137b2a54aa5a7bdce))
+
 ## [2.11.5](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.4...v2.11.5) (2023-07-07)
 
 ### Fixes & improvements
