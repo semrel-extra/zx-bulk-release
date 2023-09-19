@@ -1,3 +1,8 @@
+## [2.12.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.7...v2.12.0) (2023-09-19)
+
+### Features
+* feat: provide `tagFormat` configuration ([c405454](https://github.com/semrel-extra/zx-bulk-release/commit/c4054545da55b430e427ab8b8684a305a1dd8360))
+
 ## [2.11.7](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.6...v2.11.7) (2023-09-19)
 
 ### Fixes & improvements
