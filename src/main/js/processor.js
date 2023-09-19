@@ -1,6 +1,6 @@
 import os from 'node:os'
 import {createRequire} from 'node:module'
-import {$, fs, within} from 'zx-extra'
+import {$, within} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {analyze} from './analyze.js'
 import {pushChangelog} from './changelog.js'
@@ -10,7 +10,7 @@ import {ghPages, ghRelease} from './gh.js'
 import {getRoot, getSha, unsetUserConfig} from './git.js'
 import {log, createReport} from './log.js'
 import {getLatest, pushMeta, pushReleaseTag} from './meta.js'
-import {fetchPkg, npmPublish} from './npm.js'
+import {fetchPkg, npmPersist, npmPublish, npmRestore} from './npm.js'
 import {memoizeBy, tpl} from './util.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
@@ -153,7 +153,7 @@ const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
     throw new Error('package.json version not synced')
   }
 
-  await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
+  await npmPersist(pkg)
 
   if (pkg.context.flags.snapshot) {
     await Promise.all([
@@ -176,7 +176,5 @@ const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
 
 const clean = async (cwd, packages) => {
   await unsetUserConfig(cwd)
-  await Promise.all(Object.values(packages).map(({manifestPath, manifestRaw}) =>
-    fs.writeFile(manifestPath, manifestRaw, {encoding: 'utf8'})
-  ))
+  await Promise.all(Object.values(packages).map(npmRestore))
 }

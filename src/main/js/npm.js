@@ -38,6 +38,18 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
   }
 }
 
+export const npmPersist = async (pkg) => {
+  const {name, version, manifest, manifestAbsPath} = pkg
+  log({pkg})(`updating ${manifestAbsPath} inners: ${name} ${version}`)
+  await fs.writeJson(manifestAbsPath, manifest, {spaces: 2})
+}
+
+export const npmRestore = async (pkg) => {
+  const {manifestRaw, manifestAbsPath} = pkg
+  log({pkg})(`rolling back ${manifestAbsPath} inners to manifestRaw`)
+  await fs.writeFile(manifestAbsPath, manifestRaw, {encoding: 'utf8'})
+}
+
 export const npmPublish = async (pkg) => {
   const {absPath: cwd, name, version, manifest, config: {npmPublish, npmRegistry, npmToken, npmConfig, npmProvenance}} = pkg
 
