@@ -23,15 +23,15 @@
     "docs": "mkdir -p docs && cp ./README.md ./docs/README.md"
   },
   "dependencies": {
-    "@semrel-extra/topo": "^1.13.0",
-    "cosmiconfig": "^8.2.0",
+    "@semrel-extra/topo": "^1.14.0",
+    "cosmiconfig": "^8.3.6",
     "queuefy": "^1.2.1",
-    "zx-extra": "^2.5.4"
+    "zx-extra": "^2.5.5"
   },
   "devDependencies": {
-    "c8": "^8.0.0",
+    "c8": "^8.0.1",
     "uvu": "^0.5.6",
-    "verdaccio": "^5.25.0"
+    "verdaccio": "^5.26.2"
   },
   "publishConfig": {
     "access": "public"
