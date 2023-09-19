@@ -1,3 +1,9 @@
+## [2.11.7](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.6...v2.11.7) (2023-09-19)
+
+### Fixes & improvements
+* perf: up deps ([ae0d80a](https://github.com/semrel-extra/zx-bulk-release/commit/ae0d80ac82b3fc49c2fc046b4b52bc17ea24f466))
+* perf: add `npmPersist` helper with debug notice ([3790f4d](https://github.com/semrel-extra/zx-bulk-release/commit/3790f4dbed97e52bc937bedfacac69ce4acb5529))
+
 ## [2.11.6](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.5...v2.11.6) (2023-09-19)
 
 ### Fixes & improvements
