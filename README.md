@@ -9,7 +9,7 @@
 ## Key features
 * [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) trigger semantic releases.
 * Automated cross-pkg version bumping.
-* Predictable [toposort](https://githib.com/semrel-extra/topo)-driven flow.
+* Predictable [toposort](https://github.com/semrel-extra/topo)-driven flow.
 * No default branch blocking (no release commits).
 * Pkg changelogs go to `changelog` branch (configurable).
 * Docs are published to `gh-pages` branch (configurable).
