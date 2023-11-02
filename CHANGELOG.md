@@ -1,3 +1,8 @@
+## [2.12.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.12.0...v2.12.1) (2023-11-02)
+
+### Fixes & improvements
+* docs: fixes a broken link in README ([4b02a4d](https://github.com/semrel-extra/zx-bulk-release/commit/4b02a4db49a19b493c790f32096c34c82f90536a))
+
 ## [2.12.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.11.7...v2.12.0) (2023-09-19)
 
 ### Features
