@@ -1,3 +1,9 @@
+## [2.12.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.12.1...v2.12.2) (2023-11-20)
+
+### Fixes & improvements
+* fix: fetch latest npm manifest by default ([e7e6c0d](https://github.com/semrel-extra/zx-bulk-release/commit/e7e6c0dfe0aef34c0cf6a6936cca1057aef8c746))
+* fix: fix `pure` tag parser ([41b961d](https://github.com/semrel-extra/zx-bulk-release/commit/41b961d7eed99061fcc851b7b8ed7fc72813ef46))
+
 ## [2.12.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.12.0...v2.12.1) (2023-11-02)
 
 ### Fixes & improvements
