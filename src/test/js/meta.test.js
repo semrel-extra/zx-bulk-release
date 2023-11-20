@@ -170,6 +170,24 @@ test('formatTag() / parseTag()', () => {
         format: 'pure',
         ref: '1.2.3-my.package'
       }
+    ],
+    [
+      '0.0.1-topoconfig.cmds',
+      {
+        name: '@topoconfig/cmds',
+        version: '0.0.1',
+        format: 'pure',
+        ref: '0.0.1-topoconfig.cmds'
+      }
+    ],
+    [
+      '0.0.1-topoconfig',
+      {
+        name: 'topoconfig',
+        version: '0.0.1',
+        format: 'pure',
+        ref: '0.0.1-topoconfig'
+      }
     ]
   ]
 

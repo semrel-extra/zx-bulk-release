@@ -136,7 +136,7 @@ const pure = {
     }
 
     const [n, o = ''] = prerelease.reverse()
-    const name = o === 'x' ? n : `@${o}/${n}`
+    const name = (!o || o === 'x') ? n : `@${o}/${n}`
     const version = tag.slice(0, -1 - n.length - (o ? o.length + 1 : 0))
 
     return {format: this.name, ref: tag, name, version}
