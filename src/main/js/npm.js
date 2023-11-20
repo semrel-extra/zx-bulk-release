@@ -24,7 +24,7 @@ export const fetchPkg = async (pkg) => {
 export const fetchManifest = async (pkg, {nothrow} = {}) => {
   const {npmRegistry, npmToken, npmConfig} = pkg.config
   const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
-  const url = getManifestUrl(npmRegistry, pkg.name, pkg.version)
+  const url = getManifestUrl(npmRegistry, pkg.name, pkg.version || 'latest')
   const reqOpts = bearerToken ? {headers: {authorization: bearerToken}} : {}
 
   try {
