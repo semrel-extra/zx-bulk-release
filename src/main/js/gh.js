@@ -23,8 +23,15 @@ export const ghRelease = async (pkg) => {
     body: releaseNotes
   })
 
-  const {stdout} = await $.o({cwd})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' https://api.github.com/repos/${repoName}/releases -d ${releaseData}`
-  const res = JSON.parse(stdout.toString().trim())
+  const res = await (await fetch(`https://api.github.com/repos/${repoName}/releases`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `token ${ghToken}`,
+      'X-GitHub-Api-Version': '2022-11-28'
+    },
+    body: releaseData
+  })).json()
 
   if (ghAssets) {
     // Lol. GH API literally returns pseudourl `...releases/110103594/assets{?name,label}` as shown in the docs
@@ -86,7 +93,17 @@ export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
 
   return Promise.all(ghAssets.map(async ({name}) => {
     const url = `${uploadUrl}?name=${name}`
-    return $.o({cwd: temp})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' -H 'Content-Type: application/octet-stream' ${url} --data-binary '@${name}'`
+    // return $.o({cwd: temp})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' -H 'Content-Type: application/octet-stream' ${url} --data-binary '@${name}'`
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${ghToken}`,
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      body: await fs.readFile(path.join(temp, name))
+    })
   }))
 }
 

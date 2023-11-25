@@ -20,12 +20,14 @@
   "scripts": {
     "test": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' c8 uvu ./src/test -i fixtures -i utils && c8 report -r lcov",
     "test:it": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' node ./src/test/js/integration.test.js",
-    "docs": "mkdir -p docs && cp ./README.md ./docs/README.md"
+    "docs": "mkdir -p docs && cp ./README.md ./docs/README.md",
+    "publish:beta": "npm publish --tag beta --no-git-tag-version"
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.14.0",
     "cosmiconfig": "^8.3.6",
     "queuefy": "^1.2.1",
+    "tar-stream": "^3.1.6",
     "zx-extra": "^2.6.4"
   },
   "devDependencies": {

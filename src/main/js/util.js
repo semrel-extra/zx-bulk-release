@@ -1,3 +1,8 @@
+import zlib from 'node:zlib'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import tar from 'tar-stream'
+
 export const tpl = (str, context) =>
   str?.replace(/\$\{\{\s*([.a-z0-9]+)\s*}}/gi, (matched, key) => get(context, key) ?? '')
 
@@ -60,3 +65,50 @@ export const getCommonPath = files => {
 
   return p.slice(0, p.lastIndexOf('/') + 1)
 }
+
+// https://stackoverflow.com/questions/19978452/how-to-extract-single-file-from-tar-gz-archive-using-node-js
+export const unzip = (stream, {pick, omit, cwd = process.cwd(), strip = 0} = {}) => new Promise((resolve, reject) => {
+  const extract = tar.extract()
+  const results = []
+
+  extract.on('entry', ({name, type}, stream, cb)=>  {
+    const _name = strip ? name.split('/').slice(strip).join('/') : name
+    const fp = path.join(cwd, _name)
+
+    let data = ''
+    stream.on('data', (chunk) => {
+      if (type !== 'file') {
+        return
+      }
+      if (omit?.includes(_name)) {
+        return
+      }
+      if (pick && !pick.includes(_name)) {
+        return
+      }
+
+      data +=chunk
+    })
+
+    stream.on('end', () => {
+      if (data) {
+        results.push(
+          fs.mkdir(path.dirname(fp), {recursive: true})
+            .then(() => fs.writeFile(fp, data, 'utf8'))
+        )
+      }
+      cb()
+    })
+
+    stream.resume()
+  })
+
+  extract.on('finish', ()=> {
+    resolve(Promise.all(results))
+  })
+
+  // fs.createReadStream('archive.tar.gz')
+  stream
+    .pipe(zlib.createGunzip())
+    .pipe(extract)
+})
