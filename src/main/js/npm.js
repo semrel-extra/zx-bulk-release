@@ -1,5 +1,8 @@
 import {log} from './log.js'
 import {$, fs, INI, fetch, tempy} from 'zx-extra'
+import {unzip} from './util.js'
+
+// https://stackoverflow.com/questions/19978452/how-to-extract-single-file-from-tar-gz-archive-using-node-js
 
 export const fetchPkg = async (pkg) => {
   const id = `${pkg.name}@${pkg.version}`
@@ -10,9 +13,20 @@ export const fetchPkg = async (pkg) => {
     const {npmRegistry, npmToken, npmConfig} = pkg.config
     const tarballUrl = getTarballUrl(npmRegistry, pkg.name, pkg.version)
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
-    const authorization = bearerToken ? `--header='Authorization: ${bearerToken}'` : ''
+    const headers = bearerToken ? {Authorization: bearerToken} : {}
     log({pkg})(`fetching '${id}' from ${npmRegistry}`)
-    await $.raw`wget --timeout=15 --connect-timeout=5 ${authorization} -qO- ${tarballUrl} | tar -xvz --strip-components=1 --exclude='package.json' -C ${cwd}`
+
+    // https://stackoverflow.com/questions/46946380/fetch-api-request-timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15_000)
+    const tarball = await fetch(tarballUrl, {
+      method: 'GET',
+      headers,
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+
+    await unzip(tarball.body, {cwd, strip: 1, omit: ['package.json']})
 
     log({pkg})(`fetch duration '${id}': ${Date.now() - now}`)
     pkg.fetched = true
