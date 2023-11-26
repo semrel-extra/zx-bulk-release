@@ -33,7 +33,7 @@ export const ghRelease = async (pkg) => {
     body: releaseData
   })).json()
 
-  if (ghAssets) {
+  if (ghAssets?.length) {
     // Lol. GH API literally returns pseudourl `...releases/110103594/assets{?name,label}` as shown in the docs
     const uploadUrl = res.upload_url.slice(0, res.upload_url.indexOf('{'))
     await ghUploadAssets({ghToken, ghAssets, uploadUrl, cwd})
@@ -69,7 +69,12 @@ export const ghPages = queuefy(async (pkg) => {
 export const ghPrepareAssets = async (assets, _cwd) => {
   const temp = tempy.temporaryDirectory()
 
-  await Promise.all(assets.map(async ({name, source = 'target/**/*', zip, cwd = _cwd, strip = true}) => {
+  await Promise.all(assets.map(async ({name, contents, source = 'target/**/*', zip, cwd = _cwd, strip = true}) => {
+    if (contents) {
+      await fs.outputFile(path.join(temp, name), contents, 'utf8')
+      return
+    }
+
     const patterns = asArray(source)
     const target = path.join(temp, name)
     if (patterns.some(s => s.includes('*'))) {
@@ -107,3 +112,10 @@ export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
   }))
 }
 
+export const ghGetAsset = async ({repoName, tag, name}) => {
+  return (await fetch(`https://github.com/${repoName}/releases/download/${tag}/${name}`, {
+    headers: {
+      // Accept: 'application/vnd.github.v3+json'
+    }
+  })).text()
+}

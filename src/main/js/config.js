@@ -19,6 +19,7 @@ export const defaultConfig = {
   changelog:  'changelog',
   npmFetch:   true,
   ghRelease:  true,
+  meta:       true,
   // npmPublish: true,
   // ghPages: 'gh-pages'
 }
@@ -32,12 +33,20 @@ export const normalizePkgConfig = (config, env) => ({
   ...parseEnv(env),
   ...config,
   releaseRules: config.releaseRules || config.semanticRules,
-  npmFetch: config.npmFetch || config.fetch || config.fetchPkg,
-  buildCmd: config.buildCmd || config.cmd,
+  npmFetch:     config.npmFetch || config.fetch || config.fetchPkg,
+  buildCmd:     config.buildCmd || config.cmd,
   get ghBasicAuth() {
     return this.ghUser && this.ghToken ? `${this.ghUser}:${this.ghToken}` : false
-  }
+  },
+  meta: normalizeMetaConfig(config.meta)
 })
+
+export const normalizeMetaConfig = (meta) =>
+  meta === true
+    ? normalizeMetaConfig('commit')
+    : typeof meta === 'string'
+      ? { type: meta } // 'commit' | 'asset' | 'tag'
+      : { type: 'none' }
 
 export const parseEnv = ({GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) =>
   ({

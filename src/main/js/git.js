@@ -59,9 +59,15 @@ export const getSha = async (cwd) => (await $.o({cwd})`git rev-parse HEAD`).toSt
 
 export const getRoot = memoizeBy(async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim())
 
+export const parseOrigin = (originUrl) => {
+  const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
+
+  return {repoHost, repoName}
+}
+
 export const getRepo = memoizeBy(async (cwd, {basicAuth} = {}) => {
   const originUrl = await getOrigin(cwd)
-  const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
+  const {repoHost, repoName} = parseOrigin(originUrl)
   const repoPublicUrl = `https://${repoHost}/${repoName}`
   const repoAuthedUrl = basicAuth && repoHost && repoName
     ? `https://${basicAuth}@${repoHost}/${repoName}.git`

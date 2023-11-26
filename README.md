@@ -26,7 +26,7 @@
 * Node.js >= 16.0.0
 * npm >=7 / yarn >= 3
 * ~~wget~~
-* ~~tar~~
+* tar
 * git
 
 ## Usage

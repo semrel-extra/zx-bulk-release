@@ -19,10 +19,12 @@ test('`prepareAssets()` preprocesses files for publishing', async () => {
     { name: 'a.json', source: 'target/json/a.json', cwd },
     { name: 'c.json', source: 'c.json', cwd },
     { name: 'jsons2.zip', source: '*.json', cwd },
+    { name: 'baz.txt', contents: 'baz' },
   ], cwd)
 
   assert.equal(await fs.readFile(path.resolve(temp, 'a.json'), 'utf8'), '{"foo": "bar"}')
   assert.equal(await fs.readFile(path.resolve(temp, 'c.json'), 'utf8'), '{"quuux": "quuux"}')
+  assert.equal(await fs.readFile(path.resolve(temp, 'baz.txt'), 'utf8'), 'baz')
 })
 
 test.run()
