@@ -70,20 +70,21 @@ export const ghPrepareAssets = async (assets, _cwd) => {
   const temp = tempy.temporaryDirectory()
 
   await Promise.all(assets.map(async ({name, contents, source = 'target/**/*', zip, cwd = _cwd, strip = true}) => {
+    const target = path.join(temp, name)
+
     if (contents) {
-      await fs.outputFile(path.join(temp, name), contents, 'utf8')
+      await fs.outputFile(target, contents, 'utf8')
       return
     }
 
     const patterns = asArray(source)
-    const target = path.join(temp, name)
     if (patterns.some(s => s.includes('*'))) {
       zip = true
     }
     const files = await glob(patterns, {cwd, absolute: false, onlyFiles: true})
 
     if (files.length === 0) {
-      return
+      throw new Error(`gh asset not found: ${name} ${source}`)
     }
 
     if (!zip && files.length === 1) {

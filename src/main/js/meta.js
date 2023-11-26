@@ -39,7 +39,7 @@ export const pushMeta = queuefy(async (pkg) => {
   }
 
   const {type} = pkg.config.meta
-  if (type === 'assets') {
+  if (type === 'asset' || type === 'assets') {
     pkg.config.ghAssets = [...pkg.config.ghAssets || [], {
       name: 'meta.json',
       contents: JSON.stringify(pkg.meta, null, 2)
