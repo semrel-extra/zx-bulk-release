@@ -4,11 +4,12 @@ import {Buffer} from 'node:buffer'
 import {queuefy} from 'queuefy'
 import {semver, $, fs, path} from 'zx-extra'
 import {log} from './log.js'
-import {fetchRepo, pushCommit, getTags as getGitTags, pushTag} from './git.js'
+import {fetchRepo, pushCommit, getTags as getGitTags, pushTag, getRepo} from './git.js'
 import {fetchManifest} from './npm.js'
+import {ghGetAsset} from './gh.js'
 
 export const pushReleaseTag = async (pkg) => {
-  const {name, version, tag = formatTag({name, version}),config: {gitCommitterEmail, gitCommitterName}} = pkg
+  const {name, version, tag = formatTag({name, version}), config: {gitCommitterEmail, gitCommitterName}} = pkg
   const cwd = pkg.context.git.root
 
   pkg.context.git.tag = tag
@@ -17,33 +18,50 @@ export const pushReleaseTag = async (pkg) => {
   await pushTag({cwd, tag, gitCommitterEmail, gitCommitterName})
 }
 
-export const pushMeta = queuefy(async (pkg) => {
-  log({pkg})('push artifact to branch \'meta\'')
-
-  const {name, version, tag = formatTag({name, version}), absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
-  const to = '.'
-  const branch = 'meta'
-  const msg = `chore: release meta ${name} ${version}`
+export const prepareMeta = async (pkg) => {
+  const {absPath: cwd} = pkg
   const hash = (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
-  const meta = {
+  pkg.meta = {
     META_VERSION: '1',
-    name: pkg.name,
     hash,
+    name: pkg.name,
     version: pkg.version,
     dependencies: pkg.dependencies,
     devDependencies: pkg.devDependencies,
     peerDependencies: pkg.peerDependencies,
     optionalDependencies: pkg.optionalDependencies,
   }
+}
+
+export const pushMeta = queuefy(async (pkg) => {
+  if (!pkg.meta) {
+    await prepareMeta(pkg)
+  }
+
+  const {type} = pkg.config.meta
+  if (type === 'assets') {
+    pkg.config.ghAssets = [...pkg.config.ghAssets || [], {
+      name: 'meta.json',
+      contents: JSON.stringify(pkg.meta, null, 2)
+    }]
+    return
+  }
+
+  log({pkg})('push artifact to branch \'meta\'')
+
+  const {name, version, meta, tag = formatTag({name, version}), absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
+  const to = '.'
+  const branch = 'meta'
+  const msg = `chore: release meta ${name} ${version}`
   const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
   await pushCommit({cwd, to, branch, msg, files, gitCommitterEmail, gitCommitterName, basicAuth})
 })
 
 export const getLatest = async (pkg) => {
-  const {absPath: cwd, name, config: {ghBasicAuth: basicAuth}} = pkg
+  const {absPath: cwd, name } = pkg
   const tag = await getLatestTag(cwd, name)
-  const meta = await getLatestMeta(cwd, tag?.ref, basicAuth) || await fetchManifest(pkg, {nothrow: true})
+  const meta = await getLatestMeta(pkg, tag)
 
   return {
     tag,
@@ -192,8 +210,15 @@ export const parseDateTag = (date) => new Date(date.replaceAll('.', '-')+'Z')
 
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
-export const getLatestMeta = async (cwd, tag, basicAuth) => {
+export const getLatestMeta = async (pkg, tag) => {
   if (!tag) return
+
+  const {absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
+  const {repoName} = await getRepo(cwd, {basicAuth})
+
+  try {
+    return JSON.parse(await ghGetAsset({repoName, tag, name: 'meta.json'}))
+  } catch {}
 
   try {
     const _cwd = await fetchRepo({cwd, branch: 'meta', basicAuth})
@@ -202,4 +227,6 @@ export const getLatestMeta = async (cwd, tag, basicAuth) => {
       fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
     ])
   } catch {}
+
+  return fetchManifest(pkg, {nothrow: true})
 }

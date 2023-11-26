@@ -9,7 +9,7 @@ import {topo, traverseDeps, traverseQueue} from './deps.js'
 import {ghPages, ghRelease} from './gh.js'
 import {getRoot, getSha, unsetUserConfig} from './git.js'
 import {log, createReport} from './log.js'
-import {getLatest, pushMeta, pushReleaseTag} from './meta.js'
+import {getLatest, prepareMeta, pushMeta, pushReleaseTag} from './meta.js'
 import {fetchPkg, npmPersist, npmPublish, npmRestore} from './npm.js'
 import {memoizeBy, tpl} from './util.js'
 
@@ -154,6 +154,7 @@ const publish = memoizeBy(async (pkg, run = runCmd) => within(async () => {
   }
 
   await npmPersist(pkg)
+  await prepareMeta(pkg)
 
   if (pkg.context.flags.snapshot) {
     await Promise.all([
