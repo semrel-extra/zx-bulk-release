@@ -81,6 +81,11 @@ export const ghPrepareAssets = async (assets, _cwd) => {
       zip = true
     }
     const files = await glob(patterns, {cwd, absolute: false, onlyFiles: true})
+
+    if (files.length === 0) {
+      return
+    }
+
     if (!zip && files.length === 1) {
       await fs.copy(path.join(cwd, files[0]), target)
       return
