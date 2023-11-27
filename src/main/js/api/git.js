@@ -1,6 +1,6 @@
 import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
-import {log} from './log.js'
-import {memoizeBy} from './util.js'
+import {log} from '../log.js'
+import {memoizeBy} from '../util.js'
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => ctx(async ($) => {
   const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl

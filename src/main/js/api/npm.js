@@ -1,6 +1,6 @@
-import {log} from './log.js'
+import {log} from '../log.js'
 import {$, fs, INI, fetch, tempy} from 'zx-extra'
-import {unzip} from './util.js'
+import {unzip} from '../util.js'
 
 // https://stackoverflow.com/questions/19978452/how-to-extract-single-file-from-tar-gz-archive-using-node-js
 

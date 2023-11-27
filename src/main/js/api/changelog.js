@@ -1,9 +1,9 @@
 import {$} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {fetchRepo, getRepo, pushCommit} from './git.js'
-import {log} from './log.js'
-import {formatTag} from './meta.js'
-import {msgJoin} from './util.js'
+import {log} from '../log.js'
+import {formatTag} from '../processor/meta.js'
+import {msgJoin} from '../util.js'
 
 export const pushChangelog = queuefy(async (pkg) => {
   const {absPath: cwd, config: {changelog: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg

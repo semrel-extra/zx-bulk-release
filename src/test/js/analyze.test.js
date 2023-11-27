@@ -2,8 +2,8 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
 import {topo} from '@semrel-extra/topo'
-import {analyzeCommits, getNextVersion, resolvePkgVersion, semanticRules} from '../../main/js/analyze.js'
-import {getCommits} from '../../main/js/git.js'
+import {analyzeCommits, getNextVersion, resolvePkgVersion, semanticRules} from '../../main/js/steps/analyze.js'
+import {getCommits} from '../../main/js/api/git.js'
 import {createFakeRepo} from './test-utils.js'
 
 const test = suite('analyze')

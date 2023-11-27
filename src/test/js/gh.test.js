@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {tempy, fs} from 'zx-extra'
 import path from 'node:path'
-import { ghPrepareAssets } from '../../main/js/gh.js'
+import { ghPrepareAssets } from '../../main/js/api/gh.js'
 
 const test = suite('gh')
 

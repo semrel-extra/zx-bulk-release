@@ -1,10 +1,10 @@
 import {queuefy} from 'queuefy'
 import {$, path, tempy, glob, fs} from 'zx-extra'
-import {log} from './log.js'
+import {log} from '../log.js'
 import {getRepo, pushCommit} from './git.js'
-import {formatTag} from './meta.js'
+import {formatTag} from '../processor/meta.js'
 import {formatReleaseNotes} from './changelog.js'
-import {asArray, getCommonPath, msgJoin} from './util.js'
+import {asArray, getCommonPath, msgJoin} from '../util.js'
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release
 export const ghRelease = async (pkg) => {

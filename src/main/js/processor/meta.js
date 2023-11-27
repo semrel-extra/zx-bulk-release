@@ -3,10 +3,10 @@
 import {Buffer} from 'node:buffer'
 import {queuefy} from 'queuefy'
 import {semver, $, fs, path} from 'zx-extra'
-import {log} from './log.js'
-import {fetchRepo, pushCommit, getTags as getGitTags, pushTag, getRepo} from './git.js'
-import {fetchManifest} from './npm.js'
-import {ghGetAsset} from './gh.js'
+import {log} from '../log.js'
+import {fetchRepo, pushCommit, getTags as getGitTags, pushTag, getRepo} from '../api/git.js'
+import {fetchManifest} from '../api/npm.js'
+import {ghGetAsset} from '../api/gh.js'
 
 export const pushReleaseTag = async (pkg) => {
   const {name, version, tag = formatTag({name, version}), config: {gitCommitterEmail, gitCommitterName}} = pkg
