@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
-import {resolveNextVersion, topo} from '../../main/js/deps.js'
+import {resolveNextVersion, topo} from '../../main/js/processor/deps.js'
 
 const test = suite('deps')
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

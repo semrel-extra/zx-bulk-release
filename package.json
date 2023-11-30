@@ -1,7 +1,7 @@
 {
   "name": "zx-bulk-release",
   "alias": "bulk-release",
-  "version": "2.13.0-beta.3",
+  "version": "2.13.0-beta.4",
   "description": "zx-based alternative for multi-semantic-release",
   "type": "module",
   "exports": {
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.14.0",
-    "cosmiconfig": "^8.3.6",
+    "cosmiconfig": "^9.0.0",
     "queuefy": "^1.2.1",
     "tar-stream": "^3.1.6",
     "zx-extra": "^2.6.4"
