@@ -1,7 +1,7 @@
 import {memoizeBy} from '../util.js'
 import {$, within} from 'zx-extra'
-import {traverseDeps} from '../deps.js'
 import {fetchPkg} from '../api/npm.js'
+import {traverseDeps} from '../processor/deps.js'
 import {exec} from '../processor/exec.js'
 
 export const build = memoizeBy(async (pkg, run = exec, flags = {}, self = build) => within(async () => {

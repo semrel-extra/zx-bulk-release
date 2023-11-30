@@ -26,7 +26,12 @@ export const defaultConfig = {
 
 export const getPkgConfig = async (...cwds) =>
   normalizePkgConfig((await Promise.all(cwds.map(
-    cwd => cosmiconfig(CONFIG_NAME, { searchPlaces: CONFIG_FILES }).search(cwd).then(r => r?.config)
+    cwd => cosmiconfig(CONFIG_NAME, {
+      searchPlaces: CONFIG_FILES,
+      searchStrategy: 'global', // https://github.com/cosmiconfig/cosmiconfig/releases/tag/v9.0.0
+    })
+      .search(cwd)
+      .then(r => r?.config)
   ))).find(Boolean) || defaultConfig)
 
 export const normalizePkgConfig = (config, env) => ({
