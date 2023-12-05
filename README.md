@@ -210,8 +210,11 @@ Anyway, it's still possible to override the default config by `tagFormat` option
 
 
 ### Meta
+Each release gathers its own meta. It is _recommended_ to store the data somehow to ensure flow reliability.: 
+* Set `meta: {type: 'asset'}` to persist as gh asset.
+* If set `meta: {type: null}` the required data will be fetched from the npm artifact.
+* Otherwise, it will be pushed as a regular git commit to the `meta` branch (default behaviour).
 
-Each release pushes its result to the `meta` branch.  
 `2022-6-26-semrel-extra-zxbr-test-c-1-3-1-f0.json`
 ```json
 {

@@ -34,11 +34,16 @@ export const prepareMeta = async (pkg) => {
 }
 
 export const pushMeta = queuefy(async (pkg) => {
+  const {type} = pkg.config.meta
+
+  if (type === null) {
+    return
+  }
+
   if (!pkg.meta) {
     await prepareMeta(pkg)
   }
 
-  const {type} = pkg.config.meta
   if (type === 'asset' || type === 'assets') {
     pkg.config.ghAssets = [...pkg.config.ghAssets || [], {
       name: 'meta.json',
