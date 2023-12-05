@@ -1,3 +1,17 @@
+## [2.13.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.12.2...v2.13.0) (2023-12-05)
+
+### Fixes & improvements
+* fix: avoid polynomial regex on flags parsing ([c080fb8](https://github.com/semrel-extra/zx-bulk-release/commit/c080fb8246d71ad5e366ae6931b06db3ff86233b))
+* fix: sanitize paths on extract ([3f67b9f](https://github.com/semrel-extra/zx-bulk-release/commit/3f67b9f89b44589930c5dcce96237c0c5c3294f1))
+* refactor: decompose processor.js ([a498a7f](https://github.com/semrel-extra/zx-bulk-release/commit/a498a7f5900396e42b6b2a6478028e128ab6ec1f))
+* fix: throw error if declared gh asset is empty ([d2dc6f6](https://github.com/semrel-extra/zx-bulk-release/commit/d2dc6f6b457a3178671b0d6349d42234b8052c7e))
+* fix: handle empty files collection on gh assets push ([c9dbb5b](https://github.com/semrel-extra/zx-bulk-release/commit/c9dbb5bf3c5b4ff4ce11603e541feae784574f10))
+* perf: replace external `curl`, `wget` and `tar` with node `fetch` and `tar-stream` ([496c73b](https://github.com/semrel-extra/zx-bulk-release/commit/496c73b68172c42e5930d185f1008d487928e7fc))
+
+### Features
+* feat: configurable meta push ([0042af3](https://github.com/semrel-extra/zx-bulk-release/commit/0042af34d31ff6d3783c3953ece167a9dc78fb45))
+* feat: let release meta be published as gh assets ([3d333e1](https://github.com/semrel-extra/zx-bulk-release/commit/3d333e1fb6d61adb5bd05ac3a90e19a3a5402843))
+
 ## [2.12.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.12.1...v2.12.2) (2023-11-20)
 
 ### Fixes & improvements
