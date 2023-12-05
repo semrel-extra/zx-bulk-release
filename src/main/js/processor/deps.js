@@ -53,7 +53,7 @@ export const subsWorkspace = (decl, actual) => {
 
 export const topo = async ({flags = {}, cwd} = {}) => {
   const ignore = typeof flags.ignore === 'string'
-    ? flags.ignore.split(/\s*,\s*/)
+    ? flags.ignore.split(',').map(c => c.trim())
     : Array.isArray(flags.ignore)
       ? flags.ignore
       : []
