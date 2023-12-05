@@ -66,13 +66,15 @@ export const getCommonPath = files => {
   return p.slice(0, p.lastIndexOf('/') + 1)
 }
 
+export const safePath = v => path.resolve('/', v).slice(1)
+
 // https://stackoverflow.com/questions/19978452/how-to-extract-single-file-from-tar-gz-archive-using-node-js
 export const unzip = (stream, {pick, omit, cwd = process.cwd(), strip = 0} = {}) => new Promise((resolve, reject) => {
   const extract = tar.extract()
   const results = []
 
   extract.on('entry', ({name, type}, stream, cb)=>  {
-    const _name = strip ? name.split('/').slice(strip).join('/') : name
+    const _name = safePath(strip ? name.split('/').slice(strip).join('/') : name)
     const fp = path.join(cwd, _name)
 
     let data = ''
