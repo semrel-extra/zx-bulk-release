@@ -1,7 +1,7 @@
 {
   "name": "zx-bulk-release",
   "alias": "bulk-release",
-  "version": "2.13.0-beta.4",
+  "version": "2.13.0-beta.5",
   "description": "zx-based alternative for multi-semantic-release",
   "type": "module",
   "exports": {
@@ -21,7 +21,8 @@
     "test": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' c8 uvu ./src/test -i fixtures -i utils && c8 report -r lcov",
     "test:it": "NPM_REGISTRY='http://localhost:4873' NPM_TOKEN='mRv6eIuiaggXGb9ZDFCtBA==' node ./src/test/js/integration.test.js",
     "docs": "mkdir -p docs && cp ./README.md ./docs/README.md",
-    "publish:beta": "npm publish --tag beta --no-git-tag-version"
+    "publish:beta": "npm publish --tag beta --no-git-tag-version",
+    "build": "esbuild src/main/js/index.js --platform=node --outdir=target --bundle --format=esm --external:typescript"
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.14.0",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "c8": "^8.0.1",
+    "esbuild": "^0.19.8",
     "uvu": "^0.5.6",
     "verdaccio": "^5.27.0"
   },
