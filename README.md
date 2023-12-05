@@ -333,6 +333,7 @@ zx-bulk-release
 * [googleapis/release-please](https://github.com/googleapis/release-please)
 * [generic-semantic-version-processing](https://about.gitlab.com/blog/2021/09/28/generic-semantic-version-processing/)
 * [jchip/fynpo](https://github.com/jchip/fynpo)
+* [lerna-lite/lerna-lite](https://github.com/lerna-lite/lerna-lite)
 
 ## License 
 [MIT](./LICENSE)
