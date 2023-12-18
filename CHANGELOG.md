@@ -1,3 +1,8 @@
+## [2.13.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.0...v2.13.1) (2023-12-18)
+
+### Fixes & improvements
+* perf: update toposource ([539d55d](https://github.com/semrel-extra/zx-bulk-release/commit/539d55dbd660d651acee1c5939eb5f4e626c1d17))
+
 ## [2.13.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.12.2...v2.13.0) (2023-12-05)
 
 ### Fixes & improvements
