@@ -1,3 +1,8 @@
+## [2.13.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.2...v2.13.3) (2023-12-19)
+
+### Fixes & improvements
+* fix: getLatestMeta fallbacks to npm manifest ([eae8771](https://github.com/semrel-extra/zx-bulk-release/commit/eae877103df33b6b96d20924f7ff8cd4825b8877))
+
 ## [2.13.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.1...v2.13.2) (2023-12-19)
 
 ### Fixes & improvements
