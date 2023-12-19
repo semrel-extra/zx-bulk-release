@@ -90,7 +90,7 @@ export const getCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
   const ref = from ? `${from}..${to}` : to
 
   $.cwd = cwd
-  return (await $.raw`git log ${ref} --format=+++%s__%b__%h__%H -- .`)
+  return (await $.raw`git log ${ref} --format=+++%s__%b__%h__%H -- ${cwd}`)
     .toString()
     .split('+++')
     .filter(Boolean)
