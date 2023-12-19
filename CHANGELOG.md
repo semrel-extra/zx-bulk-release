@@ -1,3 +1,8 @@
+## [2.14.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.3...v2.14.0) (2023-12-19)
+
+### Features
+* feat: log commit delta from initial if another from ref is not specified ([e04e236](https://github.com/semrel-extra/zx-bulk-release/commit/e04e236a703c24e462a0e500d2232d4509028101))
+
 ## [2.13.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.2...v2.13.3) (2023-12-19)
 
 ### Fixes & improvements
