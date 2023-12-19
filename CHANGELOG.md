@@ -1,3 +1,8 @@
+## [2.13.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.1...v2.13.2) (2023-12-19)
+
+### Fixes & improvements
+* perf: tweak up getCommits ([9206508](https://github.com/semrel-extra/zx-bulk-release/commit/9206508cdafbfd166734c804b4c68fe861de1f02))
+
 ## [2.13.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.0...v2.13.1) (2023-12-18)
 
 ### Fixes & improvements
