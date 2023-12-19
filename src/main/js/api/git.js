@@ -87,9 +87,11 @@ export const getOrigin = memoizeBy(async (cwd) =>
 )
 
 export const getCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
-  const ref = from ? `${from}..${to}` : to
-
   $.cwd = cwd
+
+  const _from = from || await $`git rev-list --max-parents=0 HEAD`
+  const ref = `${_from}..${to}`
+
   return (await $.raw`git log ${ref} --format=+++%s__%b__%h__%H -- ${cwd}`)
     .toString()
     .split('+++')
