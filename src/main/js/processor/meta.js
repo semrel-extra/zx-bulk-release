@@ -216,22 +216,22 @@ export const parseDateTag = (date) => new Date(date.replaceAll('.', '-')+'Z')
 export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
 export const getLatestMeta = async (pkg, tag) => {
-  if (!tag) return
+  if (tag) {
+    const {absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
+    const {repoName} = await getRepo(cwd, {basicAuth})
 
-  const {absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
-  const {repoName} = await getRepo(cwd, {basicAuth})
+    try {
+      return JSON.parse(await ghGetAsset({repoName, tag, name: 'meta.json'}))
+    } catch {}
 
-  try {
-    return JSON.parse(await ghGetAsset({repoName, tag, name: 'meta.json'}))
-  } catch {}
-
-  try {
-    const _cwd = await fetchRepo({cwd, branch: 'meta', basicAuth})
-    return await Promise.any([
-      fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
-      fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
-    ])
-  } catch {}
+    try {
+      const _cwd = await fetchRepo({cwd, branch: 'meta', basicAuth})
+      return await Promise.any([
+        fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
+        fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
+      ])
+    } catch {}
+  }
 
   return fetchManifest(pkg, {nothrow: true})
 }
