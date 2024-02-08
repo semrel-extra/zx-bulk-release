@@ -1,3 +1,8 @@
+## [2.15.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.14.0...v2.15.0) (2024-02-08)
+
+### Features
+* feat: separate test and build steps ([3024a60](https://github.com/semrel-extra/zx-bulk-release/commit/3024a601adc7e2e819149c01c29d813d4467947a))
+
 ## [2.14.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.13.3...v2.14.0) (2023-12-19)
 
 ### Features
