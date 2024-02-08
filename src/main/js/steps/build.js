@@ -16,7 +16,7 @@ export const build = memoizeBy(async (pkg, run = exec, flags = {}, self = build)
 
   if (!pkg.fetched) {
     await run(pkg, 'buildCmd')
-    await run(pkg, 'testCmd')
+    // await run(pkg, 'testCmd')
   }
 
   pkg.built = true

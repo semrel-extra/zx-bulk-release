@@ -10,6 +10,7 @@ import {analyze} from '../steps/analyze.js'
 import {build} from '../steps/build.js'
 import {publish} from '../steps/publish.js'
 import {clean} from '../steps/clean.js'
+import {test} from '../steps/test.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   const {version: zbrVersion} = createRequire(import.meta.url)('../../../../package.json')
@@ -53,6 +54,10 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
       if (flags.build !== false) {
         report.setStatus('building', name)
         await build(pkg, _exec)
+      }
+      if (flags.test !== false) {
+        report.setStatus('testing', name)
+        await test(pkg, _exec)
       }
       if (!flags.dryRun && flags.publish !== false) {
         report.setStatus('publishing', name)

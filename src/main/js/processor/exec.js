@@ -3,7 +3,7 @@ import {log} from '../log.js'
 import {$} from 'zx-extra'
 
 export const exec = async (pkg, name) => {
-  const cmd = tpl(pkg.config[name], {...pkg, ...pkg.context})
+  const cmd = tpl(pkg.context.flags[name] ?? pkg.config[name], {...pkg, ...pkg.context})
   const now = Date.now()
 
   if (cmd) {
