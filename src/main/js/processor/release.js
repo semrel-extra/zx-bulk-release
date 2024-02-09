@@ -49,6 +49,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
 
       if (!pkg.releaseType) {
         report.setStatus('skipped', name)
+        pkg.skipped = true
         return
       }
       if (flags.build !== false) {
