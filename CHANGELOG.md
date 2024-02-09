@@ -1,3 +1,8 @@
+## [2.15.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.0...v2.15.1) (2024-02-09)
+
+### Fixes & improvements
+* perf: apply npmRestore to updated pkgs only ([daa4080](https://github.com/semrel-extra/zx-bulk-release/commit/daa4080f402a4a68ce97e21089dde98995c23486))
+
 ## [2.15.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.14.0...v2.15.0) (2024-02-08)
 
 ### Features
