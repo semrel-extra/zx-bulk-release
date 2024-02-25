@@ -2,6 +2,7 @@ import zlib from 'node:zlib'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import tar from 'tar-stream'
+import {Readable} from 'node:stream'
 
 export const tpl = (str, context) =>
   str?.replace(/\$\{\{\s*([.a-z0-9]+)\s*}}/gi, (matched, key) => get(context, key) ?? '')
@@ -114,3 +115,5 @@ export const unzip = (stream, {pick, omit, cwd = process.cwd(), strip = 0} = {})
     .pipe(zlib.createGunzip())
     .pipe(extract)
 })
+
+export const pipify = (stream) => stream.pipe ? stream : Readable.from(stream)

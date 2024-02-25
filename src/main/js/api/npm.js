@@ -1,7 +1,6 @@
 import {log} from '../log.js'
 import {$, fs, INI, fetch, tempy} from 'zx-extra'
-import {unzip} from '../util.js'
-import {Readable} from 'node:stream'
+import {pipify, unzip} from '../util.js'
 
 // https://stackoverflow.com/questions/19978452/how-to-extract-single-file-from-tar-gz-archive-using-node-js
 
@@ -27,7 +26,7 @@ export const fetchPkg = async (pkg) => {
     })
     clearTimeout(timeoutId)
 
-    await unzip(Readable.from(tarball.body), {cwd, strip: 1, omit: ['package.json']})
+    await unzip(pipify(tarball.body), {cwd, strip: 1, omit: ['package.json']})
 
     log({pkg})(`fetch duration '${id}': ${Date.now() - now}`)
     pkg.fetched = true
