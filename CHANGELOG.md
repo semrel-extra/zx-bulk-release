@@ -1,3 +1,8 @@
+## [2.15.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.2...v2.15.3) (2024-02-25)
+
+### Fixes & improvements
+* refactor: add util pipify ([2d5ce43](https://github.com/semrel-extra/zx-bulk-release/commit/2d5ce4382acd5c1ea9517177fb3bc3f39345a55b))
+
 ## [2.15.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.1...v2.15.2) (2024-02-25)
 
 ### Fixes & improvements
