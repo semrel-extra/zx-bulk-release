@@ -29,13 +29,13 @@
     "cosmiconfig": "^9.0.0",
     "queuefy": "^1.2.1",
     "tar-stream": "^3.1.7",
-    "zx-extra": "^2.6.4"
+    "zx-extra": "^2.6.7"
   },
   "devDependencies": {
     "c8": "^9.1.0",
-    "esbuild": "^0.20.0",
+    "esbuild": "^0.20.1",
     "uvu": "^0.5.6",
-    "verdaccio": "^5.29.0"
+    "verdaccio": "^5.29.2"
   },
   "publishConfig": {
     "access": "public"
