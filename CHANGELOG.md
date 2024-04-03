@@ -1,3 +1,9 @@
+## [2.15.5](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.4...v2.15.5) (2024-04-03)
+
+### Fixes & improvements
+* perf: update zx-extra to v3.0.4 ([818003b](https://github.com/semrel-extra/zx-bulk-release/commit/818003bfddf22c16f31a8ccae7c86259bc0f7601))
+* perf: update zx-extra to v3.0.1 ([1c6255c](https://github.com/semrel-extra/zx-bulk-release/commit/1c6255cb341776e63ced5560eadde4b87f788844))
+
 ## [2.15.4](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.3...v2.15.4) (2024-03-18)
 
 ### Fixes & improvements
