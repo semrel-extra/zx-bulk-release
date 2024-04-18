@@ -1,5 +1,5 @@
 import {queuefy} from 'queuefy'
-import {$, path, tempy, glob, fs} from 'zx-extra'
+import {$, path, tempy, glob, fs, fetch} from 'zx-extra'
 import {log} from '../log.js'
 import {getRepo, pushCommit} from './git.js'
 import {formatTag} from '../processor/meta.js'
