@@ -1,3 +1,8 @@
+## [2.15.7](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.6...v2.15.7) (2024-04-18)
+
+### Fixes & improvements
+* fix: use zx fetch polyfill (node16) ([64f3b22](https://github.com/semrel-extra/zx-bulk-release/commit/64f3b22c08c0de930ccfa302907fa541bca9a51b))
+
 ## [2.15.6](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.5...v2.15.6) (2024-04-07)
 
 ### Fixes & improvements
