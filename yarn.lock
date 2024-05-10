@@ -308,7 +308,7 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.0.0.tgz#67c7b724e1bcdd7a8821ce0d5ee184d3b4dd525a"
   integrity sha512-cHlGmko4gWLVI27cGJntjs/Sj8th9aYwplmZFwmmgYQQvL5NUsgVJG7OddLvNfLqYS31KFN0s3qlaD9qCaxACA==
 
-"@types/node@>=20.12.10", "@types/node@^20.12.11":
+"@types/node@>=20.12.11", "@types/node@^20.12.11":
   version "20.12.11"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.12.11.tgz#c4ef00d3507000d17690643278a60dc55a9dc9be"
   integrity sha512-vDg9PZ/zi+Nqp6boSOT7plNuthRugEKixDv5sFTIpkE89MmNtEArAShI4mxuX2+UrLEe9pxC1vm2cjm9YlWbJw==
@@ -3074,10 +3074,10 @@ yup@0.32.11:
     property-expr "^2.0.4"
     toposort "^2.0.2"
 
-zx-extra@3.0.8:
-  version "3.0.8"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.8.tgz#68cbc920cf38842154217de6797c787b700c2145"
-  integrity sha512-wx16RgaT7/2AoCOxGK6sTPI2CMVHtqM4OX/qJwDbEyHvGA754FdAUfrv8QD7YofhVlNJo6ui7HNzIimGq3bcjA==
+zx-extra@3.0.9:
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.9.tgz#6e8f66bfeafaac72c040e7cba721a59f193eea3f"
+  integrity sha512-zMFr/8ZOyxqLc91qAqAic2JCCGv+yn+Y75zOQh6nXx2H+qhuA281Xq8crcoeaKnzktgzuhnIqATXuYSpeRBpnA==
   dependencies:
     "@qiwi/deep-proxy" "^3.0.0"
     "@types/ip" "^1.1.3"
@@ -3090,12 +3090,12 @@ zx-extra@3.0.8:
     semver "^7.6.2"
     ssri "^10.0.6"
     tempy "^3.1.0"
-    zx "8.0.2-dev.b6420eb"
+    zx "8.0.2-dev.0eb81c9"
 
-zx@8.0.2-dev.b6420eb:
-  version "8.0.2-dev.b6420eb"
-  resolved "https://registry.yarnpkg.com/zx/-/zx-8.0.2-dev.b6420eb.tgz#5c2112746d0fedaa99d936f10a53bb5107bc4635"
-  integrity sha512-GKAdUu8Qqt9fNJkRznowKEDCDC75YJxzZxoxWnqsFYaEhpzbQcGalKjF3Tg5bWFbiND93+OzA3P4dvfbgL9oDw==
+zx@8.0.2-dev.0eb81c9:
+  version "8.0.2-dev.0eb81c9"
+  resolved "https://registry.yarnpkg.com/zx/-/zx-8.0.2-dev.0eb81c9.tgz#4428b7296bb427b431586b8d2fe1486fb73626eb"
+  integrity sha512-OTxk0rUmhI+5m7zygE0NNeGoTnJ5PAbv/MfoNhDQhI6ytYaCKQsIttSYelJXm3kuQ5UnBOdxnvKFWYKwgvQ1TA==
   optionalDependencies:
     "@types/fs-extra" "^11.0.4"
-    "@types/node" ">=20.12.10"
+    "@types/node" ">=20.12.11"
