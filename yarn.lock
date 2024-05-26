@@ -3081,10 +3081,10 @@ yup@0.32.11:
     property-expr "^2.0.4"
     toposort "^2.0.2"
 
-zx-extra@3.0.11:
-  version "3.0.11"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.11.tgz#d5fd7bc025af603090a28d132f2b2f162df193d1"
-  integrity sha512-dkFw3jnyFYJK3cjp52PPY3taY43FVAJ+C8h4koSCuz0SbSehFfGx8WMg/Nve1jFewkXhLK+Vr4b30rTuI558Jg==
+zx-extra@3.0.12:
+  version "3.0.12"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.12.tgz#cb6b17cefec0b551f447771586c465622f9e2e11"
+  integrity sha512-CH81vm/Iu8Lf+OufbQdFOFoJ6kSQEUEJiXmfnS4Dlz7IhZGVr0hqifMuZKp0Ujl5T/4yaRm+yy16D/BoVHTALA==
   dependencies:
     "@qiwi/deep-proxy" "^3.0.0"
     "@types/ip" "^1.1.3"
