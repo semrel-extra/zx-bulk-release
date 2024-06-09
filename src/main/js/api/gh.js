@@ -33,6 +33,10 @@ export const ghRelease = async (pkg) => {
     body: releaseData
   })).json()
 
+  if (!res.upload_url) {
+    throw new Error(`gh release failed: ${JSON.stringify(res)}`)
+  }
+
   if (ghAssets?.length) {
     // Lol. GH API literally returns pseudourl `...releases/110103594/assets{?name,label}` as shown in the docs
     const uploadUrl = res.upload_url.slice(0, res.upload_url.indexOf('{'))
