@@ -1,3 +1,8 @@
+## [2.15.16](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.15...v2.15.16) (2024-06-09)
+
+### Fixes & improvements
+* fix: handle gh release err ([9d2714f](https://github.com/semrel-extra/zx-bulk-release/commit/9d2714fac339c0a604e2d2311338f3775edbb81c))
+
 ## [2.15.15](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.14...v2.15.15) (2024-05-31)
 
 ### Fixes & improvements
