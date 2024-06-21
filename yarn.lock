@@ -3406,10 +3406,10 @@ yup@0.32.11:
     property-expr "^2.0.4"
     toposort "^2.0.2"
 
-zx-extra@3.0.16:
-  version "3.0.16"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.16.tgz#b67ddcdc0fef7ee88e2df9148e0ab86e82ffde07"
-  integrity sha512-hOkm47nfN50DRTgGxrVOKen2INVziExnGbX2vUwCLmMJ3c9mkd0/xHHbjH+NSX54HmsJRUAriD7ZehHEdjWDFA==
+zx-extra@3.0.17:
+  version "3.0.17"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.17.tgz#92284b69c2a7ae7862c8d9bbb35d20b03a9e6bf2"
+  integrity sha512-1f2OB6q/dZ7wBLmlgRefhA6S9yJRbCWW8AqbkAbwhnI9+jrKVk2PXKxizNvSxtiD6XOXfHZXth6hc7EY9gEs+A==
   dependencies:
     "@qiwi/deep-proxy" "^3.0.0"
     "@types/ip" "^1.1.3"
@@ -3422,12 +3422,12 @@ zx-extra@3.0.16:
     semver "^7.6.2"
     ssri "^10.0.6"
     tempy "^3.1.0"
-    zx "8.1.3"
+    zx "8.1.4-dev.a262a21"
 
-zx@8.1.3:
-  version "8.1.3"
-  resolved "https://registry.yarnpkg.com/zx/-/zx-8.1.3.tgz#037e2e49f8e50d7d8c9ecabbb1f947e54edc0eb2"
-  integrity sha512-fA44CRlggDOKeqt66aMwzLj1tb0zEQJmIjsSDXpmNjRRKaLFYkpeGE/zXnO05sJvSuzAlbVM50zexJJGMrIvuQ==
+zx@8.1.4-dev.a262a21:
+  version "8.1.4-dev.a262a21"
+  resolved "https://registry.yarnpkg.com/zx/-/zx-8.1.4-dev.a262a21.tgz#3b3650479cc824b6d11e20fa77e86a9598bbc24b"
+  integrity sha512-EUEv3JM9KYM3ewVa8IZ0hp7pSJxBT2BAY3i+ubg+UBZ+kIwktyX5f8Sv4nIICTPEh5r6RUoKBAgoWRzIVP6b+Q==
   optionalDependencies:
     "@types/fs-extra" ">=11"
     "@types/node" ">=20"
