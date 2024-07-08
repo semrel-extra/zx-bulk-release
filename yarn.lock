@@ -3419,10 +3419,10 @@ yup@0.32.11:
     property-expr "^2.0.4"
     toposort "^2.0.2"
 
-zx-extra@3.0.18:
-  version "3.0.18"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.18.tgz#722fa5252cd03d8b36f19fc0d3647d4ffc10e20a"
-  integrity sha512-J+eFvfjDENc+VFOiYlZ59lGueLg8Gz5axCnaM4vOWUwEUgC07pL0Pkm5cLyPgZXAw7mtRdELYYvRx++uvdeIDw==
+zx-extra@3.0.19:
+  version "3.0.19"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.19.tgz#a2ad6d3ca51faa6617fc93c9cff953eebe824360"
+  integrity sha512-zTvAsPgeLjQbA7ltE9ZumeSHS60zoogL1PJ1WraWUMzrnnpVUE3oo6Emi6tC7PIY4RROZt38EOOftf/vOSes/Q==
   dependencies:
     "@qiwi/deep-proxy" "^3.0.0"
     "@types/ip" "^1.1.3"
@@ -3435,12 +3435,12 @@ zx-extra@3.0.18:
     semver "^7.6.2"
     ssri "^10.0.6"
     tempy "^3.1.0"
-    zx "8.1.4-dev.d7d074d"
+    zx "8.1.4"
 
-zx@8.1.4-dev.d7d074d:
-  version "8.1.4-dev.d7d074d"
-  resolved "https://registry.yarnpkg.com/zx/-/zx-8.1.4-dev.d7d074d.tgz#7f63f03e0fc7dbd8bb972ff975ce591d8ce9021c"
-  integrity sha512-PADUyrfpGcRhPic5t9GHn+EDOcPl3RD14D8rRKwFnYn5kqXdWaKFwcWTkFW45wJlrHUx3+oi/1pTcL3wN6YYGQ==
+zx@8.1.4:
+  version "8.1.4"
+  resolved "https://registry.yarnpkg.com/zx/-/zx-8.1.4.tgz#19bcd543fab34d01d7d4174a314b33cde9115a17"
+  integrity sha512-QFDYYpnzdpRiJ3dL2102Cw26FpXpWshW4QLTGxiYfIcwdAqg084jRCkK/kuP/NOSkxOjydRwNFG81qzA5r1a6w==
   optionalDependencies:
     "@types/fs-extra" ">=11"
     "@types/node" ">=20"
