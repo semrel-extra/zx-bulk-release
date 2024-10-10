@@ -1,3 +1,8 @@
+## [2.15.24](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.23...v2.15.24) (2024-10-10)
+
+### Fixes & improvements
+* perf: memoize to config loader ([e16847f](https://github.com/semrel-extra/zx-bulk-release/commit/e16847f3c6dfd36ba7579a538943818c49485924))
+
 ## [2.15.23](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.22...v2.15.23) (2024-09-22)
 
 ### Fixes & improvements
