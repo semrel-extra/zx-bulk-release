@@ -1,3 +1,8 @@
+## [2.15.25](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.24...v2.15.25) (2024-10-11)
+
+### Fixes & improvements
+* fix(deps): update dependency zx-extra to v3.0.23 ([0eb3371](https://github.com/semrel-extra/zx-bulk-release/commit/0eb337113313a1e678580deb9456b1ef302548ef))
+
 ## [2.15.24](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.23...v2.15.24) (2024-10-10)
 
 ### Fixes & improvements
