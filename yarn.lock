@@ -3174,10 +3174,10 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zx-extra@3.0.23:
-  version "3.0.23"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.23.tgz#d8224aefd61aa698961c5b97e5380a2f819b48dd"
-  integrity sha512-0ukcKNq9iMtOSJ/I57wyzYC95OWMMFIWK5PZ5wmMf+z7dVvivRzeUB5gj75kFJE7VNCHzbeV+ZUSbvbTkqZjcA==
+zx-extra@3.0.24:
+  version "3.0.24"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-3.0.24.tgz#ca1894ddd4c755062766df2bba624d5ef926df9e"
+  integrity sha512-CUVG2KEJsK2Do8o7kfEbJcClmiwd+3tDcNfqhDOdW4h/WcFqCI2ePIS+7qWtwca3+1Y9a7GM1whyVs1Xry7foA==
   dependencies:
     "@qiwi/deep-proxy" "^3.0.0"
     "@types/ip" "^1.1.3"
@@ -3191,12 +3191,12 @@ zx-extra@3.0.23:
     ssri "^10.0.6"
     tempy "^3.1.0"
     typescript "^5.5.4"
-    zx "8.1.9"
+    zx "8.2.0"
 
-zx@8.1.9:
-  version "8.1.9"
-  resolved "https://registry.yarnpkg.com/zx/-/zx-8.1.9.tgz#36b8be5929a1c870dcaa28551095e17aa7ebf251"
-  integrity sha512-UHuLHphHmsBYKkAchkSrEN4nzDyagafqC9HUxtc1J7eopaScW6H9dsLJ1lmkAntnLtDTGoM8fa+jrJrXiIfKFA==
+zx@8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/zx/-/zx-8.2.0.tgz#46e8594bf2fe8c6bc15d6e571108e525da3c22b1"
+  integrity sha512-ec7Z1Ki9h4CsKqbMjZ8H7G1PbbZYErscxT314LF66Ljx1YRENisqa5m9IN2VjbYgOKxdv5t0MbVd3Hf+II3e7w==
   optionalDependencies:
     "@types/fs-extra" ">=11"
     "@types/node" ">=20"
