@@ -17,7 +17,7 @@ export const pushChangelog = queuefy(async (pkg) => {
   const msg = msgJoin(_msg, pkg, 'chore: update changelog ${{name}}')
   const releaseNotes = await formatReleaseNotes(pkg)
 
-  await $.o({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
+  await $({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
   await pushCommit({cwd, branch, msg, gitCommitterEmail, gitCommitterName, basicAuth})
 })
 

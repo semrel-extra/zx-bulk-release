@@ -73,8 +73,16 @@ export const npmPublish = async (pkg) => {
 
   const npmTag = pkg.preversion ? 'snapshot' : 'latest'
   const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})
+  const npmFlags = [
+    '--no-workspaces',
+    '--no-git-tag-version',
+    `--userconfig=${npmrc}`,
+    `--tag=${npmTag}`,
+    npmProvenance && `--provenance`,
+    npmRegistry && `--registry=${npmRegistry}`,
+  ].filter(Boolean)
 
-  await $.o({cwd})`npm publish ${npmProvenance ? '--provenance' : ''} --no-git-tag-version --registry=${npmRegistry} --userconfig ${npmrc} --tag ${npmTag} --no-workspaces`
+  await $({cwd})`npm publish ${npmFlags}`
 }
 
 export const getNpmrc = async ({npmConfig, npmToken, npmRegistry}) => {

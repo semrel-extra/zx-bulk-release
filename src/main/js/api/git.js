@@ -102,8 +102,8 @@ export const getCommits = async (cwd, from, to = 'HEAD') => {
     })
 }
 
-export const getTags = async (cwd, ref = '') =>
-  (await $({cwd})`git tag -l ${ref}`)
+export const getTags = async (cwd, ref) =>
+  (await $({cwd})`git tag -l ${ref || '*'}`)
     .toString()
     .split('\n')
 
