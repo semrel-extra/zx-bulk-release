@@ -3152,10 +3152,10 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zx-extra@4.0.13:
-  version "4.0.13"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.13.tgz#8dc883364fd0edd3971a57ddf02dfea0f7c855ec"
-  integrity sha512-oh4zDP1tGkxjMctuRRpL/y3z8MBJ3zbOkLs5Lc/EVL0edLK+7dA2fHrEs0ahPzmKN8juVBnqIZykYgVOIh0IsA==
+zx-extra@4.0.14:
+  version "4.0.14"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.14.tgz#40a563995144992471675ef1c4f7db163800e3fa"
+  integrity sha512-tEeYtnBcHbfDMQLUgPVejX8XZ9U/36WlXmV36b1Sc6XNR658hZp/mr/ZnZH+iecG9RQ4y5SY/P9cyy//9X8KZg==
   dependencies:
     "@types/ini" "^4.1.1"
     "@types/semver" "^7.7.1"
