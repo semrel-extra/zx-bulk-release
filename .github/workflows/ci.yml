@@ -11,6 +11,8 @@ jobs:
     if: github.event_name == 'push'
     name: Test on push
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
