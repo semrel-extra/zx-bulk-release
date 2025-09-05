@@ -167,6 +167,10 @@ const env = {
 
 await $`yarn install`
 
+const registry = createNpmRegistry()
+
+await registry.start()
+
 test('run() dry-run', async () => {
   await run({cwd, flags: {dryRun: true, report}, env})
   const r = await fs.readJson(report)
@@ -189,10 +193,6 @@ test('run() dry-run', async () => {
 })
 
 test('run()', async () => {
-  const registry = createNpmRegistry()
-
-  await registry.start()
-
   await run({cwd, flags: {onlyWorkspaceDeps: true}, env})
 
   await (async () => {
