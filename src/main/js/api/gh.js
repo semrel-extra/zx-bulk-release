@@ -123,7 +123,7 @@ export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
 }
 
 export const ghGetAsset = async ({repoName, tag, name}) => {
-  return (await fetch(`https://github.com/${repoName}/releases/download/${tag}/${name}`, {
+  return (await fetch(`https://github.com/${repoName}/releases/download/${tag.ref || tag}/${name}`, {
     headers: {
       // Accept: 'application/vnd.github.v3+json'
     }

@@ -4,8 +4,8 @@ import {getRoot, getSha} from '../api/git.js'
 import {$} from 'zx-extra'
 
 // Inspired by https://docs.github.com/en/actions/learn-github-actions/contexts
-export const contextify = async (pkg, {packages, root, flags}) => {
-  pkg.config = await getPkgConfig(pkg.absPath, root.absPath)
+export const contextify = async (pkg, {packages, root, flags, env}) => {
+  pkg.config = await getPkgConfig([pkg.absPath, root.absPath], env)
   pkg.latest = await getLatest(pkg)
   pkg.context = {
     git: {

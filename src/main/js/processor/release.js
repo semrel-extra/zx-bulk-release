@@ -81,12 +81,13 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     .log()('Great success!')
 })
 
-export const createContext = async ({flags, env, cwd}) => {
+export const createContext = async ({flags, env: _env, cwd}) => {
   const { packages, queue, root, prev, graphs } = await topo({cwd, flags})
   const report = createReport({packages, queue, flags})
+  const env = {...process.env, ..._env}
 
   $.report =        report
-  $.env =           {...process.env, ...env}
+  $.env =           env
   $.verbose =       !!(flags.debug || $.env.DEBUG ) || $.verbose
 
   return {
@@ -96,6 +97,7 @@ export const createContext = async ({flags, env, cwd}) => {
     queue,
     prev,
     graphs,
-    flags
+    flags,
+    env
   }
 }
