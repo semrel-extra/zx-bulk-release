@@ -8,7 +8,7 @@ export const exec = async (pkg, name) => {
 
   if (cmd) {
     log({pkg})(`run ${name} '${cmd}'`)
-    const result = await $.o({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
+    const result = await $({cwd: pkg.absPath, quote: v => v, preferLocal: true})`${cmd}`
 
     log({pkg})(`duration ${name}: ${Date.now() - now}`)
     return result

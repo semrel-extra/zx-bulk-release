@@ -1,14 +1,13 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 
-import {ctx, tempy, fs, path, $} from 'zx-extra'
+import {tempy, fs, path, $ as _$} from 'zx-extra'
 import {run} from '../../main/js/index.js'
 import {formatTag} from '../../main/js/processor/meta.js'
 import {addCommits, createFakeRepo, createNpmRegistry, fixtures} from './test-utils.js'
 
 const test = suite('integration')
 const report = tempy.temporaryFile({extension: 'json'})
-
 const cwd = await createFakeRepo({
   commits: [
     {
@@ -159,11 +158,17 @@ const cwd = await createFakeRepo({
 })
 
 // console.log('cwd=', cwd)
-$.cwd = cwd
+const $ = _$({cwd})
+const env = {
+  NPM_REGISTRY: 'http://localhost:4873',
+  NPM_TOKEN: 'mRv6eIuiaggXGb9ZDFCtBA==', // Localhost Verdaccio default token
+  GH_META: 'commit'
+}
+
 await $`yarn install`
 
 test('run() dry-run', async () => {
-  await run({cwd, flags: {dryRun: true, report}})
+  await run({cwd, flags: {dryRun: true, report}, env})
   const r = await fs.readJson(report)
   const {a, b} = r.packages
 
@@ -188,10 +193,9 @@ test('run()', async () => {
 
   await registry.start()
 
-  await run({cwd, flags: {onlyWorkspaceDeps: true}})
+  await run({cwd, flags: {onlyWorkspaceDeps: true}, env})
 
-  await ctx(async ($) => {
-    $.cwd = cwd
+  await (async () => {
     const digestA = JSON.parse((await $`npm view a@1.0.1 --registry=${registry.address} --json`).toString())
     const digestB = JSON.parse((await $`npm view b@1.0.0 --registry=${registry.address} --json`).toString())
 
@@ -224,7 +228,7 @@ ${sha}
 ${gitRoot}
 `)
     )
-  })
+  })()
 
   await addCommits({cwd, commits: [
     {
@@ -238,10 +242,9 @@ ${gitRoot}
     }
   ]})
 
-  await run({cwd, flags: {onlyWorkspaceDeps: true}})
+  await run({cwd, flags: {onlyWorkspaceDeps: true}, env})
 
-  await ctx(async ($) => {
-    $.cwd = cwd
+  await (async () => {
     const digestA = JSON.parse((await $`npm view a --registry=${registry.address} --json`).toString())
     const digestB = JSON.parse((await $`npm view b --registry=${registry.address} --json`).toString())
 
@@ -262,7 +265,7 @@ ${gitRoot}
 
     await $`git clone --single-branch --branch gh-pages --depth 1 ${origin} ${ghp}`
     assert.is((await fs.readFile(`${ghp}/b/readme.md`, 'utf-8')).trim(), '# docs')
-  })
+  })()
 
   await addCommits({cwd, commits: [
     {
@@ -276,16 +279,15 @@ ${gitRoot}
     }
   ]})
 
-  await run({cwd, flags: {onlyWorkspaceDeps: true, snapshot: true}})
+  await run({cwd, env, flags: {onlyWorkspaceDeps: true, snapshot: true}})
 
-  await ctx(async ($) => {
-    $.cwd = cwd
+  await (async () => {
     const digestA = JSON.parse((await $`npm view a --registry=${registry.address} --json`).toString())
     const digestB = JSON.parse((await $`npm view b --registry=${registry.address} --json`).toString())
 
     assert.ok(digestA['dist-tags'].snapshot.startsWith('1.0.2-snap.'))
     assert.ok(digestB['dist-tags'].snapshot.startsWith, '1.1.1-snap.')
-  })
+  })()
 
   await registry.stop()
 })

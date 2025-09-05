@@ -1,27 +1,27 @@
-import {$, ctx, fs, path, tempy, copy} from 'zx-extra'
+import {$, fs, path, tempy, copy} from 'zx-extra'
 import {log} from '../log.js'
 import {memoizeBy} from '../util.js'
 
-export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => ctx(async ($) => {
+export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => {
   const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl
   const cwd = tempy.temporaryDirectory()
-  $.cwd = cwd
+  const _$ = $({cwd})
   try {
-    await $`git clone --single-branch --branch ${branch} --depth 1 ${origin} .`
+    await _$`git clone --single-branch --branch ${branch} --depth 1 ${origin} .`
   } catch (e) {
     log({level: 'warn'})(`ref '${branch}' does not exist in ${origin}`)
-    await $`git init . &&
+    await _$`git init . &&
             git remote add origin ${origin}`
   }
 
   return cwd
-}), async ({cwd, branch}) => `${await getRoot(cwd)}:${branch}`)
+}, async ({cwd, branch}) => `${await getRoot(cwd)}:${branch}`)
 
-export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => ctx(async ($) => {
+export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => {
   let retries = 3
 
   const _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
-  $.cwd = _cwd
+  const _$ = $({cwd: _cwd})
 
   for (let {relpath, contents} of files) {
     const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
@@ -31,7 +31,7 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
 
   try {
     await setUserConfig(_cwd, gitCommitterName, gitCommitterEmail)
-    await $`git add . &&
+    await _$`git add . &&
             git commit -m ${msg}`
   } catch {
     log({level: 'warn'})(`no changes to commit to ${branch}`)
@@ -40,7 +40,7 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
 
   while (retries > 0) {
     try {
-      return await $.raw`git push origin HEAD:refs/heads/${branch}`
+      return await _$`git push origin HEAD:refs/heads/${branch}`
     } catch (e) {
       retries -= 1
       log({level: 'error'})('git push failed', 'branch', branch, 'retries left', retries, e)
@@ -49,15 +49,15 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
         throw e
       }
 
-      await $`git fetch origin ${branch} &&
+      await _$`git fetch origin ${branch} &&
               git rebase origin/${branch}`
     }
   }
-})
+}
 
-export const getSha = async (cwd) => (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
+export const getSha = async (cwd) => (await $({cwd})`git rev-parse HEAD`).toString().trim()
 
-export const getRoot = memoizeBy(async (cwd) => (await $.o({cwd})`git rev-parse --show-toplevel`).toString().trim())
+export const getRoot = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse --show-toplevel`).toString().trim())
 
 export const parseOrigin = (originUrl) => {
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []
@@ -83,16 +83,16 @@ export const getRepo = memoizeBy(async (cwd, {basicAuth} = {}) => {
 }, getRoot)
 
 export const getOrigin = memoizeBy(async (cwd) =>
-  $.o({cwd})`git config --get remote.origin.url`.then(r => r.toString().trim())
+  $({cwd})`git config --get remote.origin.url`.then(r => r.toString().trim())
 )
 
-export const getCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
-  $.cwd = cwd
+export const getCommits = async (cwd, from, to = 'HEAD') => {
+  const _$ = $({cwd})
 
-  const _from = from || await $`git rev-list --max-parents=0 HEAD`
+  const _from = from || await _$`git rev-list --max-parents=0 HEAD`
   const ref = `${_from}..${to}`
 
-  return (await $.raw`git log ${ref} --format=+++%s__%b__%h__%H -- ${cwd}`)
+  return (await _$`git log ${ref} --format=+++%s__%b__%h__%H -- ${cwd}`)
     .toString()
     .split('+++')
     .filter(Boolean)
@@ -100,27 +100,27 @@ export const getCommits = async (cwd, from, to = 'HEAD') => ctx(async ($) => {
       const [subj, body, short, hash] = msg.split('__').map(raw => raw.trim())
       return {subj, body, short, hash}
     })
-})
+}
 
 export const getTags = async (cwd, ref = '') =>
-  (await $.o({cwd})`git tag -l ${ref}`)
+  (await $({cwd})`git tag -l ${ref}`)
     .toString()
     .split('\n')
 
 export const pushTag = async ({cwd, tag, gitCommitterName, gitCommitterEmail}) => {
   await setUserConfig(cwd, gitCommitterName, gitCommitterEmail)
-  await $.o({cwd})`
+  await $({cwd})`
     git tag -m ${tag} ${tag} &&
     git push origin ${tag}`
 }
 
 // Memoize prevents .git/config lock
 // https://github.com/qiwi/packasso/actions/runs/4539987310/jobs/8000403413#step:7:282
-export const setUserConfig = memoizeBy(async(cwd, gitCommitterName, gitCommitterEmail) => $.o({cwd})`
+export const setUserConfig = memoizeBy(async(cwd, gitCommitterName, gitCommitterEmail) => $({cwd})`
   git config user.name ${gitCommitterName} &&
   git config user.email ${gitCommitterEmail}
 `)
 
-export const unsetUserConfig = async(cwd) => $.o({cwd, nothrow: true})`
+export const unsetUserConfig = async(cwd) => $({cwd, nothrow: true})`
   git config --unset user.name &&
   git config --unset user.email`
