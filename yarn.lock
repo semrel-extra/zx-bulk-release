@@ -1402,10 +1402,10 @@ glob@^10.4.1:
     package-json-from-dist "^1.0.0"
     path-scurry "^1.11.1"
 
-globby-cp@^1.4.1:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/globby-cp/-/globby-cp-1.4.2.tgz#cb90bd5accec3a77aa0d79024f520a1cd93e23da"
-  integrity sha512-wxzm/h03ZQuK5AO/Fw3MOszQJRnsQRR6vwx/58Bb1frI0EGMwkG7j20HDhFAhmYnHjN6t8oq04Q8oWt05ia9FQ==
+globby-cp@^1.4.4:
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/globby-cp/-/globby-cp-1.4.5.tgz#b0e0856f82347985c581d98d2fb81d25645520bd"
+  integrity sha512-/Yomk1oexeeeFMu6GE7S4D1EZhtf6yyuoqwNS4MLMDEL24Hiz2PoDaDPXTQpKvpaC8hsFxB8z6SB397m7qd/yg==
   dependencies:
     globby "^14.1.0"
     minimist "^1.2.8"
@@ -3137,16 +3137,16 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zx-extra@4.0.16:
-  version "4.0.16"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.16.tgz#e31b2f0168ade93927e1498ed98f912504b160db"
-  integrity sha512-fZdTBHvGJWYpBEiLzEu8CRxEMFqWxxgWVxyXu++sWzfGFQ84zebbDK4AeI5uic0QEDeZ6fue/F38UXVNATKSag==
+zx-extra@4.0.17:
+  version "4.0.17"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.17.tgz#808c8789c3db24efacd0dd6c3215f84a800d489c"
+  integrity sha512-KYmhWVSLzyM4DIoEI6GyasrbfOmdkX7G3LQVCVvabQwzZDPTvfRnLbOJft9yAuggysFFG9o5bFnD2BTveaXjcQ==
   dependencies:
     "@types/ini" "^4.1.1"
     "@types/semver" "^7.7.1"
     "@types/ssri" "^7.1.5"
     "@webpod/ip" "^0.4.2"
-    globby-cp "^1.4.1"
+    globby-cp "^1.4.4"
     ini "^5.0.0"
     ip-address "^10.0.1"
     is-reachable "^5.2.1"
