@@ -3137,10 +3137,10 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zx-extra@4.0.17:
-  version "4.0.17"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.17.tgz#808c8789c3db24efacd0dd6c3215f84a800d489c"
-  integrity sha512-KYmhWVSLzyM4DIoEI6GyasrbfOmdkX7G3LQVCVvabQwzZDPTvfRnLbOJft9yAuggysFFG9o5bFnD2BTveaXjcQ==
+zx-extra@4.0.18:
+  version "4.0.18"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.18.tgz#29e83246d37088cc7605dced237cff38eb440252"
+  integrity sha512-RKSiLasYJtPT90J5P1K+ouSsdHxcLrmjQ7e2y2xtXKkhdTHJ+sC0fwEJ/hO742pNy1TdmvYg6WyttZ0iEndJ7Q==
   dependencies:
     "@types/ini" "^4.1.1"
     "@types/semver" "^7.7.1"
@@ -3153,9 +3153,9 @@ zx-extra@4.0.17:
     semver "^7.7.2"
     ssri "^12.0.0"
     tempy "^3.1.0"
-    zx "8.8.1"
+    zx "8.8.4"
 
-zx@8.8.1:
-  version "8.8.1"
-  resolved "https://registry.yarnpkg.com/zx/-/zx-8.8.1.tgz#5c30645d3383d961771d911c63defa6a6e58014c"
-  integrity sha512-qvsKBnvWHstHKCluKPlEgI/D3+mdiQyMoSSeFR8IX/aXzWIas5A297KxKgPJhuPXdrR6ma0Jzx43+GQ/8sqbrw==
+zx@8.8.4:
+  version "8.8.4"
+  resolved "https://registry.yarnpkg.com/zx/-/zx-8.8.4.tgz#d1b8a5a2c4cd63136833559d8dc4e9b518819c85"
+  integrity sha512-44GcD+ZlM/v1OQtbwnSxLPcoE1ZEUICmR+RSbJZLAqfIixNLuMjLyh0DcS75OyfJ/sWYAwCWDmDvJ4hdnANAPQ==
