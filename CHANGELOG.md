@@ -1,3 +1,8 @@
+## [2.15.37](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.36...v2.15.37) (2025-09-28)
+
+### Fixes & improvements
+* fix(67): Match Jira ticket numbers which usually have upper case letters (#72) ([0d55633](https://github.com/semrel-extra/zx-bulk-release/commit/0d55633ec17bdb50049d2b255a9fda3480c10620))
+
 ## [2.15.36](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.35...v2.15.36) (2025-09-27)
 
 ### Fixes & improvements
