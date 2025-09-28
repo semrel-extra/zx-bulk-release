@@ -49,7 +49,7 @@ export const getSemanticChanges = async (cwd, from, to, rules = semanticRules) =
 export const analyzeCommits = (commits, rules) =>
   commits.reduce((acc, {subj, body, short, hash}) => {
     rules.forEach(({group, releaseType, prefixes, keywords}) => {
-      const prefixMatcher = prefixes && new RegExp(`^(${prefixes.join('|')})(\\([a-z0-9\\-_,]+\\))?:\\s.+$`)
+      const prefixMatcher = prefixes && new RegExp(`^(${prefixes.join('|')})(\\([a-zA-Z0-9\\-_,]+\\))?:\\s.+$`)
       const keywordsMatcher = keywords && new RegExp(`(${keywords.join('|')}):\\s(.+)`)
       const change = subj.match(prefixMatcher)?.[0] || body.match(keywordsMatcher)?.[2]
 
