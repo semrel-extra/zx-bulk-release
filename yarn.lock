@@ -523,10 +523,10 @@
     lodash "4.17.21"
     minimatch "7.4.6"
 
-"@webpod/ip@^0.5.0":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@webpod/ip/-/ip-0.5.1.tgz#aa44d10988cedf4104bf648afb70f752916997a2"
-  integrity sha512-IIs6UDM9VJTz3AuVD2PcMgD1cS2cw0BnlequGiV3YuWCLnYtWzZeOm6CZ6Pwu0Wq49XEq8ZNt2q57RzNdtJgXw==
+"@webpod/ip@^0.6.1":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@webpod/ip/-/ip-0.6.1.tgz#5ca1d7ff87e5032ec5a7c3c12977533e0982c0dc"
+  integrity sha512-0oPIqLPfoIPzstsbmWUFlLx9I8KiisiC9/+YQPaotVU67DnTV+vx/zXXnkMgZTKu9rHWznmUQX3jgvfqr1t4+g==
 
 JSONStream@1.3.5:
   version "1.3.5"
@@ -1447,7 +1447,7 @@ glob@^10.4.1:
     package-json-from-dist "^1.0.0"
     path-scurry "^1.11.1"
 
-globby-cp@^1.4.4:
+globby-cp@^1.4.5:
   version "1.4.5"
   resolved "https://registry.yarnpkg.com/globby-cp/-/globby-cp-1.4.5.tgz#b0e0856f82347985c581d98d2fb81d25645520bd"
   integrity sha512-/Yomk1oexeeeFMu6GE7S4D1EZhtf6yyuoqwNS4MLMDEL24Hiz2PoDaDPXTQpKvpaC8hsFxB8z6SB397m7qd/yg==
@@ -2552,10 +2552,15 @@ safe-stable-stringify@^2.3.1:
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
 
-semver@7.7.2, semver@^7.5.3, semver@^7.5.4, semver@^7.7.2:
+semver@7.7.2, semver@^7.5.3, semver@^7.5.4:
   version "7.7.2"
   resolved "https://registry.yarnpkg.com/semver/-/semver-7.7.2.tgz#67d99fdcd35cec21e6f8b87a7fd515a33f982b58"
   integrity sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==
+
+semver@^7.7.3:
+  version "7.7.3"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.7.3.tgz#4b5f4143d007633a8dc671cd0a6ef9147b8bb946"
+  integrity sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==
 
 send@0.19.0:
   version "0.19.0"
@@ -3184,25 +3189,25 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zx-extra@4.0.19:
-  version "4.0.19"
-  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.19.tgz#c03d9b2c877c2f83fc55e1e00652d99bf74a0f84"
-  integrity sha512-p83o15lxGuiMGL6erPtxswr2az73SXr97gBwwHCAw/rr7c9Za8sXfRrRYgcHrmIoaRjjc9dZMyBYCKW+uYYWFg==
+zx-extra@4.0.20:
+  version "4.0.20"
+  resolved "https://registry.yarnpkg.com/zx-extra/-/zx-extra-4.0.20.tgz#754c129088f48891fc44a0499f8de46ddccee8f3"
+  integrity sha512-HEF79MEFUOxxHBkbmgmMhzjUob86jrjXhjwqcbJWYw3dgPHqtiiA6zfSqcNugm+KmhoyQD2olficBn/PtVCu3w==
   dependencies:
     "@types/ini" "^4.1.1"
     "@types/semver" "^7.7.1"
     "@types/ssri" "^7.1.5"
-    "@webpod/ip" "^0.5.0"
-    globby-cp "^1.4.4"
+    "@webpod/ip" "^0.6.1"
+    globby-cp "^1.4.5"
     ini "^5.0.0"
     ip-address "^10.0.1"
     is-reachable "^5.2.1"
-    semver "^7.7.2"
+    semver "^7.7.3"
     ssri "^12.0.0"
     tempy "^3.1.0"
-    zx "8.8.4"
+    zx "8.8.5"
 
-zx@8.8.4:
-  version "8.8.4"
-  resolved "https://registry.yarnpkg.com/zx/-/zx-8.8.4.tgz#d1b8a5a2c4cd63136833559d8dc4e9b518819c85"
-  integrity sha512-44GcD+ZlM/v1OQtbwnSxLPcoE1ZEUICmR+RSbJZLAqfIixNLuMjLyh0DcS75OyfJ/sWYAwCWDmDvJ4hdnANAPQ==
+zx@8.8.5:
+  version "8.8.5"
+  resolved "https://registry.yarnpkg.com/zx/-/zx-8.8.5.tgz#d092d8c0017aa7c5a276fda88ff19e4b1d91cc64"
+  integrity sha512-SNgDF5L0gfN7FwVOdEFguY3orU5AkfFZm9B5YSHog/UDHv+lvmd82ZAsOenOkQixigwH2+yyH198AwNdKhj+RA==
