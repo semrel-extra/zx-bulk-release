@@ -3053,10 +3053,10 @@ verdaccio-htpasswd@13.0.0-next-8.28:
     http-errors "2.0.0"
     unix-crypt-td-js "1.1.4"
 
-verdaccio@6.2.3:
-  version "6.2.3"
-  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.2.3.tgz#f0365c367b2e0a5a99d3b8b1d4847452f40dc332"
-  integrity sha512-WADj3xYiuxjI1IFPLdN8Qskfmg35wERIlgNp/quA3XUl7bt94zc66L2FJ/ldjWmTClS7xjL2fXGOiJWJXFeK7g==
+verdaccio@6.2.4:
+  version "6.2.4"
+  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.2.4.tgz#5b8ac7ed5d99af21bb38c6b2fa8225292934c6e4"
+  integrity sha512-1riItDS5ZmkLVclEOI4ibmJPCTfg1f8iEbdZWo7mgaEDHs1KS2JJnGq+dnoDlbo4efJ5mCyy1g7p32k/xx2+wg==
   dependencies:
     "@cypress/request" "3.0.9"
     "@verdaccio/auth" "8.0.0-next-8.28"
