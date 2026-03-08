@@ -332,28 +332,28 @@
   dependencies:
     "@types/node" "*"
 
-"@verdaccio/auth@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/auth/-/auth-8.0.0-next-8.29.tgz#a0ee0294364db6df1c6dbb1eb472006467c9833f"
-  integrity sha512-lEIqneZ7LYYkF07/P9cJhOYVZTIIARGRVE66j666VR58T/fY/pC4hxEfuyqlfd3BhS3hM65aIrPZu+s03hyg+w==
+"@verdaccio/auth@8.0.0-next-8.31":
+  version "8.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/auth/-/auth-8.0.0-next-8.31.tgz#884095db2ec196d3a2626f4a539237630f86b845"
+  integrity sha512-MjLaOYJb8v3GGAlnUTHwxLsdmffA7YAcVsnqSiXQdl1b0tEDXI/R84CLFIZtYKu+wevG0QmecwVm7m81+F2bjQ==
   dependencies:
-    "@verdaccio/config" "8.0.0-next-8.29"
-    "@verdaccio/core" "8.0.0-next-8.29"
-    "@verdaccio/loaders" "8.0.0-next-8.19"
-    "@verdaccio/signature" "8.0.0-next-8.21"
+    "@verdaccio/config" "8.0.0-next-8.31"
+    "@verdaccio/core" "8.0.0-next-8.31"
+    "@verdaccio/loaders" "8.0.0-next-8.21"
+    "@verdaccio/signature" "8.0.0-next-8.23"
     debug "4.4.3"
-    lodash "4.17.21"
-    verdaccio-htpasswd "13.0.0-next-8.29"
+    lodash "4.17.23"
+    verdaccio-htpasswd "13.0.0-next-8.31"
 
-"@verdaccio/config@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/config/-/config-8.0.0-next-8.29.tgz#35a79d21666e795c4e56a4d67630822df6aba269"
-  integrity sha512-7kEZ6tv3NsJFPcKQrxELMkvJFI9Hmy1s8IPjuXjz9gobDV3NyF9VhPsh6l18Tm+nsqXb6ZTWiRup9V8Lkg0p0g==
+"@verdaccio/config@8.0.0-next-8.31":
+  version "8.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/config/-/config-8.0.0-next-8.31.tgz#4cc305d658f76a2f8eac376a95302a17cfd40cb6"
+  integrity sha512-GLwos2A5VaiQVSASMOeND0A+WsDzRlehO2Jkhpsoogrn2w1Z8J7WywLfAAMvNEmpcI0yTLLv+vmqNBAowuntCQ==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
+    "@verdaccio/core" "8.0.0-next-8.31"
     debug "4.4.3"
     js-yaml "4.1.1"
-    lodash "4.17.21"
+    lodash "4.17.23"
 
 "@verdaccio/core@8.0.0-next-8.21":
   version "8.0.0-next-8.21"
@@ -367,15 +367,15 @@
     process-warning "1.0.0"
     semver "7.7.2"
 
-"@verdaccio/core@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/core/-/core-8.0.0-next-8.29.tgz#597ce03392b5f4e4b2a7270abd073908e9982f60"
-  integrity sha512-ztsNbnHMGqpOJlC3x/Jz7+0Xzrul+UIQQAFsTFHO3pET8nyZWkh/1TH50olz0pZ/OS87O/+7mk04TK9hHD/eFQ==
+"@verdaccio/core@8.0.0-next-8.31":
+  version "8.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/core/-/core-8.0.0-next-8.31.tgz#ff715d08a75692014337de7c51d583994313de5a"
+  integrity sha512-M8Z6vL3zNgJC0tBjtBVZ+S28nSbN5hZWq7CSUoPUPpniqUMGwdevdNpKAvK+8Lb7e4d9+60vB/tIgc1Wu0BsIw==
   dependencies:
-    ajv "8.17.1"
-    http-errors "2.0.0"
+    ajv "8.18.0"
+    http-errors "2.0.1"
     http-status-codes "2.3.0"
-    minimatch "7.4.6"
+    minimatch "7.4.9"
     process-warning "1.0.0"
     semver "7.7.3"
 
@@ -393,25 +393,25 @@
   dependencies:
     lockfile "1.0.4"
 
-"@verdaccio/hooks@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/hooks/-/hooks-8.0.0-next-8.29.tgz#81d09b719f15399e0677b5aa4f377097920f37b5"
-  integrity sha512-KRuTN6iYg9ntFXmrH+fY+dNCFpNBMcEwOVLOJXk/fA3I3ki188FpRZz9rKToyj1XYZzPDqGUWv82ekswX5wrYw==
+"@verdaccio/hooks@8.0.0-next-8.31":
+  version "8.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/hooks/-/hooks-8.0.0-next-8.31.tgz#45d2dafb2d47765c3b7c58f82b2da71f8faf613c"
+  integrity sha512-7WdBo+3I9M2531BtNkgf0z9BZ1wUsGbC+Mogdoeez4F9oOVSbLCQN+WXL/5a0pCRXrdEOINHuoC17ZfYnSZSwQ==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
-    "@verdaccio/logger" "8.0.0-next-8.29"
+    "@verdaccio/core" "8.0.0-next-8.31"
+    "@verdaccio/logger" "8.0.0-next-8.31"
     debug "4.4.3"
     got-cjs "12.5.4"
     handlebars "4.7.8"
 
-"@verdaccio/loaders@8.0.0-next-8.19":
-  version "8.0.0-next-8.19"
-  resolved "https://registry.yarnpkg.com/@verdaccio/loaders/-/loaders-8.0.0-next-8.19.tgz#fe701afbf2d2590b132f87eba30109732504a624"
-  integrity sha512-+mQuEZNLRZ4EEjzfROHrVeZXVHNFhQTpI98KCpcbU1NEC7ZAl5m7OBD2XPVtvNTia2ZT83q4H0JPi/bAomnIRA==
+"@verdaccio/loaders@8.0.0-next-8.21":
+  version "8.0.0-next-8.21"
+  resolved "https://registry.yarnpkg.com/@verdaccio/loaders/-/loaders-8.0.0-next-8.21.tgz#7c0d5dc71e706e6dcb10064db94a6c6118e357e5"
+  integrity sha512-QQ0Vf0keRkbt1it685chTOeO7KmAjZH9MzVLQYQmtdm5s2Y0Lz4Y1luJi1wi5qxDXjXPeau3dlSwPmRSsr31lQ==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
+    "@verdaccio/core" "8.0.0-next-8.31"
     debug "4.4.3"
-    lodash "4.17.21"
+    lodash "4.17.23"
 
 "@verdaccio/local-storage-legacy@11.1.1":
   version "11.1.1"
@@ -427,12 +427,12 @@
     lowdb "1.0.0"
     mkdirp "1.0.4"
 
-"@verdaccio/logger-commons@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/logger-commons/-/logger-commons-8.0.0-next-8.29.tgz#53e501fffae4e1392255ecde0eedf548513c5dd7"
-  integrity sha512-CVeLv+U0cL9wtNJVwtzjj7wtUFYxMDmynWoXtepP+AthVoNj6G6rU2P2tGLX/uqH40EwqaHJy5Vo0uZ3ex2qhQ==
+"@verdaccio/logger-commons@8.0.0-next-8.31":
+  version "8.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/logger-commons/-/logger-commons-8.0.0-next-8.31.tgz#22e6921fcd6606bdc10d2c408ad73f7999a702e9"
+  integrity sha512-/gYvkoGd5obdXIXJkz5q4eVh9x0U6epwevk2N2j1lMhhEZrmiCfnoX2FCKAdR8uvyq7+TGO4sTampLdbO76xuA==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
+    "@verdaccio/core" "8.0.0-next-8.31"
     "@verdaccio/logger-prettify" "8.0.0-next-8.4"
     colorette "2.0.20"
     debug "4.4.3"
@@ -449,26 +449,26 @@
     pino-abstract-transport "1.2.0"
     sonic-boom "3.8.1"
 
-"@verdaccio/logger@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/logger/-/logger-8.0.0-next-8.29.tgz#d014ae74419247a0a29d326ef28bff7b4d2bd824"
-  integrity sha512-AF6hBAkgsRjDFGLjFWO9hzUWM47Jt15v90I6Wk0TotzsrWxgBYbslfJyTgwmTpGjhPe7al2dnFwT7hxKa6fr/w==
+"@verdaccio/logger@8.0.0-next-8.31":
+  version "8.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/logger/-/logger-8.0.0-next-8.31.tgz#d51d9a36a03735ac3fa72df700ed93ef35fac3ec"
+  integrity sha512-Jsq87EoollqVqytIhidwKcAW2PkHkzIPuTxl+x6CcDePQEh03+FQHuw6WSVUsVK5ZLOBQJaPPd3ChTRxNaBXBg==
   dependencies:
-    "@verdaccio/logger-commons" "8.0.0-next-8.29"
+    "@verdaccio/logger-commons" "8.0.0-next-8.31"
     pino "9.14.0"
 
-"@verdaccio/middleware@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/middleware/-/middleware-8.0.0-next-8.29.tgz#c76850c9d8b0874aa3c8c0bde2b49a9b2fd65b64"
-  integrity sha512-ANsQ8qjyNslH6BfGZnNkBvK1acTlnFgedXen6BnbN9nF+AWzHUea6knh529J5Clm3zrWggbRnGCrp1SSlbOqSA==
+"@verdaccio/middleware@8.0.0-next-8.31":
+  version "8.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/middleware/-/middleware-8.0.0-next-8.31.tgz#37976b2b21ec3a1fb0541aafdbad1f86d01bc30f"
+  integrity sha512-o5hzxTmLRnsWZG62ILFxjfu3IJyNIehd5ky49nOOw7Xt07ckQYI4RaCu1Suo9GXmnooUGowuMvlFJf9Wl8JMrQ==
   dependencies:
-    "@verdaccio/config" "8.0.0-next-8.29"
-    "@verdaccio/core" "8.0.0-next-8.29"
-    "@verdaccio/url" "13.0.0-next-8.29"
+    "@verdaccio/config" "8.0.0-next-8.31"
+    "@verdaccio/core" "8.0.0-next-8.31"
+    "@verdaccio/url" "13.0.0-next-8.31"
     debug "4.4.3"
     express "4.22.1"
     express-rate-limit "5.5.1"
-    lodash "4.17.21"
+    lodash "4.17.23"
     lru-cache "7.18.3"
 
 "@verdaccio/search-indexer@8.0.0-next-8.5":
@@ -476,13 +476,13 @@
   resolved "https://registry.yarnpkg.com/@verdaccio/search-indexer/-/search-indexer-8.0.0-next-8.5.tgz#28dbe2ee40c363fdee80dd92974aecd0d9ba3469"
   integrity sha512-0GC2tJKstbPg/W2PZl2yE+hoAxffD2ZWilEnEYSEo2e9UQpNIy2zg7KE/uMUq2P72Vf5EVfVzb8jdaH4KV4QeA==
 
-"@verdaccio/signature@8.0.0-next-8.21":
-  version "8.0.0-next-8.21"
-  resolved "https://registry.yarnpkg.com/@verdaccio/signature/-/signature-8.0.0-next-8.21.tgz#faec851c3ae7d154998dedcbbb1a5a9e9ac4a610"
-  integrity sha512-5TuGPRT4c5B3k6svxJ6Q5l31UBZTODo3iAJxmuAAC0iZBLNnivdvJlqUVdpZtYfrhwvuP5vuo7lucHQk6DsSmw==
+"@verdaccio/signature@8.0.0-next-8.23":
+  version "8.0.0-next-8.23"
+  resolved "https://registry.yarnpkg.com/@verdaccio/signature/-/signature-8.0.0-next-8.23.tgz#c5c8ef696cc88b35b32c5d97e7ff0c6c114adb1b"
+  integrity sha512-cDVjGvbT4eSA3BcJrrzz/ekAzWgBjsagqJ0t7LRYtbZ7xIVIrFtSAbzSrfmSJSukzgD5Ov8qDkUQuCtiaha/YQ==
   dependencies:
-    "@verdaccio/config" "8.0.0-next-8.29"
-    "@verdaccio/core" "8.0.0-next-8.29"
+    "@verdaccio/config" "8.0.0-next-8.31"
+    "@verdaccio/core" "8.0.0-next-8.31"
     debug "4.4.3"
     jsonwebtoken "9.0.3"
 
@@ -491,39 +491,39 @@
   resolved "https://registry.yarnpkg.com/@verdaccio/streams/-/streams-10.2.1.tgz#9443d24d4f17672b8f8c8e147690557918ed2bcb"
   integrity sha512-OojIG/f7UYKxC4dYX8x5ax8QhRx1b8OYUAMz82rUottCuzrssX/4nn5QE7Ank0DUSX3C9l/HPthc4d9uKRJqJQ==
 
-"@verdaccio/tarball@13.0.0-next-8.29":
-  version "13.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/tarball/-/tarball-13.0.0-next-8.29.tgz#511d33f7fbce0b5c0f9a23c540c3c9dddb0c1949"
-  integrity sha512-4hTQMXYF1olwwydaVfb6ab1TTImM42rAxLmw3VnJUI5ttbmfB9h095/TYsCssy5vqGQMp3l8YW/JxVTPcVtGYA==
+"@verdaccio/tarball@13.0.0-next-8.31":
+  version "13.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/tarball/-/tarball-13.0.0-next-8.31.tgz#84e86e47c7921237688838dca7a9a6a2995b8f5c"
+  integrity sha512-7G/2vL9XrkXFRFtGhvAzlRWGtbgOCrVVgYMnOUaDU6x8E+TptF6eyjIO0duNla/mHMcQyMmF8cpmWZUEzBTsdQ==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
-    "@verdaccio/url" "13.0.0-next-8.29"
+    "@verdaccio/core" "8.0.0-next-8.31"
+    "@verdaccio/url" "13.0.0-next-8.31"
     debug "4.4.3"
     gunzip-maybe "1.4.2"
     tar-stream "3.1.7"
 
-"@verdaccio/ui-theme@8.0.0-next-8.29":
-  version "8.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/ui-theme/-/ui-theme-8.0.0-next-8.29.tgz#18fdaf90781a828dae269cd505bc089198082f83"
-  integrity sha512-kSg69so1LHOL2SA1qLJikFxkx8FEOFQJV+Nde0lN3XMkp0RST8DgLx/hiVbgYzPz54S8LuvYR/DQAulyRulMcg==
+"@verdaccio/ui-theme@8.0.0-next-8.30":
+  version "8.0.0-next-8.30"
+  resolved "https://registry.yarnpkg.com/@verdaccio/ui-theme/-/ui-theme-8.0.0-next-8.30.tgz#3c80b93b905a117651ebaa2c183c8be028e8a15d"
+  integrity sha512-MSvFnYeocTWp6hqtIqtwp7Zm920UNhO3zQkKTPT6qGNjarkhxCCWRcSOAz7oJZhpbyLXc85zuxOLkTezCl4KUg==
 
-"@verdaccio/url@13.0.0-next-8.29":
-  version "13.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/url/-/url-13.0.0-next-8.29.tgz#5a366a1964d388a21b5b3ae2cdedbd531a06ce95"
-  integrity sha512-ucJ6MhLfY0g8uU0zjcJypSkCa1mXSLmrqdiILyj16Lo0y4w/gEvddMrfab8QUmgvvuzbCgSqCZHJmbZn7DFxQg==
+"@verdaccio/url@13.0.0-next-8.31":
+  version "13.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/url/-/url-13.0.0-next-8.31.tgz#b12376e0fcb68582b6d4dbb915431a2f619089a4"
+  integrity sha512-aCziHkVXw4b8h+EPjUFLkh0nXMk/c2vdKJX71p8XAs5/5MlHNK1vO87IFChbsCh8qrlKLKPCNsAJ4pdfnO/ufQ==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
+    "@verdaccio/core" "8.0.0-next-8.31"
     debug "4.4.3"
     validator "13.15.26"
 
-"@verdaccio/utils@8.1.0-next-8.29":
-  version "8.1.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/@verdaccio/utils/-/utils-8.1.0-next-8.29.tgz#1e500b40d1084e75f542629691717a44a636786c"
-  integrity sha512-EgyazlL0VejvZqWZ6KL3ig27Yl8RXcwhz1hayuqeAIxaqbsnmSmogL2zKXgGnm9y/A6QkPfZH1BcQoUh1STvtQ==
+"@verdaccio/utils@8.1.0-next-8.31":
+  version "8.1.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/@verdaccio/utils/-/utils-8.1.0-next-8.31.tgz#d9f2ec582140fdf754b60dfdb744f2c67593d5a2"
+  integrity sha512-u44Yf1CodTCYAXysHZiXuoW24pk1PcYg0odmv7dICyNG45J3GGfB6uMNJ6JJdcDhjwjj41pWG2mdsvdzxjoynw==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
-    lodash "4.17.21"
-    minimatch "7.4.6"
+    "@verdaccio/core" "8.0.0-next-8.31"
+    lodash "4.17.23"
+    minimatch "7.4.9"
 
 "@webpod/ip@^0.6.1":
   version "0.6.1"
@@ -572,6 +572,16 @@ ajv@8.17.1:
   version "8.17.1"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.17.1.tgz#37d9a5c776af6bc92d7f4f9510eba4c0a60d11a6"
   integrity sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==
+  dependencies:
+    fast-deep-equal "^3.1.3"
+    fast-uri "^3.0.1"
+    json-schema-traverse "^1.0.0"
+    require-from-string "^2.0.2"
+
+ajv@8.18.0:
+  version "8.18.0"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.18.0.tgz#8864186b6738d003eb3a933172bb3833e10cefbc"
+  integrity sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==
   dependencies:
     fast-deep-equal "^3.1.3"
     fast-uri "^3.0.1"
@@ -707,7 +717,7 @@ body-parser@~1.20.3:
     type-is "~1.6.18"
     unpipe "~1.0.0"
 
-brace-expansion@^2.0.1:
+brace-expansion@^2.0.1, brace-expansion@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-2.0.2.tgz#54fc53237a613d854c7bd37463aad17df87214e7"
   integrity sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==
@@ -1114,10 +1124,10 @@ env-paths@^2.2.1:
   resolved "https://registry.yarnpkg.com/env-paths/-/env-paths-2.2.1.tgz#420399d416ce1fbe9bc0a07c62fa68d67fd0f8f2"
   integrity sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==
 
-envinfo@7.15.0:
-  version "7.15.0"
-  resolved "https://registry.yarnpkg.com/envinfo/-/envinfo-7.15.0.tgz#7d5a6d464df38708ee5ac135289c88f0c9bffa7e"
-  integrity sha512-chR+t7exF6y59kelhXw5I3849nTy7KIRO+ePdLMhCD+JRP/JvmkenDWP7QSFGlsHX+kxGxdDutOPrmj5j1HR6g==
+envinfo@7.21.0:
+  version "7.21.0"
+  resolved "https://registry.yarnpkg.com/envinfo/-/envinfo-7.21.0.tgz#04a251be79f92548541f37d13c8b6f22940c3bae"
+  integrity sha512-Lw7I8Zp5YKHFCXL7+Dz95g4CcbMEpgvqZNNq3AmlT5XAV6CgAAk6gyAMqn2zjw08K9BHfcNuKrMiCPLByGafow==
 
 error-ex@^1.3.1:
   version "1.3.2"
@@ -1573,7 +1583,7 @@ http-errors@2.0.0:
     statuses "2.0.1"
     toidentifier "1.0.1"
 
-http-errors@~2.0.0, http-errors@~2.0.1:
+http-errors@2.0.1, http-errors@~2.0.0, http-errors@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/http-errors/-/http-errors-2.0.1.tgz#36d2f65bc909c8790018dd36fb4d93da6caae06b"
   integrity sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==
@@ -2071,6 +2081,13 @@ minimatch@7.4.6:
   integrity sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==
   dependencies:
     brace-expansion "^2.0.1"
+
+minimatch@7.4.9:
+  version "7.4.9"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-7.4.9.tgz#ef35412b1b36261b78ef1b2f0db29b759bbcaf5d"
+  integrity sha512-Brg/fp/iAVDOQoHxkuN5bEYhyQlZhxddI78yWsCbeEwTHXQjlNLtiJDUsp1GIptVqMI7/gkJMz4vVAc01mpoBw==
+  dependencies:
+    brace-expansion "^2.0.2"
 
 minimatch@^9.0.4:
   version "9.0.5"
@@ -3050,65 +3067,65 @@ vary@^1, vary@~1.1.2:
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-verdaccio-audit@13.0.0-next-8.29:
-  version "13.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/verdaccio-audit/-/verdaccio-audit-13.0.0-next-8.29.tgz#07eecc7b89e72897379edcde2d3027dd6973b4d2"
-  integrity sha512-ZUNONewbFocBq3oWXrwAL8IX4ZovPU70yj0nuYStSVJ9+Vrb74Duc+eI+IIS+jLfyysZe5L0ZAODGN8ny1Lu6w==
+verdaccio-audit@13.0.0-next-8.31:
+  version "13.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/verdaccio-audit/-/verdaccio-audit-13.0.0-next-8.31.tgz#5cdf2f4f453006de0a47be336592e15ed669298a"
+  integrity sha512-YtNN1qtMjBTJNcE35A37rC9/ib64s5ZkO/WsOsP+DjLar9ikCmBUCquqMtFBQc6ILPaFpfxmVVIN2K1vdy2Veg==
   dependencies:
-    "@verdaccio/config" "8.0.0-next-8.29"
-    "@verdaccio/core" "8.0.0-next-8.29"
+    "@verdaccio/config" "8.0.0-next-8.31"
+    "@verdaccio/core" "8.0.0-next-8.31"
     express "4.22.1"
     https-proxy-agent "5.0.1"
     node-fetch cjs
 
-verdaccio-htpasswd@13.0.0-next-8.29:
-  version "13.0.0-next-8.29"
-  resolved "https://registry.yarnpkg.com/verdaccio-htpasswd/-/verdaccio-htpasswd-13.0.0-next-8.29.tgz#213bfe6321421131dd9ebeaa3c47708606e18fb0"
-  integrity sha512-JBYCaSTQSUws/EXOqNrh7iOyWPrGLTYSeufCS3Y6BOCJbfDiy2Nh8PbstoZn/L9ZbzUesjPPiIZ4Ou3eUaK0Mw==
+verdaccio-htpasswd@13.0.0-next-8.31:
+  version "13.0.0-next-8.31"
+  resolved "https://registry.yarnpkg.com/verdaccio-htpasswd/-/verdaccio-htpasswd-13.0.0-next-8.31.tgz#deed3b6fce7aded7c069201384a50791ce45cc2d"
+  integrity sha512-l8bQaZb25e6rhVcZpIn3giqDTk7wzA1VAJLR0xhRacQCcOCtVFRWuN1HO0Ot75fgbTJv0Nbh48STrRljfdAPUw==
   dependencies:
-    "@verdaccio/core" "8.0.0-next-8.29"
+    "@verdaccio/core" "8.0.0-next-8.31"
     "@verdaccio/file-locking" "13.0.0-next-8.6"
     apache-md5 "1.1.8"
     bcryptjs "2.4.3"
     debug "4.4.3"
-    http-errors "2.0.0"
+    http-errors "2.0.1"
     unix-crypt-td-js "1.1.4"
 
-verdaccio@6.2.9:
-  version "6.2.9"
-  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.2.9.tgz#487d50f430524eaf66c7dd58e809da70076451a0"
-  integrity sha512-w1LYqM/wuvtiUedF9eSTsIC1yEI0nShIX48OqG1R6xzS4eEt0Pe1NYl5oPC/d7UyVSOufpjE8QVgd1CqauyhXQ==
+verdaccio@6.3.1:
+  version "6.3.1"
+  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.3.1.tgz#bcaa56ff5aa1edf8b9149108a8371ffbc2b7da1f"
+  integrity sha512-ol3hURcQYRNFuNeV6RTMEsjl9Ue/+K372MA95TWxVDNUI20ajjn0E+8jffkkgm0mFtUlxRzUasmKohNmGzJcSA==
   dependencies:
     "@cypress/request" "3.0.10"
-    "@verdaccio/auth" "8.0.0-next-8.29"
-    "@verdaccio/config" "8.0.0-next-8.29"
-    "@verdaccio/core" "8.0.0-next-8.29"
-    "@verdaccio/hooks" "8.0.0-next-8.29"
-    "@verdaccio/loaders" "8.0.0-next-8.19"
+    "@verdaccio/auth" "8.0.0-next-8.31"
+    "@verdaccio/config" "8.0.0-next-8.31"
+    "@verdaccio/core" "8.0.0-next-8.31"
+    "@verdaccio/hooks" "8.0.0-next-8.31"
+    "@verdaccio/loaders" "8.0.0-next-8.21"
     "@verdaccio/local-storage-legacy" "11.1.1"
-    "@verdaccio/logger" "8.0.0-next-8.29"
-    "@verdaccio/middleware" "8.0.0-next-8.29"
+    "@verdaccio/logger" "8.0.0-next-8.31"
+    "@verdaccio/middleware" "8.0.0-next-8.31"
     "@verdaccio/search-indexer" "8.0.0-next-8.5"
-    "@verdaccio/signature" "8.0.0-next-8.21"
+    "@verdaccio/signature" "8.0.0-next-8.23"
     "@verdaccio/streams" "10.2.1"
-    "@verdaccio/tarball" "13.0.0-next-8.29"
-    "@verdaccio/ui-theme" "8.0.0-next-8.29"
-    "@verdaccio/url" "13.0.0-next-8.29"
-    "@verdaccio/utils" "8.1.0-next-8.29"
+    "@verdaccio/tarball" "13.0.0-next-8.31"
+    "@verdaccio/ui-theme" "8.0.0-next-8.30"
+    "@verdaccio/url" "13.0.0-next-8.31"
+    "@verdaccio/utils" "8.1.0-next-8.31"
     JSONStream "1.3.5"
     async "3.2.6"
     clipanion "4.0.0-rc.4"
     compression "1.8.1"
     cors "2.8.6"
     debug "4.4.3"
-    envinfo "7.15.0"
+    envinfo "7.21.0"
     express "4.22.1"
     lodash "4.17.23"
     lru-cache "7.18.3"
     mime "3.0.0"
     semver "7.7.4"
-    verdaccio-audit "13.0.0-next-8.29"
-    verdaccio-htpasswd "13.0.0-next-8.29"
+    verdaccio-audit "13.0.0-next-8.31"
+    verdaccio-htpasswd "13.0.0-next-8.31"
 
 verror@1.10.0:
   version "1.10.0"
