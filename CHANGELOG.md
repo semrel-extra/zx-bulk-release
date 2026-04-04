@@ -1,3 +1,8 @@
+## [2.16.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.39...v2.16.0) (2026-04-04)
+
+### Features
+* feat: support npm oidc flow ([7396a6e](https://github.com/semrel-extra/zx-bulk-release/commit/7396a6ec1c4ab498261047ed17cfe42986ab2d54))
+
 ## [2.15.39](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.38...v2.15.39) (2025-10-20)
 
 ### Fixes & improvements
