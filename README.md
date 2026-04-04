@@ -83,7 +83,7 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
 ### env vars
 ```js
 export const parseEnv = (env = process.env) => {
-  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
 
   return {
     ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
@@ -93,11 +93,24 @@ export const parseEnv = (env = process.env) => {
     npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
     npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
     npmProvenance:      NPM_PROVENANCE,
+    // OIDC trusted publishing: https://docs.npmjs.com/trusted-publishers/
+    npmOidc:            NPM_OIDC || (!NPM_TOKEN && ACTIONS_ID_TOKEN_REQUEST_URL),
     gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
     gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
   }
 }
 ```
+
+### OIDC Trusted Publishing
+npm now supports [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers/) as a replacement for long-lived access tokens. To enable:
+1. [Configure a trusted publisher](https://docs.npmjs.com/trusted-publishers/) for each package on npmjs.com (link your GitHub repo and workflow)
+2. Set `NPM_OIDC=true` in your workflow environment
+3. Ensure your GitHub Actions workflow has `permissions: { id-token: write }`
+4. Make sure each `package.json` includes the `repository` field matching your GitHub repo URL
+
+OIDC mode is also auto-detected when `NPM_TOKEN` is not set and `ACTIONS_ID_TOKEN_REQUEST_URL` is present (GitHub Actions with `id-token: write` permission).
+
+When OIDC is active, `NPM_TOKEN` and `NPMRC` are ignored for publishing and `--provenance` is enabled automatically.
 
 ## Demo
 * [demo-zx-bulk-release](https://github.com/semrel-extra/demo-zx-bulk-release)

@@ -65,24 +65,32 @@ export const npmRestore = async (pkg) => {
 }
 
 export const npmPublish = async (pkg) => {
-  const {absPath: cwd, name, version, manifest, config: {npmPublish, npmRegistry, npmToken, npmConfig, npmProvenance}} = pkg
+  const {absPath: cwd, name, version, manifest, config: {npmPublish, npmRegistry, npmToken, npmConfig, npmProvenance, npmOidc}} = pkg
 
   if (manifest.private || npmPublish === false) return
 
   log({pkg})(`publishing npm package ${name} ${version} to ${npmRegistry}`)
 
   const npmTag = pkg.preversion ? 'snapshot' : 'latest'
-  const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})
   const npmFlags = [
     '--no-workspaces',
     '--no-git-tag-version',
-    `--userconfig=${npmrc}`,
     `--tag=${npmTag}`,
-    npmProvenance && `--provenance`,
     npmRegistry && `--registry=${npmRegistry}`,
-  ].filter(Boolean)
+  ]
 
-  await $({cwd})`npm publish ${npmFlags}`
+  // OIDC trusted publishing: no auth token must be present for npm to use OIDC flow.
+  // https://docs.npmjs.com/trusted-publishers/
+  if (npmOidc) {
+    log({pkg})('npm publish: OIDC trusted publishing enabled')
+    npmFlags.push('--provenance')
+  } else {
+    const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})
+    npmFlags.push(`--userconfig=${npmrc}`)
+    if (npmProvenance) npmFlags.push('--provenance')
+  }
+
+  await $({cwd})`npm publish ${npmFlags.filter(Boolean)}`
 }
 
 export const getNpmrc = async ({npmConfig, npmToken, npmRegistry}) => {
