@@ -35,8 +35,10 @@ jobs:
 
       - name: Push coverage
         if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          npx ggcp lcov.info https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git/coverage/${{ github.sha }} --cwd=${{ github.workspace }}/coverage --message='chore: push coverage'
+          npx ggcp lcov.info "https://${GH_TOKEN}@github.com/${{ github.repository }}.git/coverage/${{ github.sha }}" --cwd=${{ github.workspace }}/coverage --message='chore: push coverage'
 
 
   test_pr:
@@ -106,7 +108,8 @@ jobs:
       - name: Release
         env:
           VERBOSE: ${{ secrets.VERBOSE }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: x-access-token
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_OIDC: true
           NPM_PROVENANCE: true
