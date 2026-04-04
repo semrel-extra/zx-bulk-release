@@ -1,3 +1,9 @@
+## [2.16.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.16.0...v2.16.1) (2026-04-04)
+
+### Fixes & improvements
+* perf: tech release ([3ee886c](https://github.com/semrel-extra/zx-bulk-release/commit/3ee886ce7c4100d109ccb78bcc2d3a19ea27af37))
+* perf: update actions, tech release ([545da15](https://github.com/semrel-extra/zx-bulk-release/commit/545da151a0d47097e5da6001e40eeb725be5eaeb))
+
 ## [2.16.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.15.39...v2.16.0) (2026-04-04)
 
 ### Features
