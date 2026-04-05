@@ -1,3 +1,8 @@
+## [2.19.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.19.0...v2.19.1) (2026-04-05)
+
+### Fixes & improvements
+* fix: handle meta=none ([4bd052d](https://github.com/semrel-extra/zx-bulk-release/commit/4bd052d4deb3a2a6a6862860e7dabd205275fbcc))
+
 ## [2.19.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.3...v2.19.0) (2026-04-05)
 
 ### Features
