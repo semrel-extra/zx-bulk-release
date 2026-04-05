@@ -50,11 +50,13 @@ export const normalizePkgConfig = (config, env) => {
 }
 
 export const normalizeMetaConfig = (meta) =>
-  meta === true
-    ? normalizeMetaConfig('commit')
-    : typeof meta === 'string'
-      ? { type: meta } // 'commit' | 'asset' | 'tag'
-      : { type: 'none' }
+  meta === false || meta === 'none'
+    ? { type: null }
+    : meta === true
+      ? normalizeMetaConfig('commit')
+      : typeof meta === 'string'
+        ? { type: meta } // 'commit' | 'asset' | 'tag'
+        : { type: null }
 
 export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) =>
   ({

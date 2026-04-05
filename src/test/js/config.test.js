@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {parseEnv} from '../../main/js/config.js'
+import {parseEnv, normalizeMetaConfig} from '../../main/js/config.js'
 
 const test = suite('config')
 
@@ -35,6 +35,32 @@ test('parseEnv() NPM_OIDC overrides NPM_TOKEN presence', () => {
     NPM_TOKEN: 'some-token'
   })
   assert.ok(config.npmOidc)
+})
+
+test('parseEnv() defaults ghUser to x-access-token when GH_TOKEN present', () => {
+  const config = parseEnv({GH_TOKEN: 'tok'})
+  assert.is(config.ghUser, 'x-access-token')
+})
+
+test('parseEnv() ghUser is undefined when no token', () => {
+  const config = parseEnv({})
+  assert.is(config.ghUser, undefined)
+})
+
+test('normalizeMetaConfig(false) disables meta', () => {
+  assert.is(normalizeMetaConfig(false).type, null)
+})
+
+test('normalizeMetaConfig("none") disables meta', () => {
+  assert.is(normalizeMetaConfig('none').type, null)
+})
+
+test('normalizeMetaConfig(true) defaults to commit', () => {
+  assert.is(normalizeMetaConfig(true).type, 'commit')
+})
+
+test('normalizeMetaConfig("asset") sets asset type', () => {
+  assert.is(normalizeMetaConfig('asset').type, 'asset')
 })
 
 test.run()
