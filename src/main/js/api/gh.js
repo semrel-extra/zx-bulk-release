@@ -8,7 +8,7 @@ import {asArray, getCommonPath, msgJoin} from '../util.js'
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release
 export const ghRelease = async (pkg) => {
-  const {ghBasicAuth: basicAuth, ghToken, ghAssets} = pkg.config
+  const {ghBasicAuth: basicAuth, ghToken, ghAssets, ghApiUrl} = pkg.config
   if (!ghToken) return null
 
   log({pkg})('create gh release')
@@ -23,7 +23,7 @@ export const ghRelease = async (pkg) => {
     body: releaseNotes
   })
 
-  const res = await (await fetch(`https://api.github.com/repos/${repoName}/releases`, {
+  const res = await (await fetch(`${ghApiUrl}/repos/${repoName}/releases`, {
     method: 'POST',
     headers: {
       Accept: 'application/vnd.github.v3+json',
@@ -122,8 +122,8 @@ export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
   }))
 }
 
-export const ghGetAsset = async ({repoName, tag, name}) => {
-  return (await fetch(`https://github.com/${repoName}/releases/download/${tag.ref || tag}/${name}`, {
+export const ghGetAsset = async ({repoName, tag, name, ghUrl}) => {
+  return (await fetch(`${ghUrl || 'https://github.com'}/${repoName}/releases/download/${tag.ref || tag}/${name}`, {
     headers: {
       // Accept: 'application/vnd.github.v3+json'
     }

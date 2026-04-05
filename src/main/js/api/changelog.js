@@ -21,14 +21,27 @@ export const pushChangelog = queuefy(async (pkg) => {
   await pushCommit({cwd, branch, msg, gitCommitterEmail, gitCommitterName, basicAuth})
 })
 
+export const DIFF_TAG_URL = '${repoPublicUrl}/compare/${prevTag}...${newTag}'
+export const DIFF_COMMIT_URL = '${repoPublicUrl}/commit/${hash}'
+
+export const interpolate = (template, vars) => {
+  const result = template.replace(/\$\{(\w+)}/g, (_, key) => vars[key] ?? '')
+  try { new URL(result) } catch { throw new Error(`invalid URL after interpolation: '${result}' (template: '${template}')`) }
+  return result
+}
+
 export const formatReleaseNotes = async (pkg) => {
-  const {name, version, tag = formatTag({name, version}), absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
-  const {repoPublicUrl} = await getRepo(cwd, {basicAuth})
-  const releaseDiffRef = `## [${name}@${version}](${repoPublicUrl}/compare/${pkg.latest.tag?.ref}...${tag}) (${new Date().toISOString().slice(0, 10)})`
+  const {name, version, tag = formatTag({name, version}), absPath: cwd, config: {ghBasicAuth: basicAuth, diffTagUrl = DIFF_TAG_URL, diffCommitUrl = DIFF_COMMIT_URL}} = pkg
+  const {repoPublicUrl, repoName} = await getRepo(cwd, {basicAuth})
+  const prevTag = pkg.latest.tag?.ref
+  const vars = {repoName, repoPublicUrl, prevTag, newTag: tag, name, version}
+  const diffUrl = interpolate(diffTagUrl, vars)
+  const releaseDiffRef = `## [${name}@${version}](${diffUrl}) (${new Date().toISOString().slice(0, 10)})`
   const releaseDetails = Object.values(pkg.changes
     .reduce((acc, {group, subj, short, hash}) => {
       const {commits} = acc[group] || (acc[group] = {commits: [], group})
-      const commitRef = `* ${subj}${short ? ` [${short}](${repoPublicUrl}/commit/${hash})` : ''}`
+      const commitUrl = interpolate(diffCommitUrl, {...vars, hash, short})
+      const commitRef = `* ${subj}${short ? ` [${short}](${commitUrl})` : ''}`
 
       commits.push(commitRef)
 
