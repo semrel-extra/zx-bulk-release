@@ -1,3 +1,8 @@
+## [2.18.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.0...v2.18.1) (2026-04-05)
+
+### Fixes & improvements
+* fix: enhance rollback ([3338298](https://github.com/semrel-extra/zx-bulk-release/commit/3338298a0f7685b809e7ac1daae43c6d02a19557))
+
 ## [2.18.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.17.0...v2.18.0) (2026-04-05)
 
 ### Features
