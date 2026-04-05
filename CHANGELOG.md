@@ -1,3 +1,8 @@
+## [2.17.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.16.2...v2.17.0) (2026-04-05)
+
+### Features
+* feat: rollback git tags on npm push issues ([3d55439](https://github.com/semrel-extra/zx-bulk-release/commit/3d55439a150f08bf2c0cf3d1edae9f327abce0e4))
+
 ## [2.16.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.16.1...v2.16.2) (2026-04-05)
 
 ### Fixes & improvements
