@@ -1,3 +1,11 @@
+## [2.19.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.3...v2.19.0) (2026-04-05)
+
+### Features
+* feat: assert npm version for npm oidc flow ([647c612](https://github.com/semrel-extra/zx-bulk-release/commit/647c612f5ced01c8230ae1f625bbb6920f1e789d))
+
+### Fixes & improvements
+* fix: enable --debug info strem ([3a8ef02](https://github.com/semrel-extra/zx-bulk-release/commit/3a8ef02974a7b7a1fd8624041a37a2203cd6ec56))
+
 ## [2.18.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.2...v2.18.3) (2026-04-05)
 
 ### Fixes & improvements
