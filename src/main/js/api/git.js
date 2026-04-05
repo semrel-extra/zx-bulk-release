@@ -109,9 +109,16 @@ export const getTags = async (cwd, ref) =>
 
 export const pushTag = async ({cwd, tag, gitCommitterName, gitCommitterEmail}) => {
   await setUserConfig(cwd, gitCommitterName, gitCommitterEmail)
+
   await $({cwd})`
     git tag -m ${tag} ${tag} &&
     git push origin ${tag}`
+}
+
+export const deleteRemoteTag = async ({cwd, tag}) => {
+  log()(`rolling back remote tag '${tag}'`)
+  await $({cwd, nothrow: true})`git push origin :refs/tags/${tag}`
+  await $({cwd, nothrow: true})`git tag -d ${tag}`
 }
 
 // Memoize prevents .git/config lock
