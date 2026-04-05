@@ -93,6 +93,15 @@ By default, changelog entries link to GitHub compare/commit pages. Override `dif
 ```
 Available variables: `repoName`, `repoPublicUrl`, `prevTag`, `newTag`, `name`, `version`, `hash`, `short`.
 
+#### GitHub Enterprise
+Set `ghUrl` to point to your GHE instance. API URL (`ghApiUrl`) is derived automatically.
+```json
+{
+  "ghUrl": "https://ghe.corp.com"
+}
+```
+Or via env: `GH_URL=https://ghe.corp.com` / `GITHUB_URL=https://ghe.corp.com`.
+
 ### env vars
 ```js
 export const parseEnv = (env = process.env) => {
