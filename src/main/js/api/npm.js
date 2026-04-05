@@ -86,6 +86,11 @@ export const npmPublish = async (pkg) => {
   // OIDC trusted publishing: no auth token must be present for npm to use OIDC flow.
   // https://docs.npmjs.com/trusted-publishers/
   if (npmOidc) {
+    const npmVersion = (await $`npm --version`).toString().trim()
+    const [major, minor] = npmVersion.split('.').map(Number)
+    if (major < 11 || (major === 11 && minor < 5)) {
+      throw new Error(`npm OIDC trusted publishing requires npm >= 11.5.0, got ${npmVersion}`)
+    }
     log({pkg})('npm publish: OIDC trusted publishing enabled')
     npmFlags.push('--provenance')
   } else {
