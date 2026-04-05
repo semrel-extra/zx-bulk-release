@@ -6,6 +6,7 @@ import {topo, traverseQueue} from './deps.js'
 import {createReport} from '../log.js'
 import {exec} from './exec.js'
 import {contextify, recover} from '../steps/contextify.js'
+import {fetchTags} from '../api/git.js'
 import {analyze} from '../steps/analyze.js'
 import {build} from '../steps/build.js'
 import {publish} from '../steps/publish.js'
@@ -31,6 +32,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
   // --recover: standalone mode — clean orphan tags and exit.
   // Run the full pipeline again after this to rebuild and publish affected packages.
   if (flags.recover) {
+    await fetchTags(cwd)
     let recovered = 0
     for (const name of queue) {
       const pkg = packages[name]
