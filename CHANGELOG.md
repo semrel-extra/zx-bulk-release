@@ -1,3 +1,8 @@
+## [2.20.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.19.1...v2.20.0) (2026-04-05)
+
+### Features
+* feat: support custom ghe urls (#89) ([e33d53c](https://github.com/semrel-extra/zx-bulk-release/commit/e33d53cfe4ac15d8fd66785622d9df428a15d8e6))
+
 ## [2.19.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.19.0...v2.19.1) (2026-04-05)
 
 ### Fixes & improvements
