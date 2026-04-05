@@ -1,3 +1,8 @@
+## [2.18.3](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.2...v2.18.3) (2026-04-05)
+
+### Fixes & improvements
+* fix: use default gh username ([5f3ae20](https://github.com/semrel-extra/zx-bulk-release/commit/5f3ae20f4977b8c1f1d09a7367d15d78c211e6a8))
+
 ## [2.18.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.1...v2.18.2) (2026-04-05)
 
 ### Fixes & improvements
