@@ -104,6 +104,7 @@ export const createContext = async ({flags, env: _env, cwd}) => {
   $.report =        report
   $.env =           env
   $.verbose =       !!(flags.debug || $.env.DEBUG ) || $.verbose
+  $.quiet =         !$.verbose
 
   return {
     report,
