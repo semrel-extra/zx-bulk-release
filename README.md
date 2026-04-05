@@ -77,9 +77,21 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
   "cmd": "yarn && yarn build && yarn test",
   "npmFetch": true,
   "changelog": "changelog",
-  "ghPages": "gh-pages"
+  "ghPages": "gh-pages",
+  "diffTagUrl": "${repoPublicUrl}/compare/${prevTag}...${newTag}",
+  "diffCommitUrl": "${repoPublicUrl}/commit/${hash}"
 }
 ```
+
+#### Changelog diff URLs
+By default, changelog entries link to GitHub compare/commit pages. Override `diffTagUrl` and `diffCommitUrl` to customize for other platforms (e.g. Gerrit):
+```json
+{
+  "diffTagUrl": "https://gerrit.foo.com/plugins/gitiles/${repoName}/+/refs/tags/${newTag}",
+  "diffCommitUrl": "https://gerrit.foo.com/plugins/gitiles/${repoName}/+/${hash}%5E%21"
+}
+```
+Available variables: `repoName`, `repoPublicUrl`, `prevTag`, `newTag`, `name`, `version`, `hash`, `short`.
 
 ### env vars
 ```js
@@ -87,7 +99,7 @@ export const parseEnv = (env = process.env) => {
   const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
 
   return {
-    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
+    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME || 'x-access-token',
     ghToken:            GH_TOKEN || GITHUB_TOKEN,
     npmToken:           NPM_TOKEN,
     // npmConfig suppresses npmToken
