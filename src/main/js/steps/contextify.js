@@ -29,6 +29,7 @@ export const rollbackRelease = async (pkg) => {
 
   const cwd = pkg.context.git.root
   const {ghBasicAuth: basicAuth, ghToken, gitCommitterName, gitCommitterEmail} = pkg.config
+  if (!basicAuth) throw new Error('rollback requires git credentials (GH_TOKEN)')
   const {repoName} = await getRepo(cwd, {basicAuth})
 
   log({pkg})(`rollback: cleaning up failed release for tag '${tag}'`)
@@ -98,6 +99,7 @@ export const recover = async (pkg) => {
 
   const cwd = await getRoot(pkg.absPath)
   const {ghBasicAuth: basicAuth, ghToken, gitCommitterName, gitCommitterEmail} = pkg.config
+  if (!basicAuth) throw new Error('recover requires git credentials (GH_TOKEN)')
   const {repoName} = await getRepo(cwd, {basicAuth})
 
   log({pkg})(`recover: tag '${tag.ref}' exists but ${pkg.name}@${tag.version} not found on npm, rolling back failed release`)

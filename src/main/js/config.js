@@ -58,7 +58,7 @@ export const normalizeMetaConfig = (meta) =>
 
 export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) =>
   ({
-    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME,
+    ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME || ((GH_TOKEN || GITHUB_TOKEN) ? 'x-access-token' : undefined),
     ghToken:            GH_TOKEN || GITHUB_TOKEN,
     ghMeta:             GH_META,
     npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
