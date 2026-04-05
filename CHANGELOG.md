@@ -1,3 +1,8 @@
+## [2.18.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.17.0...v2.18.0) (2026-04-05)
+
+### Features
+* feat: introduce recovery mode ([2f15fd8](https://github.com/semrel-extra/zx-bulk-release/commit/2f15fd83cfb41a4a55a4ab12d880c00e24c5c717))
+
 ## [2.17.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.16.2...v2.17.0) (2026-04-05)
 
 ### Features
