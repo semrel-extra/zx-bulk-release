@@ -1,3 +1,8 @@
+## [2.18.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.1...v2.18.2) (2026-04-05)
+
+### Fixes & improvements
+* fix: enhance recovery ([2bb5c4d](https://github.com/semrel-extra/zx-bulk-release/commit/2bb5c4dbd9ccf9a54ecc26065f5693517b815472))
+
 ## [2.18.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.18.0...v2.18.1) (2026-04-05)
 
 ### Fixes & improvements
