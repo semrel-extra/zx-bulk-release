@@ -1,3 +1,8 @@
+## [2.16.2](https://github.com/semrel-extra/zx-bulk-release/compare/v2.16.1...v2.16.2) (2026-04-05)
+
+### Fixes & improvements
+* fix: handle tarball error ([3fb2fb7](https://github.com/semrel-extra/zx-bulk-release/commit/3fb2fb7a3ff8820a6499275737ea9a74bc281f0b))
+
 ## [2.16.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.16.0...v2.16.1) (2026-04-04)
 
 ### Fixes & improvements
