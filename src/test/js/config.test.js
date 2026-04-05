@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {parseEnv, normalizeMetaConfig} from '../../main/js/config.js'
+import {parseEnv, normalizeMetaConfig, GH_URL} from '../../main/js/config.js'
 
 const test = suite('config')
 
@@ -61,6 +61,31 @@ test('normalizeMetaConfig(true) defaults to commit', () => {
 
 test('normalizeMetaConfig("asset") sets asset type', () => {
   assert.is(normalizeMetaConfig('asset').type, 'asset')
+})
+
+test('GH_URL defaults to https://github.com', () => {
+  assert.is(GH_URL, 'https://github.com')
+})
+
+test('parseEnv() defaults ghUrl', () => {
+  assert.is(parseEnv({}).ghUrl, 'https://github.com')
+})
+
+test('parseEnv() picks GH_URL', () => {
+  assert.is(parseEnv({GH_URL: 'https://ghe.corp.com'}).ghUrl, 'https://ghe.corp.com')
+})
+
+test('parseEnv() picks GITHUB_URL as fallback', () => {
+  assert.is(parseEnv({GITHUB_URL: 'https://ghe.corp.com'}).ghUrl, 'https://ghe.corp.com')
+})
+
+test('parseEnv() ghApiUrl defaults to api.github.com', () => {
+  assert.is(parseEnv({}).ghApiUrl, 'https://api.github.com')
+})
+
+test('parseEnv() ghApiUrl resolves /api/v3 for GHE', () => {
+  assert.is(parseEnv({GH_URL: 'https://ghe.corp.com'}).ghApiUrl, 'https://ghe.corp.com/api/v3')
+  assert.is(parseEnv({GH_URL: 'https://ghe.corp.com/'}).ghApiUrl, 'https://ghe.corp.com/api/v3')
 })
 
 test.run()

@@ -28,7 +28,7 @@ export const rollbackRelease = async (pkg) => {
   if (!tag) return
 
   const cwd = pkg.context.git.root
-  const {ghBasicAuth: basicAuth, ghToken, gitCommitterName, gitCommitterEmail} = pkg.config
+  const {ghBasicAuth: basicAuth, ghToken, ghApiUrl, gitCommitterName, gitCommitterEmail} = pkg.config
   if (!basicAuth) throw new Error('rollback requires git credentials (GH_TOKEN)')
   const {repoName} = await getRepo(cwd, {basicAuth})
 
@@ -37,12 +37,12 @@ export const rollbackRelease = async (pkg) => {
   // 1. Delete GitHub release
   if (ghToken) {
     try {
-      const res = await fetch(`https://api.github.com/repos/${repoName}/releases/tags/${tag}`, {
+      const res = await fetch(`${ghApiUrl}/repos/${repoName}/releases/tags/${tag}`, {
         headers: {Authorization: `token ${ghToken}`, 'X-GitHub-Api-Version': '2022-11-28'}
       })
       if (res.ok) {
         const {id} = await res.json()
-        await fetch(`https://api.github.com/repos/${repoName}/releases/${id}`, {
+        await fetch(`${ghApiUrl}/repos/${repoName}/releases/${id}`, {
           method: 'DELETE',
           headers: {Authorization: `token ${ghToken}`, 'X-GitHub-Api-Version': '2022-11-28'}
         })
@@ -98,7 +98,7 @@ export const recover = async (pkg) => {
   if (manifest) return false
 
   const cwd = await getRoot(pkg.absPath)
-  const {ghBasicAuth: basicAuth, ghToken, gitCommitterName, gitCommitterEmail} = pkg.config
+  const {ghBasicAuth: basicAuth, ghToken, ghApiUrl, gitCommitterName, gitCommitterEmail} = pkg.config
   if (!basicAuth) throw new Error('recover requires git credentials (GH_TOKEN)')
   const {repoName} = await getRepo(cwd, {basicAuth})
 
@@ -107,12 +107,12 @@ export const recover = async (pkg) => {
   // 1. Delete GitHub release (also removes attached meta assets)
   if (ghToken) {
     try {
-      const res = await fetch(`https://api.github.com/repos/${repoName}/releases/tags/${tag.ref}`, {
+      const res = await fetch(`${ghApiUrl}/repos/${repoName}/releases/tags/${tag.ref}`, {
         headers: {Authorization: `token ${ghToken}`, 'X-GitHub-Api-Version': '2022-11-28'}
       })
       if (res.ok) {
         const {id} = await res.json()
-        await fetch(`https://api.github.com/repos/${repoName}/releases/${id}`, {
+        await fetch(`${ghApiUrl}/repos/${repoName}/releases/${id}`, {
           method: 'DELETE',
           headers: {Authorization: `token ${ghToken}`, 'X-GitHub-Api-Version': '2022-11-28'}
         })

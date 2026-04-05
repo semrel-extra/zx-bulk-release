@@ -58,10 +58,18 @@ export const normalizeMetaConfig = (meta) =>
         ? { type: meta } // 'commit' | 'asset' | 'tag'
         : { type: null }
 
-export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) =>
-  ({
+export const GH_URL = 'https://github.com'
+
+const resolveGhApiUrl = (ghUrl) =>
+  ghUrl === GH_URL ? 'https://api.github.com' : `${ghUrl.replace(/\/$/, '')}/api/v3`
+
+export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GH_URL: _GH_URL, GITHUB_URL, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) => {
+  const ghUrl = _GH_URL || GITHUB_URL || GH_URL
+  return {
     ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME || ((GH_TOKEN || GITHUB_TOKEN) ? 'x-access-token' : undefined),
     ghToken:            GH_TOKEN || GITHUB_TOKEN,
+    ghUrl,
+    ghApiUrl:           resolveGhApiUrl(ghUrl),
     ghMeta:             GH_META,
     npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
     npmToken:           NPM_TOKEN,
@@ -70,6 +78,7 @@ export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GITHUB_USER, GITHUB_USE
     npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
     gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
     gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
-  })
+  }
+}
 
 export const normalizeFlags = (flags = {}) => Object.entries(flags).reduce((acc, [k, v]) => ({...acc, [camelize(k)]: v}), {})

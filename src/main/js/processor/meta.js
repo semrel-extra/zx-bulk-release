@@ -217,11 +217,11 @@ export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g,
 
 export const getLatestMeta = async (pkg, tag) => {
   if (tag) {
-    const {absPath: cwd, config: {ghBasicAuth: basicAuth}} = pkg
+    const {absPath: cwd, config: {ghBasicAuth: basicAuth, ghUrl}} = pkg
     const {repoName} = await getRepo(cwd, {basicAuth})
 
     try {
-      return JSON.parse(await ghGetAsset({repoName, tag, name: 'meta.json'}))
+      return JSON.parse(await ghGetAsset({repoName, tag, name: 'meta.json', ghUrl}))
     } catch {}
 
     try {

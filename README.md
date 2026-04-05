@@ -96,11 +96,12 @@ Available variables: `repoName`, `repoPublicUrl`, `prevTag`, `newTag`, `name`, `
 ### env vars
 ```js
 export const parseEnv = (env = process.env) => {
-  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
+  const {GH_USER, GH_USERNAME, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, GH_URL, GITHUB_URL, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = env
 
   return {
     ghUser:             GH_USER || GH_USERNAME || GITHUB_USER || GITHUB_USERNAME || 'x-access-token',
     ghToken:            GH_TOKEN || GITHUB_TOKEN,
+    ghUrl:              GH_URL || GITHUB_URL || 'https://github.com',
     npmToken:           NPM_TOKEN,
     // npmConfig suppresses npmToken
     npmConfig:          NPMRC || NPM_USERCONFIG || NPM_CONFIG_USERCONFIG,
