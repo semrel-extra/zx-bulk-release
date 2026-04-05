@@ -26,6 +26,10 @@ export const fetchPkg = async (pkg) => {
     })
     clearTimeout(timeoutId)
 
+    if (!tarball.ok) {
+      throw new Error(`registry responded with ${tarball.status} for ${tarballUrl}`)
+    }
+
     await unzip(pipify(tarball.body), {cwd, strip: 1, omit: ['package.json']})
 
     log({pkg})(`fetch duration '${id}': ${Date.now() - now}`)
