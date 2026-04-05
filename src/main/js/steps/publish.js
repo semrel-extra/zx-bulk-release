@@ -5,7 +5,7 @@ import {npmPersist, npmPublish} from '../api/npm.js'
 import {prepareMeta, pushMeta, pushReleaseTag} from '../processor/meta.js'
 import {pushChangelog} from '../api/changelog.js'
 import {ghPages, ghRelease} from '../api/gh.js'
-import {deleteRemoteTag} from '../api/git.js'
+import {rollbackRelease} from './contextify.js'
 
 export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
   $.scope = pkg.name
@@ -34,13 +34,11 @@ export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
         run(pkg, 'publishCmd')
       ])
     } catch (e) {
-      // Rollback the tag only for npm-published packages so the next run can retry.
+      // Rollback the entire failed release for npm-published packages.
       // Git-tag-only packages (private or npmPublish: false) keep their tag — it IS the release.
       const needsNpm = !pkg.manifest.private && pkg.config.npmPublish !== false
-      const cwd = pkg.context.git.root
-      const tag = pkg.context.git.tag
-      if (tag && needsNpm) {
-        await deleteRemoteTag({cwd, tag})
+      if (needsNpm) {
+        await rollbackRelease(pkg)
       }
       throw e
     }

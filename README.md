@@ -50,7 +50,7 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 | `--dry-run` / `--no-publish` | Disable any publish logic                                                                                                 |                  |
 | `--report`                   | Persist release state to file                                                                                             |                  |
 | `--snapshot`                 | Disable any publishing steps except of `npm` and `publishCmd` (if defined), then  push packages to the `snapshot` channel |                  |  
-| `--recover`                  | Remove orphan git tags (tag pushed but npm publish failed) and retry release                                               |                  |
+| `--recover`                  | Remove orphan git tags (tag exists but npm publish failed) and exit. Re-run without this flag to release.                  |                  |
 | `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode                                                            |                  |
 | `--version` / `-v`           | Print own version                                                                                                         |                  |
 

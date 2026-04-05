@@ -5,7 +5,7 @@ import {queuefy} from 'queuefy'
 import {topo, traverseQueue} from './deps.js'
 import {createReport} from '../log.js'
 import {exec} from './exec.js'
-import {contextify} from '../steps/contextify.js'
+import {contextify, recover} from '../steps/contextify.js'
 import {analyze} from '../steps/analyze.js'
 import {build} from '../steps/build.js'
 import {publish} from '../steps/publish.js'
@@ -27,6 +27,19 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     .log()(`zx-bulk-release@${zbrVersion}`)
     .log()('queue:', queue)
     .log()('graphs', graphs)
+
+  // --recover: standalone mode — clean orphan tags and exit.
+  // Run the full pipeline again after this to rebuild and publish affected packages.
+  if (flags.recover) {
+    let recovered = 0
+    for (const name of queue) {
+      const pkg = packages[name]
+      await contextify(pkg, context)
+      if (await recover(pkg)) recovered++
+    }
+    report.log()(`recover: cleaned ${recovered} orphan tag(s)`)
+    return
+  }
 
   try {
     await traverseQueue({queue, prev, async cb(name) {
