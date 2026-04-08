@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {interpolate, DIFF_TAG_URL, DIFF_COMMIT_URL} from '../../main/js/processor/release-notes.js'
+import {interpolate, DIFF_TAG_URL, DIFF_COMMIT_URL} from '../../main/js/processor/notes.js'
 
 const test = suite('changelog')
 

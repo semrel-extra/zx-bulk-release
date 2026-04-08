@@ -9,19 +9,13 @@
 import {log} from '../log.js'
 import {deleteRemoteTag, getRoot} from '../api/git.js'
 import {fetchManifest} from '../api/npm.js'
+import {isNpmPublished, publishers} from './publishers.js'
 
-// Domain predicate: does this package get published to npm?
-// Private packages and those with `npmPublish: false` are git-tag-only —
-// the tag itself IS the release, so teardown doesn't apply in standalone mode.
-export const isNpmPublished = (pkg) =>
-  !pkg.manifest.private && pkg.config.npmPublish !== false
+export {isNpmPublished}
 
 // Tear down a release: undo every applicable publisher, then delete the git tag.
 // Failures in individual undo steps are warned, not thrown — teardown is best-effort.
 const teardownRelease = async (pkg, {tag, version, reason}) => {
-  // Lazy import to break the circular dependency (publishers → teardown → publishers).
-  const {publishers} = await import('./publishers.js')
-
   const cwd = await getRoot(pkg.absPath)
   if (!pkg.config.ghBasicAuth) throw new Error(`${reason} requires git credentials (GH_TOKEN)`)
 
