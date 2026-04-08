@@ -1,10 +1,7 @@
-import {queuefy} from 'queuefy'
+// Low-level GitHub API primitives. No domain knowledge, no imports from processor/ or steps/.
+
 import {$, path, tempy, glob, fs, fetch} from 'zx-extra'
-import {log} from '../log.js'
-import {getRepo, pushCommit} from './git.js'
-import {formatTag} from '../processor/tag.js'
-import {formatReleaseNotes} from '../processor/notes.js'
-import {asArray, asTuple, attempt2, getCommonPath, msgJoin} from '../util.js'
+import {asArray, attempt2, getCommonPath} from '../../util.js'
 
 export const GH_API_VERSION = '2022-11-28'
 export const GH_ACCEPT = 'application/vnd.github.v3+json'
@@ -20,6 +17,20 @@ export const ghFetch = (url, {ghToken, method = 'GET', headers, body} = {}) => f
   body,
 })
 
+// https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release
+export const ghCreateRelease = async ({ghApiUrl, ghToken, repoName, tag, body}) => {
+  const res = await (await ghFetch(`${ghApiUrl}/repos/${repoName}/releases`, {
+    ghToken,
+    method: 'POST',
+    body: JSON.stringify({name: tag, tag_name: tag, body}),
+  })).json()
+
+  if (!res.upload_url) {
+    throw new Error(`gh release failed: ${JSON.stringify(res)}`)
+  }
+  return res
+}
+
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#delete-a-release
 export const ghDeleteReleaseByTag = async ({ghApiUrl, ghToken, repoName, tag}) => {
   const res = await attempt2(() => ghFetch(`${ghApiUrl}/repos/${repoName}/releases/tags/${tag}`, {ghToken}))
@@ -29,64 +40,7 @@ export const ghDeleteReleaseByTag = async ({ghApiUrl, ghToken, repoName, tag}) =
   return true
 }
 
-// https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release
-export const ghRelease = async (pkg) => {
-  const {ghBasicAuth: basicAuth, ghToken, ghAssets, ghApiUrl} = pkg.config
-  if (!ghToken) return null
-
-  log({pkg})('create gh release')
-
-  const now = Date.now()
-  const {name, version, absPath: cwd, tag = formatTag({name, version})} = pkg
-  const {repoName} = await getRepo(cwd, {basicAuth})
-  const releaseNotes = await formatReleaseNotes(pkg)
-  const releaseData = JSON.stringify({
-    name: tag,
-    tag_name: tag,
-    body: releaseNotes
-  })
-
-  const res = await (await ghFetch(`${ghApiUrl}/repos/${repoName}/releases`, {
-    ghToken,
-    method: 'POST',
-    body: releaseData,
-  })).json()
-
-  if (!res.upload_url) {
-    throw new Error(`gh release failed: ${JSON.stringify(res)}`)
-  }
-
-  if (ghAssets?.length) {
-    // Lol. GH API literally returns pseudourl `...releases/110103594/assets{?name,label}` as shown in the docs
-    const uploadUrl = res.upload_url.slice(0, res.upload_url.indexOf('{'))
-    await ghUploadAssets({ghToken, ghAssets, uploadUrl, cwd})
-  }
-
-  log({pkg})(`duration gh release: ${Date.now() - now}`)
-}
-
-export const ghPages = queuefy(async (pkg) => {
-  const {config: {ghPages: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
-  if (!opts) return
-
-  const [branch = 'gh-pages', from = 'docs', to = '.', ..._msg] = asTuple(opts, ['branch', 'from', 'to', 'msg'])
-  const msg = msgJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}')
-
-  log({pkg})(`publish docs to ${branch}`)
-
-  await pushCommit({
-    cwd: path.join(pkg.absPath, from),
-    from: '.',
-    to,
-    branch,
-    msg,
-    gitCommitterEmail,
-    gitCommitterName,
-    basicAuth
-  })
-})
-
-// https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset8
+// https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
 export const ghPrepareAssets = async (assets, _cwd) => {
   const temp = tempy.temporaryDirectory()
 

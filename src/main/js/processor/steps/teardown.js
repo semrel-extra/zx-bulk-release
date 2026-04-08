@@ -6,16 +6,14 @@
 //
 // Teardown walks the publishers registry in reverse and calls undo() on each that applies.
 
-import {log} from '../log.js'
+import {log} from '../../log.js'
 import {deleteRemoteTag, getRoot} from '../api/git.js'
 import {fetchManifest} from '../api/npm.js'
-import {isNpmPublished, publishers} from './publishers.js'
-
-export {isNpmPublished}
+import {isNpmPublished} from '../publishers/npm.js'
 
 // Tear down a release: undo every applicable publisher, then delete the git tag.
 // Failures in individual undo steps are warned, not thrown — teardown is best-effort.
-const teardownRelease = async (pkg, {tag, version, reason}) => {
+const teardownRelease = async (pkg, {publishers}, {tag, version, reason}) => {
   const cwd = await getRoot(pkg.absPath)
   if (!pkg.config.ghBasicAuth) throw new Error(`${reason} requires git credentials (GH_TOKEN)`)
 
@@ -34,15 +32,15 @@ const teardownRelease = async (pkg, {tag, version, reason}) => {
 
 // Rollback a release that failed mid-publish (called inline from publish.js).
 // Uses the current release tag; skips the npm existence check — we already know it failed.
-export const rollbackRelease = async (pkg) => {
+export const rollbackRelease = async (pkg, ctx) => {
   const tag = pkg.context.git.tag
   if (!tag) return
   log({pkg})(`rollback: cleaning up failed release for tag '${tag}'`)
-  await teardownRelease(pkg, {tag, version: pkg.version, reason: 'rollback'})
+  await teardownRelease(pkg, ctx, {tag, version: pkg.version, reason: 'rollback'})
 }
 
 // Standalone recovery: if a tag exists but the package is missing from npm, treat it as an orphan and tear down.
-export const recover = async (pkg) => {
+export const recover = async (pkg, ctx) => {
   if (!isNpmPublished(pkg)) return false
 
   const {tag} = pkg.latest
@@ -56,6 +54,6 @@ export const recover = async (pkg) => {
   if (manifest) return false
 
   log({pkg})(`recover: tag '${tag.ref}' exists but ${pkg.name}@${tag.version} not found on npm, rolling back failed release`)
-  await teardownRelease(pkg, {tag: tag.ref, version: tag.version, reason: 'recover'})
+  await teardownRelease(pkg, ctx, {tag: tag.ref, version: tag.version, reason: 'recover'})
   return true
 }
