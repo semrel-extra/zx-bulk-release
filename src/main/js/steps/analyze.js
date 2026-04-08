@@ -46,27 +46,21 @@ export const getSemanticChanges = async (cwd, from, to, rules = semanticRules) =
   return analyzeCommits(commits, rules)
 }
 
-export const analyzeCommits = (commits, rules) =>
-  commits.reduce((acc, {subj, body, short, hash}) => {
-    rules.forEach(({group, releaseType, prefixes, keywords}) => {
-      const prefixMatcher = prefixes && new RegExp(`^(${prefixes.join('|')})(\\([a-zA-Z0-9\\-_,]+\\))?:\\s.+$`)
-      const keywordsMatcher = keywords && new RegExp(`(${keywords.join('|')}):\\s(.+)`)
-      const change = subj.match(prefixMatcher)?.[0] || body.match(keywordsMatcher)?.[2]
+export const analyzeCommits = (commits, rules) => {
+  const prepared = rules.map(({group, releaseType, prefixes, keywords}) => [
+    group,
+    releaseType,
+    prefixes && new RegExp(`^(${prefixes.join('|')})(\\([a-zA-Z0-9\\-_,]+\\))?:\\s.+$`),
+    keywords && new RegExp(`(${keywords.join('|')}):\\s(.+)`),
+  ])
 
-      if (change) {
-        acc.push({
-          group,
-          releaseType,
-          change,
-          subj,
-          body,
-          short,
-          hash
-        })
-      }
+  return commits.flatMap((commit) =>
+    prepared.flatMap(([group, releaseType, prefixRe, keywordRe]) => {
+      const change = prefixRe?.exec(commit.subj)?.[0] || keywordRe?.exec(commit.body)?.[2]
+      return change ? [{group, releaseType, change, ...commit}] : []
     })
-    return acc
-  }, [])
+  )
+}
 
 export const getNextReleaseType = (changes) => changes.length
   ? releaseSeverityOrder.find(type => changes.find(({releaseType}) => type === releaseType))
