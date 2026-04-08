@@ -1,6 +1,6 @@
 import {$, fs, path, tempy, copy} from 'zx-extra'
 import {log} from '../log.js'
-import {memoizeBy} from '../util.js'
+import {attempt2, attempt3, memoizeBy} from '../util.js'
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => {
   const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl
@@ -18,8 +18,6 @@ export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, b
 }, async ({cwd, branch}) => `${await getRoot(cwd)}:${branch}`)
 
 export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => {
-  let retries = 3
-
   const _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
   const _$ = $({cwd: _cwd})
 
@@ -38,21 +36,14 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
     return
   }
 
-  while (retries > 0) {
-    try {
-      return await _$`git push origin HEAD:refs/heads/${branch}`
-    } catch (e) {
-      retries -= 1
-      log({level: 'error'})('git push failed', 'branch', branch, 'retries left', retries, e)
-
-      if (retries === 0) {
-        throw e
-      }
-
-      await _$`git fetch origin ${branch} &&
-              git rebase origin/${branch}`
+  return attempt3(
+    () => _$`git push origin HEAD:refs/heads/${branch}`,
+    (e) => {
+      log({level: 'warn'})('git push failed, rebasing', 'branch', branch, e)
+      return attempt2(() => _$`git fetch origin ${branch} &&
+              git rebase origin/${branch}`)
     }
-  }
+  )
 }
 
 export const getSha = async (cwd) => (await $({cwd})`git rev-parse HEAD`).toString().trim()
