@@ -38,6 +38,19 @@ export const msgJoin = (rest, context, def) => tpl(rest.filter(Boolean).join(' '
 
 export const keyByValue = (obj, value) => Object.keys(obj).find((key) => obj[key] === value)
 
+export const attempt = async (times, action, fix) => {
+  for (let i = times; i > 0; i--) {
+    try { return await action() }
+    catch (e) {
+      if (i === 1 || !fix) throw e
+      await fix(e)
+    }
+  }
+}
+
+export const attempt2 = (action, fix) => attempt(2, action, fix)
+export const attempt3 = (action, fix) => attempt(3, action, fix)
+
 export const memoizeBy = (fn, getKey = v => v, memo = new Map()) => async (...args) => {
   const key = await getKey(...args)
   if (memo.has(key)) {
