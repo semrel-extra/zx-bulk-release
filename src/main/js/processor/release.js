@@ -5,14 +5,23 @@ import {queuefy} from 'queuefy'
 import {topo, traverseQueue} from './deps.js'
 import {createReport} from '../log.js'
 import {exec} from './exec.js'
-import {contextify} from '../steps/contextify.js'
-import {recover} from '../steps/teardown.js'
-import {fetchTags} from '../api/git.js'
-import {analyze} from '../steps/analyze.js'
-import {build} from '../steps/build.js'
-import {publish} from '../steps/publish.js'
-import {clean} from '../steps/clean.js'
-import {test} from '../steps/test.js'
+import {contextify} from './steps/contextify.js'
+import {recover} from './steps/teardown.js'
+import {fetchTags} from './api/git.js'
+import {analyze} from './steps/analyze.js'
+import {build} from './steps/build.js'
+import {publish} from './steps/publish.js'
+import {clean} from './steps/clean.js'
+import {test} from './steps/test.js'
+import meta from './publishers/meta.js'
+import npm from './publishers/npm.js'
+import ghRelease from './publishers/gh-release.js'
+import ghPages from './publishers/gh-pages.js'
+import changelog from './publishers/changelog.js'
+import cmd from './publishers/cmd.js'
+
+// Publisher registry. Order = publish order; teardown walks it in reverse.
+const publishers = [meta, npm, ghRelease, ghPages, changelog, cmd]
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   const {version: zbrVersion} = createRequire(import.meta.url)('../../../../package.json')
@@ -23,7 +32,8 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
 
   const context = await createContext({flags, env, cwd})
   const {report, packages, queue, prev, graphs} = context
-  const _exec = queuefy(exec, flags.concurrency || os.cpus().length)
+  context.run = queuefy(exec, flags.concurrency || os.cpus().length)
+  context.publishers = publishers
 
   report
     .log()(`zx-bulk-release@${zbrVersion}`)
@@ -38,29 +48,31 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     for (const name of queue) {
       const pkg = packages[name]
       await contextify(pkg, context)
-      if (await recover(pkg)) recovered++
+      if (await recover(pkg, context)) recovered++
     }
     report.log()(`recover: cleaned ${recovered} orphan tag(s)`)
     return
   }
 
   try {
-    await traverseQueue({queue, prev, async cb(name) {
+    await traverseQueue({queue, prev, cb: (name) => within(async () => {
+      $.scope = name
       report.setStatus('analyzing', name)
       const pkg = packages[name]
       await contextify(pkg, context)
-      await analyze(pkg)
+      await analyze(pkg, context)
       report
         .set('config', pkg.config, name)
         .set('version', pkg.version, name)
         .set('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
         .set('releaseType', pkg.releaseType, name)
         .set('tag', pkg.tag, name)
-    }})
+    })})
 
     report.setStatus('pending')
 
-    await traverseQueue({queue, prev, async cb(name) {
+    await traverseQueue({queue, prev, cb: (name) => within(async () => {
+      $.scope = name
       const pkg = packages[name]
 
       if (!pkg.releaseType) {
@@ -70,19 +82,19 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
       }
       if (flags.build !== false) {
         report.setStatus('building', name)
-        await build(pkg, _exec)
+        await build(pkg, context)
       }
       if (flags.test !== false) {
         report.setStatus('testing', name)
-        await test(pkg, _exec)
+        await test(pkg, context)
       }
       if (!flags.dryRun && flags.publish !== false) {
         report.setStatus('publishing', name)
-        await publish(pkg, _exec)
+        await publish(pkg, context)
       }
 
       report.setStatus('success', name)
-    }})
+    })})
   } catch (e) {
     report
       .log({level: 'error'})(e, e.stack)
@@ -90,7 +102,7 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
       .setStatus('failure')
     throw e
   } finally {
-    await clean(cwd, packages)
+    await clean(null, context)
   }
   report
     .setStatus('success')
@@ -115,6 +127,7 @@ export const createContext = async ({flags, env: _env, cwd}) => {
     prev,
     graphs,
     flags,
-    env
+    env,
+    cwd,
   }
 }

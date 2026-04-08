@@ -1,10 +1,10 @@
 import {semver} from 'zx-extra'
-import {log} from '../log.js'
+import {log} from '../../log.js'
 import {getCommits} from '../api/git.js'
-import {updateDeps} from '../processor/deps.js'
-import {formatTag} from '../processor/tag.js'
+import {updateDeps} from '../deps.js'
+import {formatTag} from '../generators/tag.js'
 
-export const analyze = async (pkg) => {
+export const analyze = async (pkg, ctx) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref, undefined, pkg.config.releaseRules)
   const depsChanges = await updateDeps(pkg)
   const changes = [...semanticChanges, ...depsChanges]

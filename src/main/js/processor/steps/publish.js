@@ -1,14 +1,21 @@
-import {memoizeBy} from '../util.js'
-import {exec} from '../processor/exec.js'
-import {$, within} from 'zx-extra'
+import {memoizeBy} from '../../util.js'
+import {exec} from '../exec.js'
+import {log} from '../../log.js'
 import {npmPersist} from '../api/npm.js'
-import {pushReleaseTag} from '../processor/meta.js'
-import {publishers, isNpmPublished} from './publishers.js'
+import {pushTag} from '../api/git.js'
+import {formatTag} from '../generators/tag.js'
+import {isNpmPublished} from '../publishers/npm.js'
 import {rollbackRelease} from './teardown.js'
 
-export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
-  $.scope = pkg.name
+const pushReleaseTag = async (pkg) => {
+  const {name, version, tag = formatTag({name, version}), config: {gitCommitterEmail, gitCommitterName}} = pkg
+  pkg.context.git.tag = tag
+  log({pkg})(`push release tag ${tag}`)
+  await pushTag({cwd: pkg.context.git.root, tag, gitCommitterEmail, gitCommitterName})
+}
 
+export const publish = memoizeBy(async (pkg, ctx) => {
+  const {run = exec, publishers = []} = ctx
   if (pkg.version !== pkg.manifest.version) {
     throw new Error('package.json version not synced')
   }
@@ -34,10 +41,10 @@ export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
       // Rollback the entire failed release for npm-published packages.
       // Git-tag-only packages (private or npmPublish: false) keep their tag — it IS the release.
       if (isNpmPublished(pkg)) {
-        await rollbackRelease(pkg)
+        await rollbackRelease(pkg, ctx)
       }
       throw e
     }
   }
   pkg.published = true
-}))
+})
