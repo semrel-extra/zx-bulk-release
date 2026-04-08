@@ -6,6 +6,29 @@ import {formatTag} from '../processor/meta.js'
 import {formatReleaseNotes} from './changelog.js'
 import {asArray, getCommonPath, msgJoin} from '../util.js'
 
+export const GH_API_VERSION = '2022-11-28'
+export const GH_ACCEPT = 'application/vnd.github.v3+json'
+
+export const ghFetch = (url, {ghToken, method = 'GET', headers, body} = {}) => fetch(url, {
+  method,
+  headers: {
+    Accept: GH_ACCEPT,
+    'X-GitHub-Api-Version': GH_API_VERSION,
+    ...(ghToken ? {Authorization: `token ${ghToken}`} : {}),
+    ...headers,
+  },
+  body,
+})
+
+// https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#delete-a-release
+export const ghDeleteReleaseByTag = async ({ghApiUrl, ghToken, repoName, tag}) => {
+  const res = await ghFetch(`${ghApiUrl}/repos/${repoName}/releases/tags/${tag}`, {ghToken})
+  if (!res.ok) return false
+  const {id} = await res.json()
+  await ghFetch(`${ghApiUrl}/repos/${repoName}/releases/${id}`, {ghToken, method: 'DELETE'})
+  return true
+}
+
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release
 export const ghRelease = async (pkg) => {
   const {ghBasicAuth: basicAuth, ghToken, ghAssets, ghApiUrl} = pkg.config
@@ -23,14 +46,10 @@ export const ghRelease = async (pkg) => {
     body: releaseNotes
   })
 
-  const res = await (await fetch(`${ghApiUrl}/repos/${repoName}/releases`, {
+  const res = await (await ghFetch(`${ghApiUrl}/repos/${repoName}/releases`, {
+    ghToken,
     method: 'POST',
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      Authorization: `token ${ghToken}`,
-      'X-GitHub-Api-Version': '2022-11-28'
-    },
-    body: releaseData
+    body: releaseData,
   })).json()
 
   if (!res.upload_url) {
@@ -109,15 +128,11 @@ export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
   return Promise.all(ghAssets.map(async ({name}) => {
     const url = `${uploadUrl}?name=${name}`
     // return $.o({cwd: temp})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' -H 'Content-Type: application/octet-stream' ${url} --data-binary '@${name}'`
-    return fetch(url, {
+    return ghFetch(url, {
+      ghToken,
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `token ${ghToken}`,
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      body: await fs.readFile(path.join(temp, name))
+      headers: {'Content-Type': 'application/octet-stream'},
+      body: await fs.readFile(path.join(temp, name)),
     })
   }))
 }
