@@ -1,6 +1,8 @@
 import {log} from '../log.js'
 import {$, fs, INI, fetch, tempy} from 'zx-extra'
-import {pipify, unzip} from '../util.js'
+import {attempt2, pipify, unzip} from '../util.js'
+
+const FETCH_TIMEOUT_MS = 15_000
 
 // https://stackoverflow.com/questions/19978452/how-to-extract-single-file-from-tar-gz-archive-using-node-js
 
@@ -18,12 +20,12 @@ export const fetchPkg = async (pkg) => {
 
     // https://stackoverflow.com/questions/46946380/fetch-api-request-timeout
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15_000)
-    const tarball = await fetch(tarballUrl, {
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+    const tarball = await attempt2(() => fetch(tarballUrl, {
       method: 'GET',
       headers,
-      signal: controller.signal
-    })
+      signal: controller.signal,
+    }))
     clearTimeout(timeoutId)
 
     if (!tarball.ok) {
@@ -46,8 +48,8 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
   const reqOpts = bearerToken ? {headers: {authorization: bearerToken}} : {}
 
   try {
-    const res = await fetch(url, reqOpts)
-    if (!res.ok) throw res
+    const res = await attempt2(() => fetch(url, reqOpts))
+    if (!res.ok) throw new Error(`npm registry responded with ${res.status} for ${url}`)
 
     return res.json() // NOTE .json() is async too
   } catch (e) {

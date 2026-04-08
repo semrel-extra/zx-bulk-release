@@ -4,7 +4,7 @@ import {log} from '../log.js'
 import {getRepo, pushCommit} from './git.js'
 import {formatTag} from '../processor/meta.js'
 import {formatReleaseNotes} from './changelog.js'
-import {asArray, asTuple, getCommonPath, msgJoin} from '../util.js'
+import {asArray, asTuple, attempt2, getCommonPath, msgJoin} from '../util.js'
 
 export const GH_API_VERSION = '2022-11-28'
 export const GH_ACCEPT = 'application/vnd.github.v3+json'
@@ -22,10 +22,10 @@ export const ghFetch = (url, {ghToken, method = 'GET', headers, body} = {}) => f
 
 // https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#delete-a-release
 export const ghDeleteReleaseByTag = async ({ghApiUrl, ghToken, repoName, tag}) => {
-  const res = await ghFetch(`${ghApiUrl}/repos/${repoName}/releases/tags/${tag}`, {ghToken})
+  const res = await attempt2(() => ghFetch(`${ghApiUrl}/repos/${repoName}/releases/tags/${tag}`, {ghToken}))
   if (!res.ok) return false
   const {id} = await res.json()
-  await ghFetch(`${ghApiUrl}/repos/${repoName}/releases/${id}`, {ghToken, method: 'DELETE'})
+  await attempt2(() => ghFetch(`${ghApiUrl}/repos/${repoName}/releases/${id}`, {ghToken, method: 'DELETE'}))
   return true
 }
 
@@ -125,20 +125,24 @@ export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
 
   return Promise.all(ghAssets.map(async ({name}) => {
     const url = `${uploadUrl}?name=${name}`
-    // return $.o({cwd: temp})`curl -H 'Authorization: token ${ghToken}' -H 'Accept: application/vnd.github.v3+json' -H 'Content-Type: application/octet-stream' ${url} --data-binary '@${name}'`
-    return ghFetch(url, {
+    const res = await ghFetch(url, {
       ghToken,
       method: 'POST',
       headers: {'Content-Type': 'application/octet-stream'},
       body: await fs.readFile(path.join(temp, name)),
     })
+    if (!res.ok) {
+      throw new Error(`gh asset upload failed for '${name}': ${res.status}`)
+    }
+    return res
   }))
 }
 
 export const ghGetAsset = async ({repoName, tag, name, ghUrl}) => {
-  return (await fetch(`${ghUrl || 'https://github.com'}/${repoName}/releases/download/${tag.ref || tag}/${name}`, {
-    headers: {
-      // Accept: 'application/vnd.github.v3+json'
-    }
-  })).text()
+  const url = `${ghUrl || 'https://github.com'}/${repoName}/releases/download/${tag.ref || tag}/${name}`
+  const res = await attempt2(() => fetch(url))
+  if (!res.ok) {
+    throw new Error(`gh asset fetch failed for '${name}': ${res.status} ${url}`)
+  }
+  return res.text()
 }
