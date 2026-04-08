@@ -4,7 +4,7 @@ import {log} from '../log.js'
 import {getRepo, pushCommit} from './git.js'
 import {formatTag} from '../processor/meta.js'
 import {formatReleaseNotes} from './changelog.js'
-import {asArray, getCommonPath, msgJoin} from '../util.js'
+import {asArray, asTuple, getCommonPath, msgJoin} from '../util.js'
 
 export const GH_API_VERSION = '2022-11-28'
 export const GH_ACCEPT = 'application/vnd.github.v3+json'
@@ -69,9 +69,7 @@ export const ghPages = queuefy(async (pkg) => {
   const {config: {ghPages: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   if (!opts) return
 
-  const [branch = 'gh-pages', from = 'docs', to = '.', ..._msg] = typeof opts === 'string'
-    ? opts.split(' ')
-    : [opts.branch, opts.from, opts.to, opts.msg]
+  const [branch = 'gh-pages', from = 'docs', to = '.', ..._msg] = asTuple(opts, ['branch', 'from', 'to', 'msg'])
   const msg = msgJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}')
 
   log({pkg})(`publish docs to ${branch}`)

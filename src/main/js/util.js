@@ -36,6 +36,12 @@ export const set = (obj, path, value) => {
 
 export const msgJoin = (rest, context, def) => tpl(rest.filter(Boolean).join(' ') || def, context)
 
+// Normalize "string | {k1, k2, ...}" config shape to a positional tuple.
+// Used for shorthand configs like ghPages: 'branch from to msg' or {branch, from, to, msg}.
+export const asTuple = (opts, keys) => typeof opts === 'string'
+  ? opts.split(' ')
+  : keys.map(k => opts[k])
+
 export const keyByValue = (obj, value) => Object.keys(obj).find((key) => obj[key] === value)
 
 export const attempt = async (times, action, fix) => {
@@ -57,8 +63,10 @@ export const memoizeBy = (fn, getKey = v => v, memo = new Map()) => async (...ar
     return memo.get(key)
   }
 
-  const value = fn(...args)
+  const value = Promise.resolve().then(() => fn(...args))
   memo.set(key, value)
+  // Evict on failure so the next caller can retry instead of being stuck on a rejected promise.
+  value.catch(() => memo.delete(key))
   return value
 }
 
