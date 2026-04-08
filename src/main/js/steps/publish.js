@@ -1,11 +1,10 @@
 import {memoizeBy} from '../util.js'
 import {exec} from '../processor/exec.js'
 import {$, within} from 'zx-extra'
-import {npmPersist, npmPublish} from '../api/npm.js'
-import {prepareMeta, pushMeta, pushReleaseTag} from '../processor/meta.js'
-import {pushChangelog} from '../api/changelog.js'
-import {ghPages, ghRelease} from '../api/gh.js'
-import {rollbackRelease} from './contextify.js'
+import {npmPersist} from '../api/npm.js'
+import {prepareMeta, pushReleaseTag} from '../processor/meta.js'
+import {publishers} from './publishers.js'
+import {isNpmPublished, rollbackRelease} from './teardown.js'
 
 export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
   $.scope = pkg.name
@@ -17,27 +16,19 @@ export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
   await npmPersist(pkg)
   await prepareMeta(pkg)
 
-  if (pkg.context.flags.snapshot) {
-    await Promise.all([
-      npmPublish(pkg),
-      run(pkg, 'publishCmd')
-    ])
+  const snapshot = !!pkg.context.flags.snapshot
+  const active = publishers.filter(p => (!snapshot || p.snapshot) && p.when(pkg))
+
+  if (snapshot) {
+    await Promise.all(active.map(p => p.run(pkg, run)))
   } else {
     await pushReleaseTag(pkg)
     try {
-      await Promise.all([
-        pushMeta(pkg),
-        pushChangelog(pkg),
-        npmPublish(pkg),
-        ghRelease(pkg),
-        ghPages(pkg),
-        run(pkg, 'publishCmd')
-      ])
+      await Promise.all(active.map(p => p.run(pkg, run)))
     } catch (e) {
       // Rollback the entire failed release for npm-published packages.
       // Git-tag-only packages (private or npmPublish: false) keep their tag — it IS the release.
-      const needsNpm = !pkg.manifest.private && pkg.config.npmPublish !== false
-      if (needsNpm) {
+      if (isNpmPublished(pkg)) {
         await rollbackRelease(pkg)
       }
       throw e
