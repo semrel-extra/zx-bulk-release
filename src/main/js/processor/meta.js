@@ -18,7 +18,13 @@ export const pushReleaseTag = async (pkg) => {
   await pushTag({cwd, tag, gitCommitterEmail, gitCommitterName})
 }
 
+// Build pkg.meta and, in asset mode, inject a meta.json entry into pkg.config.ghAssets.
+// Runs in the prepare phase — serial, before any publisher.run() — so the asset mutation
+// is guaranteed visible to gh-release.
 export const prepareMeta = async (pkg) => {
+  const {type} = pkg.config.meta
+  if (type === null) return
+
   const {absPath: cwd} = pkg
   const hash = (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
   pkg.meta = {
@@ -31,36 +37,27 @@ export const prepareMeta = async (pkg) => {
     peerDependencies: pkg.peerDependencies,
     optionalDependencies: pkg.optionalDependencies,
   }
-}
-
-export const pushMeta = queuefy(async (pkg) => {
-  const {type} = pkg.config.meta
-
-  if (type === null) {
-    return
-  }
-
-  if (!pkg.meta) {
-    await prepareMeta(pkg)
-  }
 
   if (type === 'asset' || type === 'assets') {
     pkg.config.ghAssets = [...pkg.config.ghAssets || [], {
       name: 'meta.json',
-      contents: JSON.stringify(pkg.meta, null, 2)
+      contents: JSON.stringify(pkg.meta, null, 2),
     }]
-    return
   }
+}
+
+// Push the meta artifact to the `meta` branch. No-op in asset mode (handled by gh-release).
+export const pushMetaBranch = queuefy(async (pkg) => {
+  const {type} = pkg.config.meta
+  if (type === null || type === 'asset' || type === 'assets') return
 
   log({pkg})('push artifact to branch \'meta\'')
 
   const {name, version, meta, tag = formatTag({name, version}), absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
-  const to = '.'
-  const branch = 'meta'
   const msg = `chore: release meta ${name} ${version}`
   const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
-  await pushCommit({cwd, to, branch, msg, files, gitCommitterEmail, gitCommitterName, basicAuth})
+  await pushCommit({cwd, to: '.', branch: 'meta', msg, files, gitCommitterEmail, gitCommitterName, basicAuth})
 })
 
 // Remove a meta artifact for a given tag from the meta branch.

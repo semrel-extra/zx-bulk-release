@@ -2,9 +2,9 @@ import {memoizeBy} from '../util.js'
 import {exec} from '../processor/exec.js'
 import {$, within} from 'zx-extra'
 import {npmPersist} from '../api/npm.js'
-import {prepareMeta, pushReleaseTag} from '../processor/meta.js'
-import {publishers} from './publishers.js'
-import {isNpmPublished, rollbackRelease} from './teardown.js'
+import {pushReleaseTag} from '../processor/meta.js'
+import {publishers, isNpmPublished} from './publishers.js'
+import {rollbackRelease} from './teardown.js'
 
 export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
   $.scope = pkg.name
@@ -14,10 +14,15 @@ export const publish = memoizeBy(async (pkg, run = exec) => within(async () => {
   }
 
   await npmPersist(pkg)
-  await prepareMeta(pkg)
 
   const snapshot = !!pkg.context.flags.snapshot
   const active = publishers.filter(p => (!snapshot || p.snapshot) && p.when(pkg))
+
+  // Prepare phase: serial pkg mutations (e.g. meta injects itself into ghAssets).
+  // Must complete before any run() so downstream publishers see the mutated state.
+  for (const p of active) {
+    if (p.prepare) await p.prepare(pkg)
+  }
 
   if (snapshot) {
     await Promise.all(active.map(p => p.run(pkg, run)))

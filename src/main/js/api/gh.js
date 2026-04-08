@@ -3,7 +3,7 @@ import {$, path, tempy, glob, fs, fetch} from 'zx-extra'
 import {log} from '../log.js'
 import {getRepo, pushCommit} from './git.js'
 import {formatTag} from '../processor/tag.js'
-import {formatReleaseNotes} from '../processor/release-notes.js'
+import {formatReleaseNotes} from '../processor/notes.js'
 import {asArray, asTuple, attempt2, getCommonPath, msgJoin} from '../util.js'
 
 export const GH_API_VERSION = '2022-11-28'

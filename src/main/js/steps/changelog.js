@@ -1,7 +1,7 @@
 import {$} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {fetchRepo, pushCommit} from '../api/git.js'
-import {formatReleaseNotes} from '../processor/release-notes.js'
+import {formatReleaseNotes} from '../processor/notes.js'
 import {log} from '../log.js'
 import {asTuple, msgJoin} from '../util.js'
 
