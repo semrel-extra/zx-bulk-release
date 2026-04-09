@@ -7,44 +7,33 @@ import {formatTag} from '../generators/tag.js'
 import {isNpmPublished} from '../publishers/npm.js'
 import {rollbackRelease} from './teardown.js'
 
-const pushReleaseTag = async (pkg) => {
+const pushReleaseTag = async (pkg, ctx) => {
   const {name, version, tag = formatTag({name, version}), config: {gitCommitterEmail, gitCommitterName}} = pkg
-  pkg.context.git.tag = tag
+  ctx.git.tag = tag
   log({pkg})(`push release tag ${tag}`)
-  await pushTag({cwd: pkg.context.git.root, tag, gitCommitterEmail, gitCommitterName})
+  await pushTag({cwd: ctx.git.root, tag, gitCommitterEmail, gitCommitterName})
 }
 
-export const publish = memoizeBy(async (pkg, ctx) => {
-  const {run = exec, publishers = []} = ctx
-  if (pkg.version !== pkg.manifest.version) {
+export const publish = memoizeBy(async (pkg, ctx = pkg.ctx) => {
+  if (pkg.version !== pkg.manifest.version)
     throw new Error('package.json version not synced')
-  }
+
+  const {run = exec, publishers = [], flags} = ctx
+  const snapshot = !!flags.snapshot
+  const active = publishers.filter(p => (!snapshot || p.snapshot) && p.when(pkg))
 
   await npmPersist(pkg)
 
-  const snapshot = !!pkg.context.flags.snapshot
-  const active = publishers.filter(p => (!snapshot || p.snapshot) && p.when(pkg))
+  // Prepare phase: serial pkg mutations (e.g. meta injects into ghAssets) — must finish before any run().
+  for (const p of active) await p.prepare?.(pkg)
 
-  // Prepare phase: serial pkg mutations (e.g. meta injects itself into ghAssets).
-  // Must complete before any run() so downstream publishers see the mutated state.
-  for (const p of active) {
-    if (p.prepare) await p.prepare(pkg)
-  }
-
-  if (snapshot) {
+  if (!snapshot) await pushReleaseTag(pkg, ctx)
+  try {
     await Promise.all(active.map(p => p.run(pkg, run)))
-  } else {
-    await pushReleaseTag(pkg)
-    try {
-      await Promise.all(active.map(p => p.run(pkg, run)))
-    } catch (e) {
-      // Rollback the entire failed release for npm-published packages.
-      // Git-tag-only packages (private or npmPublish: false) keep their tag — it IS the release.
-      if (isNpmPublished(pkg)) {
-        await rollbackRelease(pkg, ctx)
-      }
-      throw e
-    }
+  } catch (e) {
+    // Roll back full release for npm-published packages; git-tag-only packages keep their tag — it IS the release.
+    if (!snapshot && isNpmPublished(pkg)) await rollbackRelease(pkg, ctx)
+    throw e
   }
   pkg.published = true
 })

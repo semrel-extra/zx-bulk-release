@@ -44,7 +44,7 @@ export const getLatest = async (pkg) => {
   return {tag, meta}
 }
 
-export const getTags = async (cwd, ref = '') =>
+export const getTags = async (cwd, ref) =>
   (await getGitTags(cwd, ref))
     .map(tag => parseTag(tag.trim()))
     .filter(Boolean)

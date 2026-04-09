@@ -5,7 +5,7 @@ export {traverseQueue, traverseDeps} from '@semrel-extra/topo'
 
 export const updateDeps = async (pkg) => {
   const changes = []
-  const {context: {packages}} = pkg
+  const {packages} = pkg.ctx
 
   await traverseDeps({pkg, packages, cb: async ({name, version, deps, scope, pkg: dep}) => {
     const prev = pkg.latest.meta?.[scope]?.[name]

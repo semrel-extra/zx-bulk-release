@@ -30,104 +30,88 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     return
   }
 
-  const context = await createContext({flags, env, cwd})
-  const {report, packages, queue, prev, graphs} = context
-  context.run = queuefy(exec, flags.concurrency || os.cpus().length)
-  context.publishers = publishers
+  const ctx = await createContext({flags, env, cwd})
+  const {report, packages, queue, prev} = ctx
+
+  // Per-package scope: $.scope, packages[name] lookup, contextify on first touch.
+  const forEachPkg = (cb) => traverseQueue({queue, prev, cb: (name) => within(async () => {
+    $.scope = name
+    const pkg = packages[name]
+    await contextify(pkg, ctx)
+    return cb(pkg)
+  })})
 
   report
     .log()(`zx-bulk-release@${zbrVersion}`)
     .log()('queue:', queue)
-    .log()('graphs', graphs)
+    .log()('graphs', ctx.graphs)
 
   // --recover: standalone mode — clean orphan tags and exit.
-  // Run the full pipeline again after this to rebuild and publish affected packages.
   if (flags.recover) {
     await fetchTags(cwd)
     let recovered = 0
-    for (const name of queue) {
-      const pkg = packages[name]
-      await contextify(pkg, context)
-      if (await recover(pkg, context)) recovered++
-    }
+    await forEachPkg(async (pkg) => { if (await recover(pkg)) recovered++ })
     report.log()(`recover: cleaned ${recovered} orphan tag(s)`)
     return
   }
 
   try {
-    await traverseQueue({queue, prev, cb: (name) => within(async () => {
-      $.scope = name
-      report.setStatus('analyzing', name)
-      const pkg = packages[name]
-      await contextify(pkg, context)
-      await analyze(pkg, context)
-      report
-        .set('config', pkg.config, name)
-        .set('version', pkg.version, name)
-        .set('prevVersion', pkg.latest.tag?.version || pkg.manifest.version, name)
-        .set('releaseType', pkg.releaseType, name)
-        .set('tag', pkg.tag, name)
-    })})
+    await forEachPkg(async (pkg) => {
+      report.setStatus('analyzing', pkg.name)
+      await analyze(pkg)
+      report.set({
+        config:      pkg.config,
+        version:     pkg.version,
+        prevVersion: pkg.latest.tag?.version || pkg.manifest.version,
+        releaseType: pkg.releaseType,
+        tag:         pkg.tag,
+      }, pkg.name)
+    })
 
     report.setStatus('pending')
 
-    await traverseQueue({queue, prev, cb: (name) => within(async () => {
-      $.scope = name
-      const pkg = packages[name]
-
+    await forEachPkg(async (pkg) => {
       if (!pkg.releaseType) {
-        report.setStatus('skipped', name)
+        report.setStatus('skipped', pkg.name)
         pkg.skipped = true
         return
       }
       if (flags.build !== false) {
-        report.setStatus('building', name)
-        await build(pkg, context)
+        report.setStatus('building', pkg.name)
+        await build(pkg)
       }
       if (flags.test !== false) {
-        report.setStatus('testing', name)
-        await test(pkg, context)
+        report.setStatus('testing', pkg.name)
+        await test(pkg)
       }
       if (!flags.dryRun && flags.publish !== false) {
-        report.setStatus('publishing', name)
-        await publish(pkg, context)
+        report.setStatus('publishing', pkg.name)
+        await publish(pkg)
       }
-
-      report.setStatus('success', name)
-    })})
+      report.setStatus('success', pkg.name)
+    })
   } catch (e) {
-    report
-      .log({level: 'error'})(e, e.stack)
-      .set('error', e)
-      .setStatus('failure')
+    report.log({level: 'error'})(e, e.stack).set('error', e).setStatus('failure')
     throw e
   } finally {
-    await clean(null, context)
+    await clean(ctx)
   }
-  report
-    .setStatus('success')
-    .log()('Great success!')
+  report.setStatus('success').log()('Great success!')
 })
 
 export const createContext = async ({flags, env: _env, cwd}) => {
-  const { packages, queue, root, prev, graphs } = await topo({cwd, flags})
+  const {packages, queue, root, prev, graphs} = await topo({cwd, flags})
   const report = createReport({packages, queue, flags})
   const env = {...process.env, ..._env}
 
-  $.report =        report
-  $.env =           env
-  $.verbose =       !!(flags.debug || $.env.DEBUG ) || $.verbose
-  $.quiet =         !$.verbose
+  $.report  = report
+  $.env     = env
+  $.verbose = !!(flags.debug || env.DEBUG) || $.verbose
+  $.quiet   = !$.verbose
 
   return {
-    report,
-    packages,
-    root,
-    queue,
-    prev,
-    graphs,
-    flags,
-    env,
-    cwd,
+    cwd, env, flags, root, packages, queue, prev, graphs, report,
+    publishers,
+    run: queuefy(exec, flags.concurrency || os.cpus().length),
   }
 }
