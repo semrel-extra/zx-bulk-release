@@ -1,4 +1,4 @@
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {getRepo, getRoot} from '../api/git.js'
 import {ghCreateRelease, ghDeleteReleaseByTag, ghUploadAssets} from '../api/gh.js'
 import {formatTag} from '../generators/tag.js'

@@ -6,7 +6,7 @@
 //
 // Teardown walks the publishers registry in reverse and calls undo() on each that applies.
 
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {deleteRemoteTag} from '../api/git.js'
 import {fetchManifest} from '../api/npm.js'
 import {isNpmPublished} from '../publishers/npm.js'

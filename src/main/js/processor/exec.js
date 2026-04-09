@@ -1,5 +1,5 @@
 import {tpl} from '../util.js'
-import {log} from '../log.js'
+import {log} from './log.js'
 import {$} from 'zx-extra'
 
 export const exec = async (pkg, name) => {

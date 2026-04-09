@@ -1,5 +1,5 @@
 import {$, fs} from 'zx-extra'
-import {get, set, tpl} from './util.js'
+import {get, set, tpl} from '../util.js'
 
 export const log = (ctx) =>
   $.report

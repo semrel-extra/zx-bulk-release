@@ -1,6 +1,6 @@
 import {queuefy} from 'queuefy'
 import {path} from 'zx-extra'
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {pushCommit} from '../api/git.js'
 import {asTuple, msgJoin} from '../../util.js'
 

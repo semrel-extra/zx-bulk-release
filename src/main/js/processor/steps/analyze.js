@@ -1,5 +1,5 @@
 import {semver} from 'zx-extra'
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {getCommits} from '../api/git.js'
 import {updateDeps} from '../deps.js'
 import {formatTag} from '../generators/tag.js'

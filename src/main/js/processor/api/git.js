@@ -1,5 +1,5 @@
 import {$, fs, path, tempy, copy} from 'zx-extra'
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {attempt2, attempt3, memoizeBy} from '../../util.js'
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => {
