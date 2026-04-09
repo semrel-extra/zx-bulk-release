@@ -1,4 +1,4 @@
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {$, fs, INI, fetch, tempy} from 'zx-extra'
 import {attempt2, pipify, unzip} from '../../util.js'
 

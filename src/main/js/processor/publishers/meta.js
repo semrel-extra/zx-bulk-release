@@ -3,7 +3,7 @@
 
 import {queuefy} from 'queuefy'
 import {fs, path} from 'zx-extra'
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {fetchRepo, pushCommit} from '../api/git.js'
 import {formatTag} from '../generators/tag.js'
 import {prepareMeta, getArtifactPath, isAssetMode} from '../generators/meta.js'

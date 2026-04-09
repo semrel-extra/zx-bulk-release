@@ -1,6 +1,6 @@
 import {memoizeBy} from '../../util.js'
 import {exec} from '../exec.js'
-import {log} from '../../log.js'
+import {log} from '../log.js'
 import {npmPersist} from '../api/npm.js'
 import {pushTag} from '../api/git.js'
 import {formatTag} from '../generators/tag.js'
