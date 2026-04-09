@@ -20,9 +20,9 @@ const teardownRelease = async (pkg, ctx, {tag, version, reason}) => {
     if (!p.undo || !p.when(pkg)) continue
     try {
       const result = await p.undo(pkg, {tag, version, reason})
-      if (result !== false) log({pkg})(`${reason}: ${p.name} undone for '${tag}'`)
+      if (result !== false) log.info(`${reason}: ${p.name} undone for '${tag}'`)
     } catch (e) {
-      log({pkg, level: 'warn'})(`${reason}: ${p.name} undo failed`, e)
+      log.warn(`${reason}: ${p.name} undo failed`, e)
     }
   }
 
@@ -34,7 +34,7 @@ const teardownRelease = async (pkg, ctx, {tag, version, reason}) => {
 export const rollbackRelease = async (pkg, ctx = pkg.ctx) => {
   const tag = ctx.git.tag
   if (!tag) return
-  log({pkg})(`rollback: cleaning up failed release for tag '${tag}'`)
+  log.info(`rollback: cleaning up failed release for tag '${tag}'`)
   await teardownRelease(pkg, ctx, {tag, version: pkg.version, reason: 'rollback'})
 }
 
@@ -52,7 +52,7 @@ export const recover = async (pkg, ctx = pkg.ctx) => {
   }, {nothrow: true})
   if (manifest) return false
 
-  log({pkg})(`recover: tag '${tag.ref}' exists but ${pkg.name}@${tag.version} not found on npm, rolling back failed release`)
+  log.info(`recover: tag '${tag.ref}' exists but ${pkg.name}@${tag.version} not found on npm, rolling back failed release`)
   await teardownRelease(pkg, ctx, {tag: tag.ref, version: tag.version, reason: 'recover'})
   return true
 }

@@ -9,7 +9,7 @@ export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, b
   try {
     await _$`git clone --single-branch --branch ${branch} --depth 1 ${origin} .`
   } catch (e) {
-    log({level: 'warn'})(`ref '${branch}' does not exist in ${origin}`)
+    log.warn(`ref '${branch}' does not exist in ${origin}`)
     await _$`git init . &&
             git remote add origin ${origin}`
   }
@@ -32,14 +32,14 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
     await _$`git add . &&
             git commit -m ${msg}`
   } catch {
-    log({level: 'warn'})(`no changes to commit to ${branch}`)
+    log.warn(`no changes to commit to ${branch}`)
     return
   }
 
   return attempt3(
     () => _$`git push origin HEAD:refs/heads/${branch}`,
     (e) => {
-      log({level: 'warn'})('git push failed, rebasing', 'branch', branch, e)
+      log.warn('git push failed, rebasing', 'branch', branch, e)
       return attempt2(() => _$`git fetch origin ${branch} &&
               git rebase origin/${branch}`)
     }
@@ -112,7 +112,7 @@ export const fetchTags = async (cwd) =>
   $({cwd})`git fetch --tags`
 
 export const deleteRemoteTag = async ({cwd, tag}) => {
-  log()(`rolling back remote tag '${tag}'`)
+  log.info(`rolling back remote tag '${tag}'`)
   await $({cwd, nothrow: true})`git push origin :refs/tags/${tag}`
   await $({cwd, nothrow: true})`git tag -d ${tag}`
 }

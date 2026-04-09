@@ -16,7 +16,7 @@ export const fetchPkg = async (pkg) => {
     const tarballUrl = getTarballUrl(npmRegistry, pkg.name, pkg.version)
     const bearerToken = getBearerToken(npmRegistry, npmToken, npmConfig)
     const headers = bearerToken ? {Authorization: bearerToken} : {}
-    log({pkg})(`fetching '${id}' from ${npmRegistry}`)
+    log.info(`fetching '${id}' from ${npmRegistry}`)
 
     // https://stackoverflow.com/questions/46946380/fetch-api-request-timeout
     const controller = new AbortController()
@@ -34,10 +34,10 @@ export const fetchPkg = async (pkg) => {
 
     await unzip(pipify(tarball.body), {cwd, strip: 1, omit: ['package.json']})
 
-    log({pkg})(`fetch duration '${id}': ${Date.now() - now}`)
+    log.info(`fetch duration '${id}': ${Date.now() - now}`)
     pkg.fetched = true
   } catch (e) {
-    log({pkg, level: 'warn'})(`fetching '${id}' failed`, e)
+    log.warn(`fetching '${id}' failed`, e)
   }
 }
 
@@ -60,13 +60,13 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
 
 export const npmPersist = async (pkg) => {
   const {name, version, manifest, manifestAbsPath} = pkg
-  log({pkg})(`updating ${manifestAbsPath} inners: ${name} ${version}`)
+  log.info(`updating ${manifestAbsPath} inners: ${name} ${version}`)
   await fs.writeJson(manifestAbsPath, manifest, {spaces: 2})
 }
 
 export const npmRestore = async (pkg) => {
   const {manifestRaw, manifestAbsPath} = pkg
-  log({pkg})(`rolling back ${manifestAbsPath} inners to manifestRaw`)
+  log.info(`rolling back ${manifestAbsPath} inners to manifestRaw`)
   await fs.writeFile(manifestAbsPath, manifestRaw, {encoding: 'utf8'})
 }
 
@@ -75,7 +75,7 @@ export const npmPublish = async (pkg) => {
 
   if (manifest.private || npmPublish === false) return
 
-  log({pkg})(`publishing npm package ${name} ${version} to ${npmRegistry}`)
+  log.info(`publishing npm package ${name} ${version} to ${npmRegistry}`)
 
   const npmTag = pkg.preversion ? 'snapshot' : 'latest'
   const npmFlags = [
@@ -93,7 +93,7 @@ export const npmPublish = async (pkg) => {
     if (major < 11 || (major === 11 && minor < 5)) {
       throw new Error(`npm OIDC trusted publishing requires npm >= 11.5.0, got ${npmVersion}`)
     }
-    log({pkg})('npm publish: OIDC trusted publishing enabled')
+    log.info('npm publish: OIDC trusted publishing enabled')
     npmFlags.push('--provenance')
   } else {
     const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})

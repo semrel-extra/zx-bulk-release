@@ -24,7 +24,7 @@ export const analyze = async (pkg, ctx = pkg.ctx) => {
   pkg.manifest.version = pkg.version
   pkg.tag = releaseType ? formatTag({name: pkg.name, version: pkg.version, format: pkg.config.tagFormat}) : null
 
-  log({pkg})(
+  log.info(
     'semantic changes', changes,
     'releaseType', releaseType,
     'prevVersion', latestVersion,

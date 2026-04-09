@@ -8,7 +8,7 @@ const run = async (pkg) => {
   const {ghBasicAuth: basicAuth, ghToken, ghAssets, ghApiUrl} = pkg.config
   if (!ghToken) return null
 
-  log({pkg})('create gh release')
+  log.info('create gh release')
 
   const now = Date.now()
   const {name, version, absPath: cwd, tag = formatTag({name, version})} = pkg
@@ -22,7 +22,7 @@ const run = async (pkg) => {
     await ghUploadAssets({ghToken, ghAssets, uploadUrl, cwd})
   }
 
-  log({pkg})(`duration gh release: ${Date.now() - now}`)
+  log.info(`duration gh release: ${Date.now() - now}`)
 }
 
 const undo = async (pkg, {tag}) => {

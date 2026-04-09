@@ -9,7 +9,7 @@ const run = queuefy(async (pkg) => {
   const {absPath: cwd, config: {changelog: opts, gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   if (!opts) return
 
-  log({pkg})('push changelog')
+  log.info('push changelog')
   const [branch = 'changelog', file = `${pkg.name.replace(/[^a-z0-9-]/ig, '')}-changelog.md`, ..._msg] = asTuple(opts, ['branch', 'file', 'msg'])
   const _cwd = await fetchRepo({cwd, branch, basicAuth})
   const msg = msgJoin(_msg, pkg, 'chore: update changelog ${{name}}')
