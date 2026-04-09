@@ -29,7 +29,7 @@ const removeMetaArtifact = async (pkg, {tag, version, reason}) => {
   // Asset-mode meta lives inside the GH release; deleting the release already removes it.
   if (type === null || isAssetMode(type)) return false
 
-  const cwd = pkg.context?.git?.root || pkg.absPath
+  const cwd = pkg.ctx?.git?.root || pkg.absPath
   const metaCwd = await fetchRepo({cwd, branch: 'meta', basicAuth})
   const artifactPath = getArtifactPath(tag)
   const candidates = [

@@ -42,8 +42,6 @@ export const asTuple = (opts, keys) => typeof opts === 'string'
   ? opts.split(' ')
   : keys.map(k => opts[k])
 
-export const keyByValue = (obj, value) => Object.keys(obj).find((key) => obj[key] === value)
-
 export const attempt = async (times, action, fix) => {
   for (let i = times; i > 0; i--) {
     try { return await action() }

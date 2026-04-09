@@ -30,6 +30,12 @@ export const createReport = ({logger = console, packages = {}, queue = [], flags
     )
   },
   set(key, value, pkgName) {
+    // set({k1: v1, k2: v2}, pkgName) — batch
+    if (key && typeof key === 'object') {
+      const target = value ? this.packages[value] : this
+      for (const [k, v] of Object.entries(key)) set(target, k, v)
+      return this
+    }
     set(
       pkgName ? this.packages[pkgName] : this,
       key,

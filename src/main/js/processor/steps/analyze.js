@@ -4,12 +4,12 @@ import {getCommits} from '../api/git.js'
 import {updateDeps} from '../deps.js'
 import {formatTag} from '../generators/tag.js'
 
-export const analyze = async (pkg, ctx) => {
+export const analyze = async (pkg, ctx = pkg.ctx) => {
   const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref, undefined, pkg.config.releaseRules)
   const depsChanges = await updateDeps(pkg)
   const changes = [...semanticChanges, ...depsChanges]
   const releaseType = getNextReleaseType(changes)
-  const pre = pkg.context.flags.snapshot ? `-snap.${pkg.context.git.sha.slice(0, 7)}` : undefined
+  const pre = ctx.flags.snapshot ? `-snap.${ctx.git.sha.slice(0, 7)}` : undefined
   const latestVersion = pkg.latest.tag?.version || pkg.latest.meta?.version
 
   pkg.changes = changes

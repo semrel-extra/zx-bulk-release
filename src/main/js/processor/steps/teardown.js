@@ -1,23 +1,22 @@
 // Release teardown: undo a published (or half-published) release.
 //
 // Two entry points share the same core:
-//   - rollbackRelease: called inline from publish.js on mid-publish failure (tag known from pkg.context).
+//   - rollbackRelease: called inline from publish.js on mid-publish failure (tag known from pkg.ctx).
 //   - recover:         standalone --recover mode — detect orphan tags (tagged but missing on npm) and tear them down.
 //
 // Teardown walks the publishers registry in reverse and calls undo() on each that applies.
 
 import {log} from '../../log.js'
-import {deleteRemoteTag, getRoot} from '../api/git.js'
+import {deleteRemoteTag} from '../api/git.js'
 import {fetchManifest} from '../api/npm.js'
 import {isNpmPublished} from '../publishers/npm.js'
 
 // Tear down a release: undo every applicable publisher, then delete the git tag.
 // Failures in individual undo steps are warned, not thrown — teardown is best-effort.
-const teardownRelease = async (pkg, {publishers}, {tag, version, reason}) => {
-  const cwd = await getRoot(pkg.absPath)
+const teardownRelease = async (pkg, ctx, {tag, version, reason}) => {
   if (!pkg.config.ghBasicAuth) throw new Error(`${reason} requires git credentials (GH_TOKEN)`)
 
-  for (const p of [...publishers].reverse()) {
+  for (const p of [...ctx.publishers].reverse()) {
     if (!p.undo || !p.when(pkg)) continue
     try {
       const result = await p.undo(pkg, {tag, version, reason})
@@ -27,20 +26,20 @@ const teardownRelease = async (pkg, {publishers}, {tag, version, reason}) => {
     }
   }
 
-  await deleteRemoteTag({cwd, tag})
+  await deleteRemoteTag({cwd: ctx.git.root, tag})
 }
 
 // Rollback a release that failed mid-publish (called inline from publish.js).
 // Uses the current release tag; skips the npm existence check — we already know it failed.
-export const rollbackRelease = async (pkg, ctx) => {
-  const tag = pkg.context.git.tag
+export const rollbackRelease = async (pkg, ctx = pkg.ctx) => {
+  const tag = ctx.git.tag
   if (!tag) return
   log({pkg})(`rollback: cleaning up failed release for tag '${tag}'`)
   await teardownRelease(pkg, ctx, {tag, version: pkg.version, reason: 'rollback'})
 }
 
 // Standalone recovery: if a tag exists but the package is missing from npm, treat it as an orphan and tear down.
-export const recover = async (pkg, ctx) => {
+export const recover = async (pkg, ctx = pkg.ctx) => {
   if (!isNpmPublished(pkg)) return false
 
   const {tag} = pkg.latest
