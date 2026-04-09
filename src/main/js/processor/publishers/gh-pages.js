@@ -11,7 +11,7 @@ const run = queuefy(async (pkg) => {
   const [branch = 'gh-pages', from = 'docs', to = '.', ..._msg] = asTuple(opts, ['branch', 'from', 'to', 'msg'])
   const msg = msgJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}')
 
-  log({pkg})(`publish docs to ${branch}`)
+  log.info(`publish docs to ${branch}`)
 
   await pushCommit({
     cwd: path.join(pkg.absPath, from),

@@ -6,6 +6,10 @@ export const log = (ctx) =>
     ? $.report.log(ctx)
     : console.log
 
+log.info = (...args) => log()(...args)
+log.warn = (...args) => log({level: 'warn'})(...args)
+log.error = (...args) => log({level: 'error'})(...args)
+
 export const createReport = ({logger = console, packages = {}, queue = [], flags} = {}) => ({
   logger,
   flags,

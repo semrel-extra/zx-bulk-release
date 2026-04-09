@@ -10,7 +10,7 @@ import {rollbackRelease} from './teardown.js'
 const pushReleaseTag = async (pkg, ctx) => {
   const {name, version, tag = formatTag({name, version}), config: {gitCommitterEmail, gitCommitterName}} = pkg
   ctx.git.tag = tag
-  log({pkg})(`push release tag ${tag}`)
+  log.info(`push release tag ${tag}`)
   await pushTag({cwd: ctx.git.root, tag, gitCommitterEmail, gitCommitterName})
 }
 

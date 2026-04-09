@@ -13,7 +13,7 @@ const pushMetaBranch = queuefy(async (pkg) => {
   const {type} = pkg.config.meta
   if (type === null || isAssetMode(type)) return
 
-  log({pkg})('push artifact to branch \'meta\'')
+  log.info('push artifact to branch \'meta\'')
 
   const {name, version, meta, tag = formatTag({name, version}), absPath: cwd, config: {gitCommitterEmail, gitCommitterName, ghBasicAuth: basicAuth}} = pkg
   const msg = `chore: release meta ${name} ${version}`
