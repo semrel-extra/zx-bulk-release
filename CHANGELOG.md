@@ -1,3 +1,23 @@
+## [2.21.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.20.0...v2.21.0) (2026-04-10)
+
+### Fixes & improvements
+* docs: update badges ([c9fc1af](https://github.com/semrel-extra/zx-bulk-release/commit/c9fc1af8cfb3d177dc328d1934cb7e663c36f0ca))
+* fix: fix memoize store ([7fddefa](https://github.com/semrel-extra/zx-bulk-release/commit/7fddefa590ded43907d059d3b58e235adff6fa17))
+* refactor: enhance logger ([89d9cff](https://github.com/semrel-extra/zx-bulk-release/commit/89d9cff7727e2190e6490d51f759e7039a25cdb2))
+* docs: mention testing along the change graph flow ([44fd065](https://github.com/semrel-extra/zx-bulk-release/commit/44fd06568d552ae19e753c91f6536978a9c1d28e))
+* docs: add cmd tpl usage example ([d228de0](https://github.com/semrel-extra/zx-bulk-release/commit/d228de09e456799c9e113b36b971187ae7c3c1be))
+* refactor: rearrange utils ([8beeab6](https://github.com/semrel-extra/zx-bulk-release/commit/8beeab6906e4500429cc165f05b39fc5d57e5a09))
+* refactor: optimize npm ver assert (oidc) ([e3b5939](https://github.com/semrel-extra/zx-bulk-release/commit/e3b5939cfb26ab2c0d84bc4a09ebf5971eb2a33a))
+* refactor: bind zx pkg mdc with logger ([fd763a4](https://github.com/semrel-extra/zx-bulk-release/commit/fd763a42a2229ccbc902936fbbfa4a38652685e5))
+* refactor: align context injection flow ([6edb11b](https://github.com/semrel-extra/zx-bulk-release/commit/6edb11bfa669ae9519a134383f5299d77bc4f1a6))
+* refactor: rearrange processor layers ([ea7ef42](https://github.com/semrel-extra/zx-bulk-release/commit/ea7ef42e5632691dfee8705a4f4ef73e0c166979))
+* refactor: align internal publishers contract ([c16b6d8](https://github.com/semrel-extra/zx-bulk-release/commit/c16b6d8d11ade2d5d159936a457c43c0a2989141))
+* refactor: ghFetch helper ([fc3517e](https://github.com/semrel-extra/zx-bulk-release/commit/fc3517e24e12cc28a63d1088d93cecb1114ce5b5))
+* refactor: introduce `attempt` helper ([57f0d06](https://github.com/semrel-extra/zx-bulk-release/commit/57f0d06a093136e57600f2362ab46e16165c9b59))
+
+### Features
+* feat: add secrets masker ([fffea8b](https://github.com/semrel-extra/zx-bulk-release/commit/fffea8bfbebd6155e40f318a9303551ec4ae6e52))
+
 ## [2.20.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.19.1...v2.20.0) (2026-04-05)
 
 ### Features
