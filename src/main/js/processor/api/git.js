@@ -48,7 +48,6 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
 
 export const getRoot = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse --show-toplevel`).toString().trim())
 
-// HEAD sha is repo-wide — key by resolved root so all packages of the same monorepo share the cache.
 export const getSha = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse HEAD`).toString().trim(), getRoot)
 
 export const parseOrigin = (originUrl) => {
@@ -94,7 +93,6 @@ export const getCommits = async (cwd, from, to = 'HEAD') => {
     })
 }
 
-// Repo-wide: same output for every package in the monorepo. Key by resolved root + ref.
 export const getTags = memoizeBy(
   async (cwd, ref = '*') => (await $({cwd})`git tag -l ${ref}`).toString().split('\n'),
   async (cwd, ref = '*') => `${await getRoot(cwd)}:${ref}`,

@@ -1,3 +1,5 @@
+import {$} from 'zx-extra'
+
 export const tpl = (str, context) =>
   str?.replace(/\$\{\{\s*([.a-z0-9]+)\s*}}/gi, (matched, key) => get(context, key) ?? '')
 
@@ -49,17 +51,22 @@ export const attempt = async (times, action, fix) => {
 export const attempt2 = (action, fix) => attempt(2, action, fix)
 export const attempt3 = (action, fix) => attempt(3, action, fix)
 
-export const memoizeBy = (fn, getKey = v => v, memo = new Map()) => async (...args) => {
-  const key = await getKey(...args)
-  if (memo.has(key)) {
-    return memo.get(key)
-  }
+export const memoStore = new Map()
 
-  const value = Promise.resolve().then(() => fn(...args))
-  memo.set(key, value)
-  // Evict on failure so the next caller can retry instead of being stuck on a rejected promise.
-  value.catch(() => memo.delete(key))
-  return value
+export const memoizeBy = (fn, getKey = v => v) => {
+  const memoized = async (...args) => {
+    const store = $.memo || memoStore
+    if (!store.has(memoized)) store.set(memoized, new Map())
+    const memo = store.get(memoized)
+    const key = await getKey(...args)
+    if (memo.has(key)) return memo.get(key)
+
+    const value = Promise.resolve().then(() => fn(...args))
+    memo.set(key, value)
+    value.catch(() => memo.delete(key))
+    return value
+  }
+  return memoized
 }
 
 export const camelize = s => s.replace(/-./g, x => x[1].toUpperCase())
