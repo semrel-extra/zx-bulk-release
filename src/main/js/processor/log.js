@@ -11,14 +11,15 @@ export const redact = (v) => {
 }
 
 // Module-level logger. Delegates to $.report when inside a release run, falls back to console.
+const sanitize = (args) => args.map(a => typeof a === 'string' ? redact(a) : a)
 const r = () => $.report || console
 
 export const log = Object.assign(
-  (...args) => r().log(...args),
+  (...args) => r().log(...sanitize(args)),
   {
-    info:   (...args) => r().log(...args),
-    warn:   (...args) => r().warn(...args),
-    error:  (...args) => r().error(...args),
+    info:   (...args) => r().log(...sanitize(args)),
+    warn:   (...args) => r().warn(...sanitize(args)),
+    error:  (...args) => r().error(...sanitize(args)),
     secret: (...values) => values.forEach(v => { if (v) secrets.add(String(v)) }),
   }
 )
@@ -70,7 +71,7 @@ export const createReport = ({logger = console, packages = {}, queue = [], flags
   },
   _log(level, ...chunks) {
     const scope = $.scope || '~'
-    const msg = chunks.map(c => typeof c === 'string' ? redact(c) : c)
+    const msg = sanitize(chunks)
     this.events.push({msg, scope, date: Date.now(), level})
     logger[level === 'info' ? 'log' : level](`[${scope}]`, ...msg)
     return this
