@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
 import {createMock, defaultResponses, makePkg, makeCtx, has} from './utils/mock.js'
 
-const test = suite('teardown')
+const test = suite('steps.teardown')
 
 const setup = (responses = []) => {
   const mock = createMock([...defaultResponses(), ...responses])

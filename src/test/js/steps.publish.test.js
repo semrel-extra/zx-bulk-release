@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import {$, within, fs} from 'zx-extra'
 import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
 
-const test = suite('publish')
+const test = suite('steps.publish')
 
 const setup = async (responses = []) => {
   await fs.ensureDir(tmpDir)

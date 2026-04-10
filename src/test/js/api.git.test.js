@@ -5,7 +5,7 @@ import {$} from 'zx-extra'
 import {pushTag, deleteRemoteTag} from '../../main/js/processor/api/git.js'
 import {createFakeRepo} from './utils/repo.js'
 
-const test = suite('git')
+const test = suite('api.git')
 
 const setupRepo = async () => {
   const cwd = await createFakeRepo({commits: [
@@ -45,25 +45,20 @@ test('deleteRemoteTag() removes tag from remote and local', async () => {
 
   await pushTag({cwd, tag: '1.0.0-del', gitCommitterName: 'Test', gitCommitterEmail: 'test@test.com'})
 
-  // Verify tag exists
   let remoteTags = (await $({cwd})`git ls-remote --tags origin`).toString()
   assert.ok(remoteTags.includes('1.0.0-del'))
 
   await deleteRemoteTag({cwd, tag: '1.0.0-del'})
 
-  // Verify tag removed from remote
   remoteTags = (await $({cwd})`git ls-remote --tags origin`).toString()
   assert.ok(!remoteTags.includes('1.0.0-del'))
 
-  // Verify tag removed locally
   const localTags = (await $({cwd})`git tag -l`).toString()
   assert.ok(!localTags.includes('1.0.0-del'))
 })
 
 test('deleteRemoteTag() does not throw for non-existent tag', async () => {
   const cwd = await setupRepo()
-
-  // Should not throw
   await deleteRemoteTag({cwd, tag: 'nonexistent-tag'})
 })
 

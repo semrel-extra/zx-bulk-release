@@ -17,7 +17,7 @@ import {getCommits} from '../../main/js/processor/api/git.js'
 import {createFakeRepo} from './utils/repo.js'
 import {createMock, defaultResponses, makePkg, makeCtx} from './utils/mock.js'
 
-const test = suite('analyze')
+const test = suite('steps.analyze')
 
 const setup = (responses = []) => {
   const mock = createMock([...responses, ...defaultResponses()])

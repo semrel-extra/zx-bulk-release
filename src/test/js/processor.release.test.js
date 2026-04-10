@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
 import {createMock, defaultResponses, has} from './utils/mock.js'
 
-const test = suite('release')
+const test = suite('processor.release')
 
 const gitTagsForMonorepo = '2022.6.13-a.v1.0.0-f0\n'
 const gitLogA = '+++refactor(a): a refactoring____abc1__abc1full'
