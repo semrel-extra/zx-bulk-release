@@ -26,6 +26,8 @@ import cmd from './publishers/cmd.js'
 const publishers = [meta, npm, ghRelease, ghPages, changelog, cmd]
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
+  $.memo = new Map()
+
   const {version: zbrVersion} = createRequire(import.meta.url)('../../../../package.json')
   if (flags.v || flags.version) {
     console.log(zbrVersion)
