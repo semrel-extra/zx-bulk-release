@@ -2,8 +2,8 @@
 > [zx](https://github.com/google/zx)-based alternative for [multi-semantic-release](https://github.com/dhoulb/multi-semantic-release)
 
 [![CI](https://github.com/semrel-extra/zx-bulk-release/workflows/CI/badge.svg?branch=master)](https://github.com/semrel-extra/zx-bulk-release/actions)
-[![Maintainability](https://qlty.sh/gh/semrel-extra/zx-bulk-release/maintainability.svg)](https://qlty.sh/gh/semrel-extra/zx-bulk-release)
-[![Code Coverage](https://qlty.sh/gh/semrel-extra/zx-bulk-release/coverage.svg)](https://qlty.sh/gh/semrel-extra/zx-bulk-release)
+[![Maintainability](https://qlty.sh/gh/semrel-extra/projects/zx-bulk-release/maintainability.svg)](https://qlty.sh/gh/semrel-extra/projects/zx-bulk-release)
+[![Code Coverage](https://qlty.sh/gh/semrel-extra/projects/zx-bulk-release/coverage.svg)](https://qlty.sh/gh/semrel-extra/projects/zx-bulk-release)
 [![npm (tag)](https://img.shields.io/npm/v/zx-bulk-release)](https://www.npmjs.com/package/zx-bulk-release)
 
 ## Key features
