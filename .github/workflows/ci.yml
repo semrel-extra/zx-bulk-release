@@ -33,9 +33,16 @@ jobs:
         timeout-minutes: 2
         run: yarn test
 
+      - name: Push coverage
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          npx ggcp lcov.info "https://${GH_TOKEN}@github.com/${{ github.repository }}.git/coverage/${{ github.sha }}" --cwd=${{ github.workspace }}/coverage --message='chore: push coverage'
+
       - name: Upload coverage to Qlty
         if: github.ref == 'refs/heads/master'
-        uses: qltysh/qlty-coverage@v2
+        uses: qltysh/qlty-action/coverage@a19242102d17e497f437d7466aa01b528537e899 # v2.2.0
         with:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
           files: coverage/lcov.info
