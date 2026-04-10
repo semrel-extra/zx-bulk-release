@@ -4,7 +4,7 @@ import * as assert from 'uvu/assert'
 import {topo} from '@semrel-extra/topo'
 import {analyzeCommits, getNextVersion, resolvePkgVersion, semanticRules} from '../../main/js/processor/steps/analyze.js'
 import {getCommits} from '../../main/js/processor/api/git.js'
-import {createFakeRepo} from './test-utils.js'
+import {createFakeRepo} from './utils/repo.js'
 
 const test = suite('analyze')
 

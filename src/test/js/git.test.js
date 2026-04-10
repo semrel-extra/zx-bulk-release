@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import {$} from 'zx-extra'
 
 import {pushTag, deleteRemoteTag} from '../../main/js/processor/api/git.js'
-import {createFakeRepo} from './test-utils.js'
+import {createFakeRepo} from './utils/repo.js'
 
 const test = suite('git')
 
