@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 
 import {parseTag, formatTag} from '../../main/js/processor/generators/tag.js'
 import {getTags, getLatestTaggedVersion} from '../../main/js/processor/generators/meta.js'
-import {createFakeRepo} from './test-utils.js'
+import {createFakeRepo} from './utils/repo.js'
 import {semver} from 'zx-extra'
 
 const test = suite('tag')
