@@ -4,7 +4,7 @@ import {fetchManifest, fetchPkg, getNpmrc} from '../../main/js/processor/api/npm
 import {tempy, fs} from 'zx-extra'
 import {parseEnv} from '../../main/js/config.js'
 
-const test = suite('npm')
+const test = suite('api.npm')
 
 test('fetchManifest()', async () => {
   const env = {NPM_REGISTRY: 'https://registry.npmjs.org'}
@@ -50,7 +50,6 @@ test('fetchPkg() handles 404 gracefully (tag exists but pkg not published)', asy
     config: parseEnv(env)
   }
 
-  // Should not throw — 404 is caught and logged as warning
   await fetchPkg(pkg)
   assert.ok(!pkg.fetched, 'pkg.fetched should remain falsy on 404')
 })

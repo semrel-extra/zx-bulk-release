@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url'
 import path from 'node:path'
 import {resolveNextVersion, subsWorkspace, updateDeps, topo} from '../../main/js/processor/deps.js'
 
-const test = suite('deps')
+const test = suite('processor.deps')
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
 

@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
 import {redact, log, createReport} from '../../main/js/processor/log.js'
 
-const test = suite('log')
+const test = suite('processor.log')
 
 test('redact masks registered secrets', () => {
   log.secret('supersecret123')

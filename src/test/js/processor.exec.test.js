@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
 import {createMock, defaultResponses} from './utils/mock.js'
 
-const test = suite('exec')
+const test = suite('processor.exec')
 
 test('exec runs templated command', async () => {
   await within(async () => {
