@@ -1,6 +1,11 @@
+import zlib from 'node:zlib'
+import _fs from 'node:fs/promises'
+import _path from 'node:path'
+import tar from 'tar-stream'
+import {Readable} from 'node:stream'
 import {log} from '../log.js'
 import {$, semver, fs, INI, fetch, tempy} from 'zx-extra'
-import {attempt2, memoizeBy, pipify, unzip} from '../../util.js'
+import {attempt2, memoizeBy} from '../../util.js'
 
 const FETCH_TIMEOUT_MS = 15_000
 const NPM_OIDC_VER = '11.5.0'
@@ -127,3 +132,41 @@ export const getBearerToken = (npmRegistry, npmToken, npmConfig) => {
 // NOTE registry-auth-token does not work with localhost:4873
 export const getAuthToken = (registry, npmrc) =>
   (Object.entries(npmrc).find(([reg]) => reg.startsWith(registry.replace(/^https?/, ''))) || [])[1]
+
+const pipify = (stream) => stream.pipe ? stream : Readable.from(stream)
+
+const safePath = v => _path.resolve('/', v).slice(1)
+
+const unzip = (stream, {pick, omit, cwd = process.cwd(), strip = 0} = {}) => new Promise((resolve, reject) => {
+  const extract = tar.extract()
+  const results = []
+
+  extract.on('entry', ({name, type}, stream, cb) => {
+    const _name = safePath(strip ? name.split('/').slice(strip).join('/') : name)
+    const fp = _path.join(cwd, _name)
+
+    let data = ''
+    stream.on('data', (chunk) => {
+      if (type !== 'file' || omit?.includes(_name) || (pick && !pick.includes(_name))) return
+      data += chunk
+    })
+
+    stream.on('end', () => {
+      if (data) {
+        results.push(
+          _fs.mkdir(_path.dirname(fp), {recursive: true})
+            .then(() => _fs.writeFile(fp, data, 'utf8'))
+        )
+      }
+      cb()
+    })
+
+    stream.resume()
+  })
+
+  extract.on('finish', () => resolve(Promise.all(results)))
+
+  stream
+    .pipe(zlib.createGunzip())
+    .pipe(extract)
+})
