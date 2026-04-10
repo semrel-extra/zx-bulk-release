@@ -147,9 +147,17 @@ OIDC mode is also auto-detected when `NPM_TOKEN` is not set and `ACTIONS_ID_TOKE
 
 When OIDC is active, `NPM_TOKEN` and `NPMRC` are ignored for publishing and `--provenance` is enabled automatically.
 
+### Selective testing along the change graph
+In a monorepo, `--dry-run` combined with `--no-build` lets you run tests only for packages affected by the current changes — following the dependency graph, without publishing anything. This gives you a precise CI check scoped to what actually changed:
+```shell
+npx zx-bulk-release --dry-run --no-build
+```
+See [antongolub/misc](https://github.com/antongolub/misc) for a real-world example of this pattern.
+
 ## Demo
 * [demo-zx-bulk-release](https://github.com/semrel-extra/demo-zx-bulk-release)
 * [qiwi/pijma](https://github.com/qiwi/pijma)
+* [antongolub/misc](https://github.com/antongolub/misc)
 
 ## Implementation notes
 ### Flow
