@@ -3,7 +3,7 @@ import {createRequire} from 'node:module'
 import {$, within} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {topo, traverseQueue} from './deps.js'
-import {createReport} from './log.js'
+import {createReport, log} from './log.js'
 import {exec} from './exec.js'
 import {contextify} from './steps/contextify.js'
 import {recover} from './steps/teardown.js'
@@ -103,6 +103,9 @@ export const createContext = async ({flags, env: _env, cwd}) => {
   const {packages, queue, root, prev, graphs} = await topo({cwd, flags})
   const report = createReport({packages, queue, flags})
   const env = {...process.env, ..._env}
+
+  // Register known secrets so the logger redacts them from all output.
+  log.secret(env.GH_TOKEN, env.GITHUB_TOKEN, env.NPM_TOKEN)
 
   $.report  = report
   $.env     = env

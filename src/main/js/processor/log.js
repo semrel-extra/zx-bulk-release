@@ -1,6 +1,18 @@
 import {$, fs} from 'zx-extra'
 import {get, set, tpl} from '../util.js'
 
+// Credential redactor: masks tokens/passwords that may leak into log output.
+// Secrets are registered via `log.secret(value)` — typically once, when env/config is parsed.
+const secrets = new Set()
+export const redact = (v) => {
+  if (!secrets.size) return v
+  if (typeof v === 'string') {
+    for (const s of secrets) v = v.replaceAll(s, '***')
+    return v
+  }
+  return v
+}
+
 export const log = (ctx) =>
   $.report
     ? $.report.log(ctx)
@@ -9,6 +21,7 @@ export const log = (ctx) =>
 log.info = (...args) => log()(...args)
 log.warn = (...args) => log({level: 'warn'})(...args)
 log.error = (...args) => log({level: 'error'})(...args)
+log.secret = (...values) => values.forEach(v => { if (v) secrets.add(String(v)) })
 
 export const createReport = ({logger = console, packages = {}, queue = [], flags} = {}) => ({
   logger,
@@ -58,7 +71,7 @@ export const createReport = ({logger = console, packages = {}, queue = [], flags
   log(ctx = {}) {
     return function (...chunks) {
       const {pkg, scope = pkg?.name || $.scope || '~', level = 'info'} = ctx
-      const msg = chunks.map(c => typeof c === 'string' ? tpl(c, ctx) : c)
+      const msg = chunks.map(c => redact(typeof c === 'string' ? tpl(c, ctx) : c))
       const event = {msg, scope, date: Date.now(), level}
       this.events.push(event)
       logger[level](`[${scope}]`, ...msg)
