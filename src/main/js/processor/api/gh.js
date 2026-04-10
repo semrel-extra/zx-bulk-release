@@ -1,7 +1,16 @@
 // Low-level GitHub API primitives. No domain knowledge, no imports from processor/ or steps/.
 
 import {$, path, tempy, glob, fs, fetch} from 'zx-extra'
-import {asArray, attempt2, getCommonPath} from '../../util.js'
+import {asArray, attempt2} from '../../util.js'
+
+export const getCommonPath = files => {
+  const f0 = files[0]
+  const common = files.length === 1
+    ? f0.lastIndexOf('/') + 1
+    : [...f0].findIndex((c, i) => files.some(f => f.charAt(i) !== c))
+  const p = f0.slice(0, common)
+  return p.endsWith('/') ? p : p.slice(0, p.lastIndexOf('/') + 1)
+}
 
 export const GH_API_VERSION = '2022-11-28'
 export const GH_ACCEPT = 'application/vnd.github.v3+json'

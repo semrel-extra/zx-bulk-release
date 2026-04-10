@@ -2,9 +2,22 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {tempy, fs} from 'zx-extra'
 import path from 'node:path'
-import { ghPrepareAssets } from '../../main/js/processor/api/gh.js'
+import { ghPrepareAssets, getCommonPath } from '../../main/js/processor/api/gh.js'
 
 const test = suite('gh')
+
+test('getCommonPath()', () => {
+  const cases = [
+    ['single dir',                  ['foo/bar/'],                       'foo/bar/'],
+    ['single file',                 ['baz.json'],                       ''],
+    ['single file in nested dir',   ['foo/bar/baz.json'],               'foo/bar/'],
+    ['pair of files in same dir',   ['foo/bar.json', 'foo/baz.json'],   'foo/'],
+    ['pair of dirs',                ['foo/bar/qux/', 'foo/bar/baz/'],   'foo/bar/'],
+  ]
+  cases.forEach(([name, input, expected]) => {
+    assert.equal(getCommonPath(input), expected, name)
+  })
+})
 
 test('`prepareAssets()` preprocesses files for publishing', async () => {
   const cwd = tempy.temporaryDirectory()
