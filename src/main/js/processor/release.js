@@ -44,16 +44,16 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
   })})
 
   report
-    .log.info(`zx-bulk-release@${zbrVersion}`)
-    .log.info('queue:', queue)
-    .log.info('graphs', ctx.graphs)
+    .log(`zx-bulk-release@${zbrVersion}`)
+    .log('queue:', queue)
+    .log('graphs', ctx.graphs)
 
   // --recover: standalone mode — clean orphan tags and exit.
   if (flags.recover) {
     await fetchTags(cwd)
     let recovered = 0
     await forEachPkg(async (pkg) => { if (await recover(pkg)) recovered++ })
-    report.log.info(`recover: cleaned ${recovered} orphan tag(s)`)
+    report.log(`recover: cleaned ${recovered} orphan tag(s)`)
     return
   }
 
@@ -93,12 +93,12 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
       report.setStatus('success', pkg.name)
     })
   } catch (e) {
-    report.log({level: 'error'})(e, e.stack).set('error', e).setStatus('failure')
+    report.error(e, e.stack).set('error', e).setStatus('failure')
     throw e
   } finally {
     await clean(ctx)
   }
-  report.setStatus('success').log.info('Great success!')
+  report.setStatus('success').log('Great success!')
 })
 
 export const createContext = async ({flags, env: _env, cwd}) => {
