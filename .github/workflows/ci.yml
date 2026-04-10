@@ -30,8 +30,8 @@ jobs:
         run: yarn install
 
       - name: Run tests
-        timeout-minutes: 2
-        run: yarn test
+        timeout-minutes: 5
+        run: yarn test:cov
 
       - name: Push coverage
         if: github.ref == 'refs/heads/master'
