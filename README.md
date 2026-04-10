@@ -74,7 +74,8 @@ await run({
 Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format: `.releaserc`, `.release.json`, `.release.yaml`, etc in the package root or in the repo root dir.
 ```json
 {
-  "cmd": "yarn && yarn build && yarn test",
+  "buildCmd": "yarn && yarn build",
+  "testCmd": "yarn test",
   "npmFetch": true,
   "changelog": "changelog",
   "ghPages": "gh-pages",
@@ -82,6 +83,17 @@ Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format
   "diffCommitUrl": "${repoPublicUrl}/commit/${hash}"
 }
 ```
+
+#### Command templating
+`buildCmd`, `testCmd` and `publishCmd` support `${{ variable }}` interpolation. The template context includes all `pkg` fields and the release context (`flags`, `git`, `env`, etc):
+```json
+{
+  "buildCmd": "yarn build --pkg=${{name}} --ver=${{version}}",
+  "testCmd": "yarn test --scope=${{name}}",
+  "publishCmd": "echo releasing ${{name}}@${{version}}"
+}
+```
+Available variables include: `name`, `version`, `absPath`, `relPath`, and anything from `pkg.ctx` (e.g. `git.sha`, `git.root`, `flags.*`).
 
 #### Changelog diff URLs
 By default, changelog entries link to GitHub compare/commit pages. Override `diffTagUrl` and `diffCommitUrl` to customize for other platforms (e.g. Gerrit):
@@ -141,56 +153,25 @@ When OIDC is active, `NPM_TOKEN` and `NPMRC` are ignored for publishing and `--p
 
 ## Implementation notes
 ### Flow
-```js
-try {
-  const {packages, queue, root} = await topo({cwd, flags})
-  console.log('queue:', queue)
-
-  for (let name of queue) {
-    const pkg = packages[name]
-
-    await analyze(pkg, packages, root)
-
-    if (pkg.changes.length === 0) continue
-
-    await build(pkg, packages)
-
-    if (flags.dryRun) continue
-
-    await publish(pkg)
-  }
-} catch (e) {
-  console.error(e)
-  throw e
-}
 ```
-
-### `topo`
-[Toposort](https://github.com/semrel-extra/topo) is used to resolve the pkg release queue.
-By default, it omits the packages marked as `private`. You can override this by setting the `--include-private` flag.
-
-### `analyze`
-Determines pkg changes, release type, next version etc.
-
-```js
-export const analyze = async (pkg, packages, root) => {
-  pkg.config = await getPkgConfig(pkg.absPath, root.absPath)
-  pkg.latest = await getLatest(pkg)
-
-  const semanticChanges = await getSemanticChanges(pkg.absPath, pkg.latest.tag?.ref)
-  const depsChanges = await updateDeps(pkg, packages)
-  const changes = [...semanticChanges, ...depsChanges]
-
-  pkg.changes = changes
-  pkg.version = resolvePkgVersion(changes, pkg.latest.tag?.version || pkg.manifest.version)
-  pkg.manifest.version = pkg.version
-
-  console.log(`[${pkg.name}] semantic changes`, changes)
-}
+topo ─► contextify ─► analyze ──► build ──► test ──► publish ─► clean
+         (per pkg)    (per pkg)   (per pkg)  (per pkg) (per pkg)
 ```
+[`@semrel-extra/topo`](https://github.com/semrel-extra/topo) resolves the release queue respecting dependency graphs. The graph allows parallel execution where the dependency tree permits; `memoizeBy` prevents duplicate work when a package is reached by multiple paths.
+
+By default, packages marked as `private` are omitted. Override with `--include-private`.
+
+### Steps
+Each step has a uniform signature `(pkg, ctx)`:
+- **`contextify`** — resolves per-package config, latest release metadata, and git context.
+- **`analyze`** — determines semantic changes, release type, and next version.
+- **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
+- **`test`** — runs `testCmd`.
+- **`publish`** — orchestrates the publisher registry: prepare (serial) → run (parallel) → rollback on failure.
+- **`clean`** — restores `package.json` files and unsets git user config.
 
 Set `config.releaseRules` to override the default rules preset:
-```ts
+```js
 [
   {group: 'Features', releaseType: 'minor', prefixes: ['feat']},
   {group: 'Fixes & improvements', releaseType: 'patch', prefixes: ['fix', 'perf', 'refactor', 'docs', 'patch']},
@@ -198,32 +179,16 @@ Set `config.releaseRules` to override the default rules preset:
 ]
 ```
 
-### `build`
-Applies `config.cmd` to build pkg assets: bundles, docs, etc.
-```js
-export const build = async (pkg, packages) => {
-  // ...
-  if (!pkg.fetched && config.cmd) {
-    console.log(`[${pkg.name}] run cmd '${config.cmd}'`)
-    await $.o({cwd: pkg.absPath, quote: v => v})`${config.cmd}`
-  }
-  // ...
-}
-```
+### Publishers
+Publish targets are a registry of `{name, when, prepare?, run, undo?, snapshot?}` objects:
+- **meta** — pushes release metadata to the `meta` branch (or as a GH release asset).
+- **npm** — publishes to the npm registry.
+- **gh-release** — creates a GitHub release with optional file assets.
+- **gh-pages** — pushes docs to a `gh-pages` branch.
+- **changelog** — pushes a changelog entry to a `changelog` branch.
+- **cmd** — runs a custom `publishCmd`.
 
-### `publish`
-Publish the pkg to git, npm, gh-pages, gh-release, etc.
-```js
-export const publish = async (pkg) => {
-  await fs.writeJson(pkg.manifestPath, pkg.manifest, {spaces: 2})
-  await pushTag(pkg)
-  await pushMeta(pkg)
-  await pushChangelog(pkg)
-  await npmPublish(pkg)
-  await ghRelease(pkg)
-  await ghPages(pkg)
-}
-```
+Teardown walks the registry in reverse, calling `undo()` on each publisher for rollback/recovery.
 
 ### Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract:
