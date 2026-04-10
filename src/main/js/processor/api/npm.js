@@ -1,8 +1,10 @@
 import {log} from '../log.js'
-import {$, fs, INI, fetch, tempy} from 'zx-extra'
-import {attempt2, pipify, unzip} from '../../util.js'
+import {$, semver, fs, INI, fetch, tempy} from 'zx-extra'
+import {attempt2, memoizeBy, pipify, unzip} from '../../util.js'
 
 const FETCH_TIMEOUT_MS = 15_000
+const NPM_OIDC_VER = '11.5.0'
+const NPM_VER = (await $`npm --version`).toString().trim()
 
 // https://stackoverflow.com/questions/19978452/how-to-extract-single-file-from-tar-gz-archive-using-node-js
 
@@ -18,15 +20,14 @@ export const fetchPkg = async (pkg) => {
     const headers = bearerToken ? {Authorization: bearerToken} : {}
     log.info(`fetching '${id}' from ${npmRegistry}`)
 
-    // https://stackoverflow.com/questions/46946380/fetch-api-request-timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+    const ac = new AbortController()
+    const timer = setTimeout(() => ac.abort(), FETCH_TIMEOUT_MS)
     const tarball = await attempt2(() => fetch(tarballUrl, {
       method: 'GET',
       headers,
-      signal: controller.signal,
+      signal: ac.signal,
     }))
-    clearTimeout(timeoutId)
+    clearTimeout(timer)
 
     if (!tarball.ok) {
       throw new Error(`registry responded with ${tarball.status} for ${tarballUrl}`)
@@ -88,10 +89,8 @@ export const npmPublish = async (pkg) => {
   // OIDC trusted publishing: no auth token must be present for npm to use OIDC flow.
   // https://docs.npmjs.com/trusted-publishers/
   if (npmOidc) {
-    const npmVersion = (await $`npm --version`).toString().trim()
-    const [major, minor] = npmVersion.split('.').map(Number)
-    if (major < 11 || (major === 11 && minor < 5)) {
-      throw new Error(`npm OIDC trusted publishing requires npm >= 11.5.0, got ${npmVersion}`)
+    if (!semver.gte(NPM_VER, NPM_OIDC_VER)) {
+      throw new Error(`npm OIDC trusted publishing requires npm >= ${NPM_OIDC_VER}, got ${NPM_VER}`)
     }
     log.info('npm publish: OIDC trusted publishing enabled')
     npmFlags.push('--provenance')
@@ -104,16 +103,14 @@ export const npmPublish = async (pkg) => {
   await $({cwd})`npm publish ${npmFlags.filter(Boolean)}`
 }
 
-export const getNpmrc = async ({npmConfig, npmToken, npmRegistry}) => {
-  if (npmConfig) {
-    return npmConfig
-  }
+export const getNpmrc = memoizeBy(async ({npmConfig, npmToken, npmRegistry}) => {
+  if (npmConfig) return npmConfig
 
-  const npmrc =  tempy.temporaryFile({name: '.npmrc'})
+  const npmrc = tempy.temporaryFile({name: '.npmrc'})
   await fs.writeFile(npmrc, `${npmRegistry.replace(/^https?:\/\//, '//')}/:_authToken=${npmToken}`, {encoding: 'utf8'})
 
   return npmrc
-}
+}, ({npmConfig, npmToken, npmRegistry}) => `${npmConfig}:${npmToken}:${npmRegistry}`)
 
 // $`npm view ${name}@${version} dist.tarball`
 export const getTarballUrl = (registry, name, version) => `${registry}/${name}/-/${name.replace(/^.+(%2f|\/)/,'')}-${version}.tgz`
