@@ -1,12 +1,33 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
+import {$, within} from 'zx-extra'
 
 import {topo} from '@semrel-extra/topo'
-import {analyzeCommits, getNextVersion, resolvePkgVersion, semanticRules} from '../../main/js/processor/steps/analyze.js'
+import {
+  analyzeCommits,
+  getNextReleaseType,
+  getNextVersion,
+  resolvePkgVersion,
+  getSemanticChanges,
+  semanticRules,
+  releaseSeverityOrder,
+  analyze,
+} from '../../main/js/processor/steps/analyze.js'
 import {getCommits} from '../../main/js/processor/api/git.js'
 import {createFakeRepo} from './utils/repo.js'
+import {createMock, defaultResponses, makePkg, makeCtx} from './utils/mock.js'
 
 const test = suite('analyze')
+
+const setup = (responses = []) => {
+  const mock = createMock([...responses, ...defaultResponses()])
+  $.spawn = mock.spawn
+  $.quiet = true
+  $.verbose = false
+  $.memo = new Map()
+  $.report = undefined
+  return mock
+}
 
 test('`getCommits` obtains commits for each package', async () => {
   const cwd = await createFakeRepo({commits: [
@@ -212,6 +233,129 @@ test('resolvePkgVersion()', async () => {
 
   cases.forEach(([releaseType, prev, def, expected]) => {
     assert.is(resolvePkgVersion(releaseType, prev, def), expected)
+  })
+})
+
+test('getNextReleaseType returns major for breaking change', () => {
+  assert.is(getNextReleaseType([{releaseType: 'patch'}, {releaseType: 'major'}]), 'major')
+})
+
+test('getNextReleaseType returns minor for feat', () => {
+  assert.is(getNextReleaseType([{releaseType: 'patch'}, {releaseType: 'minor'}]), 'minor')
+})
+
+test('getNextReleaseType returns null for empty', () => {
+  assert.is(getNextReleaseType([]), null)
+})
+
+test('getNextVersion with previous version', () => {
+  assert.is(getNextVersion('patch', '1.0.0'), '1.0.1')
+  assert.is(getNextVersion('minor', '1.0.0'), '1.1.0')
+  assert.is(getNextVersion('major', '1.0.0'), '2.0.0')
+})
+
+test('getNextVersion with pre-release suffix', () => {
+  assert.is(getNextVersion('patch', '1.0.0', '1.0.0', '-snap.abc1234'), '1.0.1-snap.abc1234')
+})
+
+test('getNextVersion without previous version uses default', () => {
+  assert.is(getNextVersion('patch', undefined, '0.1.0'), '0.1.0')
+  assert.is(getNextVersion('patch', undefined), '1.0.0')
+})
+
+test('resolvePkgVersion returns null when no releaseType', () => {
+  assert.is(resolvePkgVersion(null, '1.0.0', '0.0.0'), '1.0.0')
+  assert.is(resolvePkgVersion(null, undefined, '0.0.0'), null)
+})
+
+test('releaseSeverityOrder is major > minor > patch', () => {
+  assert.equal(releaseSeverityOrder, ['major', 'minor', 'patch'])
+})
+
+test('getSemanticChanges parses commits with rules', async () => {
+  await within(async () => {
+    const log = '+++fix: bug____abc1__abc1full\n+++feat: new____def1__def1full'
+    setup([
+      [/git log/, log],
+    ])
+    const changes = await getSemanticChanges('/tmp/test', 'v1.0.0', undefined, semanticRules)
+    assert.is(changes.length, 2)
+    assert.is(changes[0].releaseType, 'patch')
+    assert.is(changes[1].releaseType, 'minor')
+  })
+})
+
+test('analyze sets pkg fields', async () => {
+  await within(async () => {
+    const log = '+++fix: something____abc1__abc1full'
+    setup([
+      [/git log/, log],
+    ])
+
+    const pkg = makePkg({
+      version: '1.0.0',
+      latest: {tag: {ref: 'v1.0.0', version: '1.0.0', name: 'test-pkg'}, meta: null},
+      changes: [],
+      extra: {manifest: {name: 'test-pkg', version: '1.0.0'}},
+    })
+    const ctx = makeCtx({flags: {}})
+    pkg.ctx = ctx
+    ctx.packages = {[pkg.name]: pkg}
+
+    await analyze(pkg, ctx)
+
+    assert.is(pkg.releaseType, 'patch')
+    assert.is(pkg.version, '1.0.1')
+    assert.ok(pkg.tag)
+    assert.ok(pkg.changes.length > 0)
+  })
+})
+
+test('analyze with snapshot flag', async () => {
+  await within(async () => {
+    const log = '+++feat: feature____abc1__abc1full'
+    setup([
+      [/git log/, log],
+    ])
+
+    const pkg = makePkg({
+      version: '1.0.0',
+      latest: {tag: {ref: 'v1.0.0', version: '1.0.0', name: 'test-pkg'}, meta: null},
+      changes: [],
+      extra: {manifest: {name: 'test-pkg', version: '1.0.0'}},
+    })
+    const ctx = makeCtx({flags: {snapshot: true}, git: {sha: 'deadbeef1234567', root: '/tmp/test'}})
+    pkg.ctx = ctx
+    ctx.packages = {[pkg.name]: pkg}
+
+    await analyze(pkg, ctx)
+
+    assert.ok(pkg.version.includes('-snap.'))
+    assert.ok(pkg.preversion)
+  })
+})
+
+test('analyze with no semantic changes', async () => {
+  await within(async () => {
+    const log = '+++chore: update deps____abc1__abc1full'
+    setup([
+      [/git log/, log],
+    ])
+
+    const pkg = makePkg({
+      version: '1.0.0',
+      latest: {tag: {ref: 'v1.0.0', version: '1.0.0', name: 'test-pkg'}, meta: null},
+      changes: [],
+      extra: {manifest: {name: 'test-pkg', version: '1.0.0'}},
+    })
+    const ctx = makeCtx({flags: {}})
+    pkg.ctx = ctx
+    ctx.packages = {[pkg.name]: pkg}
+
+    await analyze(pkg, ctx)
+
+    assert.is(pkg.releaseType, null)
+    assert.is(pkg.tag, null)
   })
 })
 

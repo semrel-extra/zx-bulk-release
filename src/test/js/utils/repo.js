@@ -2,7 +2,7 @@ import {fs, path, tempy, $, sleep} from 'zx-extra'
 import {fileURLToPath} from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-export const fixtures = path.resolve(__dirname, '../fixtures')
+export const fixtures = path.resolve(__dirname, '../../fixtures')
 
 export const createNpmRegistry = () => {
   let p
@@ -10,8 +10,8 @@ export const createNpmRegistry = () => {
   return {
     address: $.env.NPM_REGISTRY || 'http://localhost:4873',
     async start() {
-      fs.removeSync(path.resolve(__dirname, '../../../storage'))
-      const config = path.resolve(__dirname, '../../../verdaccio.config.yaml')
+      fs.removeSync(path.resolve(__dirname, '../../../../storage'))
+      const config = path.resolve(__dirname, '../../../../verdaccio.config.yaml')
       p = $({preferLocal: true})`verdaccio --config ${config}`
 
       return sleep(1000)
