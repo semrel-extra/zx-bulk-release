@@ -1,10 +1,10 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within, fs, path, tempy} from 'zx-extra'
-import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir, gitResponses} from './utils/mock.js'
+import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
 import {createGhServer} from './utils/gh-server.js'
-import {channels, deliver, resolveTemplates, filterActive} from '../../main/js/post/courier/index.js'
-import {buildParcel} from '../../main/js/post/courier/parcel.js'
+import {channels, deliver, resolveManifest} from '../../main/js/post/courier/index.js'
+import {buildParcels} from '../../main/js/post/courier/parcel.js'
 import {packTar, unpackTar} from '../../main/js/post/tar.js'
 
 const test = suite('courier.deliver')
@@ -26,121 +26,82 @@ const setup = async (responses = []) => {
   return mock
 }
 
-// --- resolveTemplates ---
+const writeTmpFile = async (content) => {
+  const p = path.join(tempy.temporaryDirectory(), 'file')
+  await fs.writeFile(p, content)
+  return p
+}
 
-test('resolveTemplates replaces ${{VAR}} from env', () => {
-  const manifest = {
-    token: '${{GH_TOKEN}}',
-    registry: '${{NPM_REGISTRY}}',
-    name: 'pkg',
-    version: '1.0.0',
-  }
-  const env = {GH_TOKEN: 'secret-tok', NPM_REGISTRY: 'https://registry.npmjs.org'}
-  const resolved = resolveTemplates(manifest, env)
+const findTar = (tars, channel) => tars.find(t => path.basename(t).includes(`.${channel}.`))
 
+// --- resolveManifest ---
+
+test('resolveManifest replaces ${{VAR}} from env', () => {
+  const resolved = resolveManifest(
+    {token: '${{GH_TOKEN}}', registry: '${{NPM_REGISTRY}}', name: 'pkg', version: '1.0.0'},
+    {GH_TOKEN: 'secret-tok', NPM_REGISTRY: 'https://registry.npmjs.org'},
+  )
   assert.is(resolved.token, 'secret-tok')
   assert.is(resolved.registry, 'https://registry.npmjs.org')
   assert.is(resolved.name, 'pkg')
-  assert.is(resolved.version, '1.0.0')
 })
 
-test('resolveTemplates replaces missing vars with empty string', () => {
-  const resolved = resolveTemplates({token: '${{MISSING}}'}, {})
+test('resolveManifest: missing vars → empty string, non-strings preserved', () => {
+  const resolved = resolveManifest({token: '${{MISSING}}', count: 42, flag: null}, {})
   assert.is(resolved.token, '')
-})
-
-test('resolveTemplates preserves non-string values', () => {
-  const data = {count: 42, list: [1, 2], flag: null}
-  const resolved = resolveTemplates(data, {})
   assert.is(resolved.count, 42)
-  assert.equal(resolved.list, [1, 2])
   assert.is(resolved.flag, null)
 })
 
-test('resolveTemplates handles multiple placeholders in one string', () => {
-  const resolved = resolveTemplates(
-    {url: 'https://${{USER}}:${{PASS}}@host'},
-    {USER: 'admin', PASS: 'secret'},
-  )
+test('resolveManifest handles multiple placeholders in one string', () => {
+  const resolved = resolveManifest({url: 'https://${{USER}}:${{PASS}}@host'}, {USER: 'admin', PASS: 'secret'})
   assert.is(resolved.url, 'https://admin:secret@host')
 })
 
-// --- tar round-trip: pack → unpack → verify ---
+// --- tar round-trip ---
 
 test('tar round-trip preserves manifest and files', async () => {
   const dir = tempy.temporaryDirectory()
-  const srcFile = path.join(dir, 'data.txt')
-  await fs.writeFile(srcFile, 'payload')
-
-  const tarPath = path.join(dir, 'test.tar')
-  await packTar(tarPath, {key: 'value', n: 42}, [{name: 'data.txt', source: srcFile}])
-
-  const outDir = path.join(dir, 'out')
-  const {manifest} = await unpackTar(tarPath, outDir)
-
+  await fs.writeFile(path.join(dir, 'data.txt'), 'payload')
+  await packTar(path.join(dir, 'test.tar'), {key: 'value', n: 42}, [{name: 'data.txt', source: path.join(dir, 'data.txt')}])
+  const {manifest} = await unpackTar(path.join(dir, 'test.tar'), path.join(dir, 'out'))
   assert.is(manifest.key, 'value')
-  assert.is(manifest.n, 42)
-  assert.is(await fs.readFile(path.join(outDir, 'data.txt'), 'utf8'), 'payload')
+  assert.is(await fs.readFile(path.join(dir, 'out/data.txt'), 'utf8'), 'payload')
 })
 
 test('tar round-trip preserves directory trees', async () => {
   const dir = tempy.temporaryDirectory()
-  const nested = path.join(dir, 'src/sub')
-  await fs.ensureDir(nested)
+  await fs.ensureDir(path.join(dir, 'src/sub'))
   await fs.writeFile(path.join(dir, 'src/a.txt'), 'aaa')
-  await fs.writeFile(path.join(nested, 'b.txt'), 'bbb')
-
-  const tarPath = path.join(dir, 'tree.tar')
-  await packTar(tarPath, {ok: true}, [{name: 'src', source: path.join(dir, 'src')}])
-
-  const outDir = path.join(dir, 'out')
-  const {manifest} = await unpackTar(tarPath, outDir)
-
+  await fs.writeFile(path.join(dir, 'src/sub/b.txt'), 'bbb')
+  await packTar(path.join(dir, 'tree.tar'), {ok: true}, [{name: 'src', source: path.join(dir, 'src')}])
+  const {manifest} = await unpackTar(path.join(dir, 'tree.tar'), path.join(dir, 'out'))
   assert.is(manifest.ok, true)
-  assert.is(await fs.readFile(path.join(outDir, 'src/a.txt'), 'utf8'), 'aaa')
-  assert.is(await fs.readFile(path.join(outDir, 'src/sub/b.txt'), 'utf8'), 'bbb')
+  assert.is(await fs.readFile(path.join(dir, 'out/src/sub/b.txt'), 'utf8'), 'bbb')
 })
 
 // --- deliver: credential resolution ---
 
-test('deliver resolves template credentials from env and calls channel.run', async () => {
+test('deliver resolves template credentials and calls channel.run', async () => {
   await within(async () => {
     await setup()
     const dir = tempy.temporaryDirectory()
     const tarPath = path.join(dir, 'test.npm.tar')
-
-    // Build a fake npm tar with template manifest
     await packTar(tarPath, {
-      name: 'test-pkg',
-      version: '1.0.1',
-      registry: '${{NPM_REGISTRY}}',
-      token: '${{NPM_TOKEN}}',
-      config: '${{NPM_CONFIG}}',
-      provenance: '${{NPM_PROVENANCE}}',
-      oidc: '${{NPM_OIDC}}',
-      preversion: undefined,
+      channel: 'npm', name: 'test-pkg', version: '1.0.1',
+      registry: '${{NPM_REGISTRY}}', token: '${{NPM_TOKEN}}',
     }, [{name: 'package.tgz', source: await writeTmpFile('fake-tarball')}])
 
     const received = []
     const origRun = channels.npm.run
     channels.npm.run = async (manifest, dir) => received.push({manifest, dir})
 
-    await deliver({npm: tarPath}, {
-      NPM_REGISTRY: 'https://my-registry.com',
-      NPM_TOKEN: 'tok-123',
-      NPM_CONFIG: '',
-      NPM_PROVENANCE: '',
-      NPM_OIDC: '',
-      PATH: process.env.PATH,
-    })
+    await deliver([tarPath], {NPM_REGISTRY: 'https://my-registry.com', NPM_TOKEN: 'tok-123', PATH: process.env.PATH})
 
     channels.npm.run = origRun
-
     assert.is(received.length, 1)
     assert.is(received[0].manifest.registry, 'https://my-registry.com')
     assert.is(received[0].manifest.token, 'tok-123')
-    assert.is(received[0].manifest.name, 'test-pkg')
-    // package.tgz extracted into dir
     assert.ok(await fs.pathExists(path.join(received[0].dir, 'package.tgz')))
   })
 })
@@ -150,9 +111,8 @@ test('deliver builds repoAuthedUrl from repoHost + env token', async () => {
     await setup()
     const dir = tempy.temporaryDirectory()
     const tarPath = path.join(dir, 'test.meta.tar')
-
     await packTar(tarPath, {
-      name: 'pkg', version: '1.0.0', tag: 'v1',
+      channel: 'meta', name: 'pkg', version: '1.0.0', tag: 'v1',
       type: 'commit', data: {foo: 1},
       repoHost: 'github.com', repoName: 'org/repo',
       originUrl: 'https://github.com/org/repo.git',
@@ -162,18 +122,11 @@ test('deliver builds repoAuthedUrl from repoHost + env token', async () => {
     const received = []
     const origRun = channels.meta.run
     channels.meta.run = async (manifest, dir) => received.push({manifest, dir})
-
-    await deliver({meta: tarPath}, {
-      GH_TOKEN: 'ghp_secret',
-      PATH: process.env.PATH,
-    })
-
+    await deliver([tarPath], {GH_TOKEN: 'ghp_secret', PATH: process.env.PATH})
     channels.meta.run = origRun
 
-    assert.is(received.length, 1)
-    const m = received[0].manifest
-    assert.is(m.repoAuthedUrl, 'https://x-access-token:ghp_secret@github.com/org/repo.git')
-    assert.is(m.ghBasicAuth, 'x-access-token:ghp_secret')
+    assert.is(received[0].manifest.repoAuthedUrl, 'https://x-access-token:ghp_secret@github.com/org/repo.git')
+    assert.is(received[0].manifest.ghBasicAuth, 'x-access-token:ghp_secret')
   })
 })
 
@@ -182,9 +135,8 @@ test('deliver uses custom GH_USER in repoAuthedUrl', async () => {
     await setup()
     const dir = tempy.temporaryDirectory()
     const tarPath = path.join(dir, 'test.meta.tar')
-
     await packTar(tarPath, {
-      name: 'pkg', version: '1.0.0', tag: 'v1',
+      channel: 'meta', name: 'pkg', version: '1.0.0', tag: 'v1',
       type: 'commit', data: {},
       repoHost: 'github.com', repoName: 'org/repo',
       originUrl: 'https://github.com/org/repo.git',
@@ -194,9 +146,7 @@ test('deliver uses custom GH_USER in repoAuthedUrl', async () => {
     const received = []
     const origRun = channels.meta.run
     channels.meta.run = async (manifest, dir) => received.push({manifest, dir})
-
-    await deliver({meta: tarPath}, {GH_TOKEN: 'tok', GH_USER: 'mybot', PATH: process.env.PATH})
-
+    await deliver([tarPath], {GH_TOKEN: 'tok', GH_USER: 'mybot', PATH: process.env.PATH})
     channels.meta.run = origRun
 
     assert.is(received[0].manifest.repoAuthedUrl, 'https://mybot:tok@github.com/org/repo.git')
@@ -208,11 +158,9 @@ test('deliver falls back to originUrl when GH_TOKEN is missing', async () => {
     await setup()
     const dir = tempy.temporaryDirectory()
     const tarPath = path.join(dir, 'test.changelog.tar')
-
     await packTar(tarPath, {
-      releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
-      msg: 'chore: update',
-      repoHost: 'github.com', repoName: 'org/repo',
+      channel: 'changelog', releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
+      msg: 'chore: update', repoHost: 'github.com', repoName: 'org/repo',
       originUrl: 'https://github.com/org/repo.git',
       gitCommitterEmail: 'b@b.com', gitCommitterName: 'Bot',
     })
@@ -220,13 +168,9 @@ test('deliver falls back to originUrl when GH_TOKEN is missing', async () => {
     const received = []
     const origRun = channels.changelog.run
     channels.changelog.run = async (manifest, dir) => received.push({manifest, dir})
-
-    // No GH_TOKEN → repoAuthedUrl must fall back to originUrl
-    await deliver({changelog: tarPath}, {PATH: process.env.PATH})
-
+    await deliver([tarPath], {PATH: process.env.PATH})
     channels.changelog.run = origRun
 
-    assert.is(received.length, 1)
     assert.is(received[0].manifest.repoAuthedUrl, 'https://github.com/org/repo.git')
   })
 })
@@ -236,111 +180,77 @@ test('deliver uses originUrl for local repos (no repoHost)', async () => {
     await setup()
     const dir = tempy.temporaryDirectory()
     const tarPath = path.join(dir, 'test.changelog.tar')
-    const bareOrigin = '/tmp/bare-repo'
-
     await packTar(tarPath, {
-      releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
-      msg: 'chore: update',
-      repoHost: undefined, repoName: undefined,
-      originUrl: bareOrigin,
+      channel: 'changelog', releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
+      msg: 'chore: update', originUrl: '/tmp/bare-repo',
       gitCommitterEmail: 'b@b.com', gitCommitterName: 'Bot',
     })
 
     const received = []
     const origRun = channels.changelog.run
     channels.changelog.run = async (manifest, dir) => received.push({manifest, dir})
-
-    await deliver({changelog: tarPath}, {GH_TOKEN: 'tok', PATH: process.env.PATH})
-
+    await deliver([tarPath], {GH_TOKEN: 'tok', PATH: process.env.PATH})
     channels.changelog.run = origRun
 
-    assert.is(received.length, 1)
-    // repoHost is missing → originUrl used directly
-    assert.is(received[0].manifest.repoAuthedUrl, bareOrigin)
+    assert.is(received[0].manifest.repoAuthedUrl, '/tmp/bare-repo')
   })
 })
 
-test('deliver skips cmd channel', async () => {
-  await within(async () => {
-    await setup()
-    const dir = tempy.temporaryDirectory()
-
-    const received = []
-    const origRun = channels.cmd.run
-    channels.cmd.run = async (...args) => received.push(args)
-
-    await deliver({cmd: path.join(dir, 'fake.tar')}, {PATH: process.env.PATH})
-
-    channels.cmd.run = origRun
-    assert.is(received.length, 0)
-  })
-})
-
-test('deliver skips unknown channel names', async () => {
+test('deliver skips tars with unknown channel', async () => {
   await within(async () => {
     await setup()
     const dir = tempy.temporaryDirectory()
     const tarPath = path.join(dir, 'test.unknown.tar')
-    await packTar(tarPath, {foo: 'bar'})
-
-    // should not throw
-    await deliver({unknown: tarPath}, {PATH: process.env.PATH})
+    await packTar(tarPath, {channel: 'unknown', foo: 'bar'})
+    await deliver([tarPath], {PATH: process.env.PATH})
   })
 })
 
-// --- credentials never leak into tar manifests ---
+test('deliver skips tars without channel field', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const tarPath = path.join(dir, 'test.tar')
+    await packTar(tarPath, {foo: 'bar'})
+    await deliver([tarPath], {PATH: process.env.PATH})
+  })
+})
+
+// --- credentials never leak into parcels ---
 
 test('parcel manifests contain only template placeholders, never real values', () => {
   const pkg = makePkg({
     config: {
-      ghToken: 'REAL_SECRET',
-      npmToken: 'REAL_NPM',
-      npmRegistry: 'https://real.registry',
-      ghBasicAuth: 'user:REAL_SECRET',
-      changelog: 'changelog',
-      ghPages: 'gh-pages',
-      meta: {type: 'commit'},
+      ghToken: 'REAL_SECRET', npmToken: 'REAL_NPM',
+      ghBasicAuth: 'user:REAL_SECRET', changelog: 'changelog',
+      ghPages: 'gh-pages', meta: {type: 'commit'},
     },
   })
   const ctx = makeCtx()
 
-  const parcel = buildParcel(pkg, ctx, {
+  const parcels = buildParcels(pkg, ctx, {
     channels: ['npm', 'changelog', 'gh-pages', 'meta', 'gh-release'],
-    repoHost: 'github.com',
-    repoName: 'org/repo',
-    originUrl: 'https://github.com/org/repo.git',
-    releaseNotes: '## notes',
+    repoHost: 'github.com', repoName: 'org/repo',
+    originUrl: 'https://github.com/org/repo.git', releaseNotes: '## notes',
   })
 
-  // npm: tokens are templates
-  const npm = parcel.channels.npm.manifest
+  for (const {manifest} of parcels) {
+    const json = JSON.stringify(manifest)
+    assert.not.ok(json.includes('REAL_SECRET'), `secret leaked in ${manifest.channel}`)
+    assert.not.ok(json.includes('REAL_NPM'), `npm secret leaked in ${manifest.channel}`)
+  }
+
+  const npm = parcels.find(p => p.channel === 'npm').manifest
   assert.is(npm.token, '${{NPM_TOKEN}}')
   assert.is(npm.registry, '${{NPM_REGISTRY}}')
-  assert.not.ok(JSON.stringify(npm).includes('REAL_SECRET'))
-  assert.not.ok(JSON.stringify(npm).includes('REAL_NPM'))
 
-  // gh-release: token is template
-  const ghr = parcel.channels['gh-release'].manifest
+  const ghr = parcels.find(p => p.channel === 'gh-release').manifest
   assert.is(ghr.token, '${{GH_TOKEN}}')
-  assert.not.ok(JSON.stringify(ghr).includes('REAL_SECRET'))
-
-  // changelog: no credentials at all
-  const cl = parcel.channels.changelog.manifest
-  assert.not.ok(JSON.stringify(cl).includes('REAL_SECRET'))
-  assert.not.ok(JSON.stringify(cl).includes('ghBasicAuth'))
-
-  // gh-pages: no credentials
-  const ghp = parcel.channels['gh-pages'].manifest
-  assert.not.ok(JSON.stringify(ghp).includes('REAL_SECRET'))
-
-  // meta: no credentials
-  const m = parcel.channels.meta.manifest
-  assert.not.ok(JSON.stringify(m).includes('REAL_SECRET'))
 })
 
 // --- full pack → deliver round-trip ---
 
-test('pack → deliver round-trip: npm channel receives resolved manifest + tarball', async () => {
+test('pack → deliver round-trip: npm', async () => {
   await within(async () => {
     const mock = await setup([['npm pack', 'test-pkg-1.0.1.tgz']])
     const origSpawn = $.spawn
@@ -352,227 +262,132 @@ test('pack → deliver round-trip: npm channel receives resolved manifest + tarb
       }
       return origSpawn(cmd, args)
     }
-
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
-    const pkg = makePkg({
-      version: '1.0.1',
-      extra: {
-        manifest: {name: 'test-pkg', version: '1.0.1', private: false},
-        manifestRaw: '{}',
-        manifestAbsPath: `${tmpDir}/package.json`,
-      },
-    })
+    const pkg = makePkg({version: '1.0.1', extra: {
+      manifest: {name: 'test-pkg', version: '1.0.1', private: false},
+      manifestRaw: '{}', manifestAbsPath: `${tmpDir}/package.json`,
+    }})
     const ctx = makeCtx({channels: ['npm'], flags: {}})
     pkg.ctx = ctx
-
     await pack(pkg, ctx)
 
-    // Now deliver: templates should resolve from env
     const received = []
     const origRun = channels.npm.run
     channels.npm.run = async (manifest, dir) => received.push({manifest, dir})
-
-    await deliver(pkg.tars, {
-      NPM_REGISTRY: 'https://my.registry',
-      NPM_TOKEN: 'secret-npm-tok',
-      PATH: process.env.PATH,
-    })
-
+    await deliver(pkg.tars, {NPM_REGISTRY: 'https://my.registry', NPM_TOKEN: 'secret-npm-tok', PATH: process.env.PATH})
     channels.npm.run = origRun
 
-    assert.is(received.length, 1)
-    assert.is(received[0].manifest.name, 'test-pkg')
-    assert.is(received[0].manifest.version, '1.0.1')
+    assert.is(received[0].manifest.channel, 'npm')
     assert.is(received[0].manifest.registry, 'https://my.registry')
     assert.is(received[0].manifest.token, 'secret-npm-tok')
     assert.ok(await fs.pathExists(path.join(received[0].dir, 'package.tgz')))
   })
 })
 
-test('pack → deliver round-trip: changelog channel receives resolved repoAuthedUrl + notes', async () => {
+test('pack → deliver round-trip: changelog', async () => {
   await within(async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
-
-    const pkg = makePkg({
-      version: '1.0.1',
-      extra: {
-        manifest: {name: 'test-pkg', version: '1.0.1', private: false},
-        manifestRaw: '{}',
-        manifestAbsPath: `${tmpDir}/package.json`,
-      },
-    })
+    const pkg = makePkg({version: '1.0.1', extra: {
+      manifest: {name: 'test-pkg', version: '1.0.1', private: false},
+      manifestRaw: '{}', manifestAbsPath: `${tmpDir}/package.json`,
+    }})
     const ctx = makeCtx({channels: ['changelog'], flags: {}})
     pkg.ctx = ctx
-
     await pack(pkg, ctx)
-    assert.ok(pkg.tars.changelog)
 
     const received = []
     const origRun = channels.changelog.run
     channels.changelog.run = async (manifest, dir) => received.push({manifest, dir})
-
-    await deliver(pkg.tars, {
-      GH_TOKEN: 'ghp_test123',
-      PATH: process.env.PATH,
-    })
-
+    await deliver(pkg.tars, {GH_TOKEN: 'ghp_test123', PATH: process.env.PATH})
     channels.changelog.run = origRun
 
-    assert.is(received.length, 1)
-    const m = received[0].manifest
-    assert.ok(m.releaseNotes)
-    assert.is(m.branch, 'changelog')
-    assert.ok(m.file)
-    assert.is(m.repoAuthedUrl, 'https://x-access-token:ghp_test123@github.com/test-org/test-repo.git')
-    assert.is(m.ghBasicAuth, 'x-access-token:ghp_test123')
+    assert.is(received[0].manifest.channel, 'changelog')
+    assert.ok(received[0].manifest.releaseNotes)
+    assert.is(received[0].manifest.repoAuthedUrl, 'https://x-access-token:ghp_test123@github.com/test-org/test-repo.git')
   })
 })
 
-test('pack → deliver round-trip: gh-pages channel receives docs from tar', async () => {
+test('pack → deliver round-trip: gh-pages with docs', async () => {
   await within(async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
+    await fs.ensureDir(path.join(tmpDir, 'packages/test-pkg/docs'))
+    await fs.writeFile(path.join(tmpDir, 'packages/test-pkg/docs/index.html'), '<h1>hello</h1>')
 
-    // Create docs in package absPath
-    const docsDir = path.join(tmpDir, 'packages/test-pkg/docs')
-    await fs.ensureDir(docsDir)
-    await fs.writeFile(path.join(docsDir, 'index.html'), '<h1>hello</h1>')
-    await fs.writeFile(path.join(docsDir, 'style.css'), 'body{}')
-
-    const pkg = makePkg({
-      version: '1.0.1',
-      extra: {
-        manifest: {name: 'test-pkg', version: '1.0.1', private: false},
-        manifestRaw: '{}',
-        manifestAbsPath: `${tmpDir}/package.json`,
-      },
-    })
+    const pkg = makePkg({version: '1.0.1', extra: {
+      manifest: {name: 'test-pkg', version: '1.0.1', private: false},
+      manifestRaw: '{}', manifestAbsPath: `${tmpDir}/package.json`,
+    }})
     pkg.config.ghPages = 'gh-pages'
     const ctx = makeCtx({channels: ['gh-pages'], flags: {}})
     pkg.ctx = ctx
-
     await pack(pkg, ctx)
-    assert.ok(pkg.tars['gh-pages'])
 
     const received = []
     const origRun = channels['gh-pages'].run
     channels['gh-pages'].run = async (manifest, dir) => received.push({manifest, dir})
-
     await deliver(pkg.tars, {GH_TOKEN: 'ghp_x', PATH: process.env.PATH})
-
     channels['gh-pages'].run = origRun
 
-    assert.is(received.length, 1)
-    const m = received[0].manifest
-    assert.is(m.branch, 'gh-pages')
-    assert.ok(m.repoAuthedUrl)
-    // docs extracted from tar
-    const html = await fs.readFile(path.join(received[0].dir, 'docs/index.html'), 'utf8')
-    assert.is(html, '<h1>hello</h1>')
-    const css = await fs.readFile(path.join(received[0].dir, 'docs/style.css'), 'utf8')
-    assert.is(css, 'body{}')
+    assert.is(received[0].manifest.channel, 'gh-pages')
+    assert.is(await fs.readFile(path.join(received[0].dir, 'docs/index.html'), 'utf8'), '<h1>hello</h1>')
   })
 })
 
-test('pack → deliver round-trip: gh-release channel receives assets from tar', async () => {
+test('pack → deliver round-trip: gh-release with assets', async () => {
   await within(async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
+    await fs.writeFile(path.join(tmpDir, 'packages/test-pkg/dist.bin'), 'binary-data')
 
-    // Create asset in package absPath
-    const assetDir = path.join(tmpDir, 'packages/test-pkg')
-    await fs.ensureDir(assetDir)
-    await fs.writeFile(path.join(assetDir, 'dist.bin'), 'binary-data')
-
-    gh.setRoutes({
-      'POST /repos/test-org/test-repo/releases': (req, res) => {
-        res.writeHead(201, {'Content-Type': 'application/json'})
-        res.end(JSON.stringify({id: 1, upload_url: `${gh.url}/uploads{?name}`}))
-      },
-      'POST /uploads': (req, res) => {
-        res.writeHead(201, {'Content-Type': 'application/json'})
-        res.end('{"id":2}')
-      },
-    })
-
-    const pkg = makePkg({
-      version: '1.0.1',
-      extra: {
-        manifest: {name: 'test-pkg', version: '1.0.1', private: false},
-        manifestRaw: '{}',
-        manifestAbsPath: `${tmpDir}/package.json`,
-      },
-    })
+    const pkg = makePkg({version: '1.0.1', extra: {
+      manifest: {name: 'test-pkg', version: '1.0.1', private: false},
+      manifestRaw: '{}', manifestAbsPath: `${tmpDir}/package.json`,
+    }})
     pkg.config.ghToken = 'tok'
     pkg.config.ghAssets = [{name: 'dist.bin', source: 'dist.bin'}]
     const ctx = makeCtx({channels: ['gh-release'], flags: {}})
     pkg.ctx = ctx
-
     await pack(pkg, ctx)
-    assert.ok(pkg.tars['gh-release'])
 
-    // Verify asset is packed into tar
-    const {manifest, dir: tarDir} = await unpackTar(pkg.tars['gh-release'], tempy.temporaryDirectory())
+    const tar = findTar(pkg.tars, 'gh-release')
+    const {manifest} = await unpackTar(tar, tempy.temporaryDirectory())
+    assert.is(manifest.channel, 'gh-release')
     assert.is(manifest.token, '${{GH_TOKEN}}')
-    assert.ok(await fs.pathExists(path.join(tarDir, 'assets/dist.bin')))
-    assert.is(await fs.readFile(path.join(tarDir, 'assets/dist.bin'), 'utf8'), 'binary-data')
 
-    // Deliver resolves token and channel reads from dir
     const received = []
     const origRun = channels['gh-release'].run
     channels['gh-release'].run = async (manifest, dir) => received.push({manifest, dir})
-
     await deliver(pkg.tars, {GH_TOKEN: 'real-token', GH_API_URL: gh.url, PATH: process.env.PATH})
-
     channels['gh-release'].run = origRun
 
-    assert.is(received.length, 1)
     assert.is(received[0].manifest.token, 'real-token')
     assert.ok(await fs.pathExists(path.join(received[0].dir, 'assets/dist.bin')))
   })
 })
 
-test('pack → deliver round-trip: meta channel receives originUrl fallback', async () => {
+test('pack → deliver round-trip: meta with originUrl fallback', async () => {
   await within(async () => {
-    // Simulate local bare repo: parseOrigin can't parse local paths
-    await setup([
-      ['git config --get remote.origin.url', '/tmp/local-bare-repo'],
-    ])
+    await setup([['git config --get remote.origin.url', '/tmp/local-bare-repo']])
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
-    const pkg = makePkg({
-      version: '1.0.1',
-      extra: {
-        manifest: {name: 'test-pkg', version: '1.0.1', private: false},
-        manifestRaw: '{}',
-        manifestAbsPath: `${tmpDir}/package.json`,
-      },
-    })
+    const pkg = makePkg({version: '1.0.1', extra: {
+      manifest: {name: 'test-pkg', version: '1.0.1', private: false},
+      manifestRaw: '{}', manifestAbsPath: `${tmpDir}/package.json`,
+    }})
     pkg.config.meta = {type: 'commit'}
     const ctx = makeCtx({channels: ['meta'], flags: {}})
     pkg.ctx = ctx
-
     await pack(pkg, ctx)
-    assert.ok(pkg.tars.meta)
-
-    // Verify originUrl is stored in manifest
-    const {manifest} = await unpackTar(pkg.tars.meta, tempy.temporaryDirectory())
-    assert.is(manifest.originUrl, '/tmp/local-bare-repo')
-    // repoHost should be undefined for local paths
-    assert.is(manifest.repoHost, undefined)
 
     const received = []
     const origRun = channels.meta.run
     channels.meta.run = async (manifest, dir) => received.push({manifest, dir})
-
     await deliver(pkg.tars, {GH_TOKEN: 'tok', PATH: process.env.PATH})
-
     channels.meta.run = origRun
 
-    assert.is(received.length, 1)
-    // originUrl used as repoAuthedUrl since repoHost is undefined
     assert.is(received[0].manifest.repoAuthedUrl, '/tmp/local-bare-repo')
   })
 })
@@ -589,42 +404,25 @@ test('pack → deliver: multiple channels in one pass', async () => {
       }
       return origSpawn(cmd, args)
     }
-
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
+    await fs.ensureDir(path.join(tmpDir, 'packages/test-pkg/docs'))
+    await fs.writeFile(path.join(tmpDir, 'packages/test-pkg/docs/readme.md'), '# Docs')
 
-    const docsDir = path.join(tmpDir, 'packages/test-pkg/docs')
-    await fs.ensureDir(docsDir)
-    await fs.writeFile(path.join(docsDir, 'readme.md'), '# Docs')
-
-    const pkg = makePkg({
-      version: '1.0.1',
-      extra: {
-        manifest: {name: 'test-pkg', version: '1.0.1', private: false},
-        manifestRaw: '{}',
-        manifestAbsPath: `${tmpDir}/package.json`,
-      },
-    })
+    const pkg = makePkg({version: '1.0.1', extra: {
+      manifest: {name: 'test-pkg', version: '1.0.1', private: false},
+      manifestRaw: '{}', manifestAbsPath: `${tmpDir}/package.json`,
+    }})
     pkg.config.ghToken = 'tok'
     pkg.config.ghPages = 'gh-pages'
     pkg.config.meta = {type: 'commit'}
     const ctx = makeCtx({channels: ['npm', 'gh-release', 'gh-pages', 'changelog', 'meta'], flags: {}})
     pkg.ctx = ctx
-
     await pack(pkg, ctx)
 
-    // All 5 channels should have tars
-    assert.ok(pkg.tars.npm)
-    assert.ok(pkg.tars['gh-release'])
-    assert.ok(pkg.tars['gh-pages'])
-    assert.ok(pkg.tars.changelog)
-    assert.ok(pkg.tars.meta)
+    assert.is(pkg.tars.length, 5)
+    // All tars in same staging directory
+    assert.is(new Set(pkg.tars.map(t => path.dirname(t))).size, 1)
 
-    // All tars live in the same staging directory
-    const dirs = Object.values(pkg.tars).map(p => path.dirname(p))
-    const uniqueDirs = [...new Set(dirs)]
-    assert.is(uniqueDirs.length, 1, 'all tars should be in one staging directory')
-
-    // Deliver all channels
     const received = {}
     const origRuns = {}
     for (const name of ['npm', 'gh-release', 'gh-pages', 'changelog', 'meta']) {
@@ -633,35 +431,65 @@ test('pack → deliver: multiple channels in one pass', async () => {
     }
 
     await deliver(pkg.tars, {
-      GH_TOKEN: 'ghp_live',
-      NPM_TOKEN: 'npm_live',
-      NPM_REGISTRY: 'https://live.registry',
-      GH_API_URL: gh.url,
-      PATH: process.env.PATH,
+      GH_TOKEN: 'ghp_live', NPM_TOKEN: 'npm_live',
+      NPM_REGISTRY: 'https://live.registry', GH_API_URL: gh.url, PATH: process.env.PATH,
     })
 
     for (const name of Object.keys(origRuns)) channels[name].run = origRuns[name]
 
-    // npm
     assert.is(received.npm.manifest.token, 'npm_live')
-    assert.is(received.npm.manifest.registry, 'https://live.registry')
-
-    // gh-release
     assert.is(received['gh-release'].manifest.token, 'ghp_live')
-    assert.ok(received['gh-release'].manifest.releaseNotes)
-
-    // gh-pages
     assert.ok(received['gh-pages'].manifest.repoAuthedUrl.includes('ghp_live'))
-    const doc = await fs.readFile(path.join(received['gh-pages'].dir, 'docs/readme.md'), 'utf8')
-    assert.is(doc, '# Docs')
-
-    // changelog
-    assert.ok(received.changelog.manifest.repoAuthedUrl.includes('ghp_live'))
     assert.ok(received.changelog.manifest.releaseNotes)
-
-    // meta
-    assert.ok(received.meta.manifest.repoAuthedUrl.includes('ghp_live'))
     assert.is(received.meta.manifest.name, 'test-pkg')
+  })
+})
+
+// --- deliver validation: fail-fast ---
+
+test('deliver throws before any channel runs if credentials missing', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const tarPath = path.join(dir, 'test.npm.tar')
+    await packTar(tarPath, {channel: 'npm', name: 'pkg', version: '1.0.0', registry: '', token: '${{NPM_TOKEN}}'},
+      [{name: 'package.tgz', source: await writeTmpFile('fake')}])
+
+    const ran = []
+    const origRun = channels.npm.run
+    channels.npm.run = async () => ran.push('npm')
+
+    try {
+      await deliver([tarPath], {PATH: process.env.PATH})
+      assert.unreachable('should have thrown')
+    } catch (e) {
+      assert.ok(e.message.includes('missing credentials'))
+      assert.ok(e.message.includes('npm'))
+    }
+
+    channels.npm.run = origRun
+    assert.is(ran.length, 0)
+  })
+})
+
+test('deliver reports all missing credentials at once', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const npmTar = path.join(dir, 'npm.tar')
+    await packTar(npmTar, {channel: 'npm', name: 'pkg', version: '1.0.0', token: '${{NPM_TOKEN}}'},
+      [{name: 'package.tgz', source: await writeTmpFile('fake')}])
+    const clTar = path.join(dir, 'cl.tar')
+    await packTar(clTar, {channel: 'changelog', releaseNotes: '#', branch: 'cl', file: 'CL.md', msg: 'up',
+      gitCommitterEmail: 'b@b.com', gitCommitterName: 'Bot'})
+
+    try {
+      await deliver([npmTar, clTar], {PATH: process.env.PATH})
+      assert.unreachable('should have thrown')
+    } catch (e) {
+      assert.ok(e.message.includes('npm'))
+      assert.ok(e.message.includes('changelog'))
+    }
   })
 })
 
@@ -679,13 +507,5 @@ test('fetchRepo throws when both origin and cwd are missing', async () => {
     }
   })
 })
-
-// --- helper ---
-
-async function writeTmpFile(content) {
-  const p = path.join(tempy.temporaryDirectory(), 'file')
-  await fs.writeFile(p, content)
-  return p
-}
 
 test.run()

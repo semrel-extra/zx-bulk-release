@@ -54,6 +54,7 @@ const removeMetaArtifact = async (pkg, {tag, version, reason}) => {
 
 export default {
   name: 'meta',
+  requires: ['repoAuthedUrl'],
   when:    (pkg) => pkg.config.meta.type !== null,
   prepare: prepareMeta,
   run:     pushMetaBranch,

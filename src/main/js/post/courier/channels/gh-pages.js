@@ -24,6 +24,7 @@ const run = queuefy(async (manifest, dir) => {
 
 export default {
   name: 'gh-pages',
+  requires: ['repoAuthedUrl'],
   when: (pkg) => !!pkg.config.ghPages,
   run,
 }

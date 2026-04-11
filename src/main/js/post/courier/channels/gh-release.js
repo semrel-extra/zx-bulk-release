@@ -37,6 +37,7 @@ const undo = async (pkg, {tag}) => {
 
 export default {
   name: 'gh-release',
+  requires: ['token', 'repoName'],
   when: (pkg) => !!pkg.config.ghToken,
   run,
   undo,
