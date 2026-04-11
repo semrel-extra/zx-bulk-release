@@ -11,6 +11,7 @@ import {recover} from './depot/steps/teardown.js'
 import {fetchTags} from './api/git.js'
 import {analyze} from './depot/steps/analyze.js'
 import {build} from './depot/steps/build.js'
+import {pack} from './depot/steps/pack.js'
 import {publish} from './depot/steps/publish.js'
 import {clean} from './depot/steps/clean.js'
 import {test} from './depot/steps/test.js'
@@ -81,6 +82,8 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
         await test(pkg)
       }
       if (!flags.dryRun && flags.publish !== false) {
+        report.setStatus('packing', pkg.name)
+        await pack(pkg)
         report.setStatus('publishing', pkg.name)
         await publish(pkg)
       }
