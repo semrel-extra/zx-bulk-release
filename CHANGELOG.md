@@ -1,3 +1,8 @@
+## [3.0.3](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.2...v3.0.3) (2026-04-11)
+
+### Fixes & improvements
+* fix: fallback ghApiUrl from config ([ac56cb0](https://github.com/semrel-extra/zx-bulk-release/commit/ac56cb014dea0bea9d3c352dd44900a0647e058f))
+
 ## [3.0.2](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.1...v3.0.2) (2026-04-11)
 
 ### Fixes & improvements
