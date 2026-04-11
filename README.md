@@ -63,7 +63,6 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 By default, zbr runs the full pipeline in a single process. For better security isolation, split build and delivery into separate CI jobs:
 
 ```yaml
-# Job 1: build (minimal privileges — source code access only)
 jobs:
   pack:
     runs-on: ubuntu-latest
@@ -72,20 +71,27 @@ jobs:
         with: { fetch-depth: 0 }
       - run: npx zx-bulk-release --pack
       - uses: actions/upload-artifact@v4
-        with: { name: parcels, path: parcels, retention-days: 1 }
+        with:
+          name: parcels
+          path: parcels
+          retention-days: 1
+          if-no-files-found: ignore
 
-# Job 2: deliver (only delivery credentials, no source code)
   deliver:
     needs: pack
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
+        id: download
         with: { name: parcels, path: parcels }
-      - run: npx zx-bulk-release --deliver
+        continue-on-error: true
+      - if: steps.download.outcome == 'success'
+        run: npx zx-bulk-release --deliver
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - if: steps.download.outcome == 'success'
+        uses: actions/upload-artifact@v4
         with: { name: parcels, path: parcels, overwrite: true, retention-days: 1 }
 ```
 

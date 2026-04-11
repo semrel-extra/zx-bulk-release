@@ -124,19 +124,27 @@ jobs:
         with: { fetch-depth: 0 }
       - run: npx zx-bulk-release --pack
       - uses: actions/upload-artifact@v4
-        with: { name: parcels, path: parcels, retention-days: 1 }
+        with:
+          name: parcels
+          path: parcels
+          retention-days: 1
+          if-no-files-found: ignore
 
   deliver:
     needs: pack
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
+        id: download
         with: { name: parcels, path: parcels }
-      - run: npx zx-bulk-release --deliver
+        continue-on-error: true
+      - if: steps.download.outcome == 'success'
+        run: npx zx-bulk-release --deliver
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - if: steps.download.outcome == 'success'
+        uses: actions/upload-artifact@v4
         with: { name: parcels, path: parcels, overwrite: true, retention-days: 1 }
 ```
 
