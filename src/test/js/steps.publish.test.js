@@ -41,9 +41,10 @@ test('publish throws when version not synced', async () => {
   })
 })
 
-test('publish pushes tag and runs publishers', async () => {
+test('publish pushes tag and runs channels', async () => {
   await within(async () => {
     const mock = await setup()
+    const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
     const {publish} = await import(`../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
 
     const ran = []
@@ -64,6 +65,7 @@ test('publish pushes tag and runs publishers', async () => {
     const ctx = makeCtx({channels: ['git-tag', 'test-pub'], flags: {}})
     pkg.ctx = ctx
 
+    await pack(pkg, ctx)
     await publish(pkg, ctx)
 
     assert.ok(pkg.published)
@@ -78,6 +80,7 @@ test('publish pushes tag and runs publishers', async () => {
 test('publish in snapshot mode skips tag push', async () => {
   await within(async () => {
     const mock = await setup()
+    const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
     const {publish} = await import(`../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
 
     const ran = []
@@ -98,6 +101,7 @@ test('publish in snapshot mode skips tag push', async () => {
     const ctx = makeCtx({channels: ['snap-pub'], flags: {snapshot: true}})
     pkg.ctx = ctx
 
+    await pack(pkg, ctx)
     await publish(pkg, ctx)
 
     assert.ok(pkg.published)
@@ -109,10 +113,10 @@ test('publish in snapshot mode skips tag push', async () => {
   })
 })
 
-test('publish calls prepare on publishers', async () => {
+test('pack calls prepare on channels', async () => {
   await within(async () => {
     await setup()
-    const {publish} = await import(`../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
+    const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
     const prepared = []
     const cleanup = registerTestChannel('prep-pub', {
@@ -133,7 +137,7 @@ test('publish calls prepare on publishers', async () => {
     const ctx = makeCtx({channels: ['prep-pub'], flags: {}})
     pkg.ctx = ctx
 
-    await publish(pkg, ctx)
+    await pack(pkg, ctx)
 
     assert.equal(prepared, ['done'])
 

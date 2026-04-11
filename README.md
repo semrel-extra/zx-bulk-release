@@ -153,7 +153,7 @@ The `--snapshot` flag publishes packages to the `snapshot` npm dist-tag with a p
 **What snapshot does differently:**
 - Version gets a `-snap.<short-sha>` suffix instead of a clean bump
 - Git release tags are **not** pushed
-- Only `npm` and `publishCmd` publishers run (no gh-release, no changelog, no gh-pages, no meta)
+- Only `npm` and `publishCmd` channels run (no gh-release, no changelog, no gh-pages, no meta)
 - npm tag is `snapshot` instead of `latest`
 
 **Workflow example** (`.github/workflows/snapshot.yml`):
@@ -206,12 +206,20 @@ See [antongolub/misc](https://github.com/antongolub/misc) for a real-world examp
 ## Implementation notes
 ### Flow
 ```
-topo ─► contextify ─► analyze ──► build ──► test ──► publish ─► clean
-         (per pkg)    (per pkg)   (per pkg)  (per pkg) (per pkg)
+topo ─► contextify ─► analyze ──► build ──► test ──► pack ──► publish ─► clean
+         (per pkg)    (per pkg)   (per pkg)  (per pkg) (per pkg) (per pkg)
 ```
 [`@semrel-extra/topo`](https://github.com/semrel-extra/topo) resolves the release queue respecting dependency graphs. The graph allows parallel execution where the dependency tree permits; `memoizeBy` prevents duplicate work when a package is reached by multiple paths.
 
 By default, packages marked as `private` are omitted. Override with `--include-private`.
+
+### Architecture
+The release pipeline is split into three subsystems under `post/`:
+- **depot** — preparation: analysis, versioning, building, testing, artifact staging.
+- **courier** — sealed delivery: receives a self-contained parcel and delivers through channels.
+- **api** — shared infrastructure wrappers (git, npm, gh).
+
+This separation ensures that courier never touches the project directory — it works only with pre-staged artifacts and credentials. In the future, the parcel can be persisted (git, s3, actions artifacts) and delivered asynchronously by a separate job.
 
 ### Steps
 Each step has a uniform signature `(pkg, ctx)`:
@@ -219,7 +227,8 @@ Each step has a uniform signature `(pkg, ctx)`:
 - **`analyze`** — determines semantic changes, release type, and next version.
 - **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
 - **`test`** — runs `testCmd`.
-- **`publish`** — orchestrates the publisher registry: prepare (serial) → run (parallel) → rollback on failure.
+- **`pack`** — stages delivery artifacts in temp directories (`npm pack`, docs copy, assets, release notes). After this step, everything the courier needs is outside the project dir. Builds the list of active channels.
+- **`publish`** — builds a sealed parcel from staged artifacts, hands it to courier's `deliver()`, runs `cmd` channel separately. Rolls back on failure.
 - **`clean`** — restores `package.json` files and unsets git user config.
 
 Set `config.releaseRules` to override the default rules preset:
@@ -231,16 +240,17 @@ Set `config.releaseRules` to override the default rules preset:
 ]
 ```
 
-### Publishers
-Publish targets are a registry of `{name, when, prepare?, run, undo?, snapshot?}` objects:
+### Channels
+Delivery channels are a registry of `{name, when, prepare?, run, undo?, snapshot?}` objects:
+- **git-tag** — pushes the release tag. Runs first; other channels may reference it.
 - **meta** — pushes release metadata to the `meta` branch (or as a GH release asset).
 - **npm** — publishes to the npm registry.
 - **gh-release** — creates a GitHub release with optional file assets.
 - **gh-pages** — pushes docs to a `gh-pages` branch.
 - **changelog** — pushes a changelog entry to a `changelog` branch.
-- **cmd** — runs a custom `publishCmd`.
+- **cmd** — runs a custom `publishCmd` (depot-side, not through courier).
 
-Teardown walks the registry in reverse, calling `undo()` on each publisher for rollback/recovery.
+Teardown walks the registry in reverse, calling `undo()` on each channel for rollback/recovery.
 
 ### Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract:
