@@ -49,7 +49,7 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
     const tmpPath = path.join(stageDir, `_tmp.${channel}.tar`)
     await packTar(tmpPath, manifest, files)
     const hash = await hashFile(tmpPath)
-    const finalPath = path.join(stageDir, `${pkg.tag}.${channel}.${hash}.tar`)
+    const finalPath = path.join(stageDir, `parcel.${pkg.tag}.${channel}.${hash}.tar`)
     await fs.rename(tmpPath, finalPath)
     tars.push(finalPath)
   }

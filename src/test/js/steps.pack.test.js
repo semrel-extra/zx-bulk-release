@@ -309,11 +309,12 @@ test('pack tar name includes tag, channel and hash', async () => {
     await pack(pkg, ctx)
 
     const tarName = path.basename(pkg.tars[0])
-    // {tag}.{channel}.{hash8}.tar
+    // parcel.{tag}.{channel}.{hash8}.tar
+    assert.ok(tarName.startsWith('parcel.'))
     const parts = tarName.replace(/\.tar$/, '').split('.')
     const hash = parts.pop()
     const channel = parts.pop()
-    const tag = parts.join('.')
+    const tag = parts.slice(1).join('.') // skip 'parcel' prefix
 
     assert.ok(tag.length > 0)
     assert.is(channel, 'changelog')

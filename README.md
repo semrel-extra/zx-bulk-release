@@ -68,7 +68,7 @@ jobs:
         with: { fetch-depth: 0 }
       - run: npx zx-bulk-release --pack
       - uses: actions/upload-artifact@v4
-        with: { name: parcels, path: parcels }
+        with: { name: parcels, path: parcels, retention-days: 1 }
 
 # Job 2: deliver (only delivery credentials, no source code)
   deliver:
@@ -81,9 +81,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with: { name: parcels, path: parcels, overwrite: true, retention-days: 1 }
 ```
 
-**Recovery** is simply re-running the deliver job. The tars are self-describing — each contains a `manifest.json` with the channel name and all delivery instructions. No rebuild required.
+After delivery, each tar is replaced with a marker (`released` or `skip`). The final `upload-artifact` syncs these markers back to CI storage, so a re-run of the deliver job will skip already-delivered parcels. Artifacts expire naturally via retention policy.
+
+**Recovery** is simply re-running the deliver job. Only undelivered tars (not yet replaced with markers) will be processed. No rebuild required.
 
 ### JS API
 ```js
