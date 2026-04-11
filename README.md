@@ -16,6 +16,10 @@
 * No extra builds. The required deps are fetched from the pkg registry (`npmFetch` config opt).
 * **Two-phase pipeline**: build and delivery can run as separate jobs with isolated credentials.
 
+
+> [!NOTE]
+> **[Migration guide v2 → v3](./MIGRATION_V2_V3.md)**
+
 ## Roadmap
 * [x] Store release metrics to `meta`.
 * [x] Two-phase pipeline (pack / deliver).
