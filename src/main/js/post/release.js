@@ -84,7 +84,10 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
         report.setStatus('testing', pkg.name)
         await test(pkg)
       }
-      if (flags.dryRun || flags.publish === false) return
+      if (flags.dryRun || flags.publish === false) {
+        report.setStatus('success', pkg.name)
+        return
+      }
 
       report.setStatus('packing', pkg.name)
       await pack(pkg)
