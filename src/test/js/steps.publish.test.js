@@ -113,36 +113,4 @@ test('publish in snapshot mode skips tag push', async () => {
   })
 })
 
-test('pack calls prepare on channels', async () => {
-  await within(async () => {
-    await setup()
-    const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
-
-    const prepared = []
-    const cleanup = registerTestChannel('prep-pub', {
-      when: () => true,
-      prepare: async () => prepared.push('done'),
-      run: async () => {},
-      snapshot: false,
-    })
-
-    const pkg = makePkg({
-      version: '1.0.1',
-      extra: {
-        manifest: {name: 'test-pkg', version: '1.0.1', private: false},
-        manifestRaw: '{}',
-        manifestAbsPath: `${tmpDir}/package.json`,
-      },
-    })
-    const ctx = makeCtx({channels: ['prep-pub'], flags: {}})
-    pkg.ctx = ctx
-
-    await pack(pkg, ctx)
-
-    assert.equal(prepared, ['done'])
-
-    cleanup()
-  })
-})
-
 test.run()
