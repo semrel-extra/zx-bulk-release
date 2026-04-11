@@ -1,39 +1,88 @@
+import {$, tempy, fs, path} from 'zx-extra'
 import {memoizeBy} from '../../util.js'
 import {exec} from '../exec.js'
-import {log} from '../log.js'
+import {deliver, filterActive, prepare, runPublisher, buildDirective} from '../../courier/index.js'
 import {npmPersist} from '../api/npm.js'
-import {pushTag} from '../api/git.js'
-import {formatTag} from '../generators/tag.js'
-import {isNpmPublished} from '../publishers/npm.js'
+import {getRepo} from '../api/git.js'
+import {formatReleaseNotes} from '../generators/notes.js'
+import {isNpmPublished} from '../../courier/publishers/npm.js'
+import {ghPrepareAssets} from '../api/gh.js'
+import {asTuple} from '../../util.js'
 import {rollbackRelease} from './teardown.js'
 
-const pushReleaseTag = async (pkg, ctx) => {
-  const {name, version, tag = formatTag({name, version}), config: {gitCommitterEmail, gitCommitterName}} = pkg
-  ctx.git.tag = tag
-  log.info(`push release tag ${tag}`)
-  await pushTag({cwd: ctx.git.root, tag, gitCommitterEmail, gitCommitterName})
+// Prepare delivery artifacts in temp directories.
+// After this step, everything courier needs is outside the project dir.
+const prepareArtifacts = async (pkg, activeTransport) => {
+  const artifacts = {}
+
+  // Persist manifest (version bump) — always, even for non-npm packages.
+  await npmPersist(pkg)
+
+  // npm: pack into tarball so courier publishes without touching project dir.
+  if (activeTransport.includes('npm')) {
+    const packDir = tempy.temporaryDirectory()
+    const out = await $({cwd: pkg.absPath})`npm pack --pack-destination ${packDir}`
+    artifacts.npmTarball = path.join(packDir, out.toString().trim())
+  }
+
+  // Git info: pre-resolve so courier doesn't need .git access.
+  const {repoName, repoAuthedUrl} = await getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})
+  artifacts.repoName = repoName
+  artifacts.repoAuthedUrl = repoAuthedUrl
+
+  // Release notes: pre-render so courier doesn't need git log.
+  if (activeTransport.includes('gh-release') || activeTransport.includes('changelog')) {
+    artifacts.releaseNotes = await formatReleaseNotes(pkg)
+  }
+
+  // gh-pages: copy docs to temp so courier reads from there.
+  if (activeTransport.includes('gh-pages')) {
+    const [, from = 'docs'] = asTuple(pkg.config.ghPages, ['branch', 'from'])
+    const docsDir = tempy.temporaryDirectory()
+    await fs.copy(path.join(pkg.absPath, from), docsDir)
+    artifacts.docsDir = docsDir
+  }
+
+  // gh-release assets: stage to temp.
+  if (activeTransport.includes('gh-release') && pkg.config.ghAssets?.length) {
+    artifacts.assetsDir = await ghPrepareAssets(pkg.config.ghAssets, pkg.absPath)
+  }
+
+  return artifacts
 }
 
 export const publish = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   if (pkg.version !== pkg.manifest.version)
     throw new Error('package.json version not synced')
 
-  const {run = exec, publishers = [], flags} = ctx
+  const {run = exec, publishers: pubNames = [], flags} = ctx
   const snapshot = !!flags.snapshot
-  const active = publishers.filter(p => (!snapshot || p.snapshot) && p.when(pkg))
 
-  await npmPersist(pkg)
+  // Transport publishers go through courier; cmd stays processor-side.
+  const transportNames = pubNames.filter(n => n !== 'cmd')
+  const activeTransport = filterActive(transportNames, pkg, {snapshot})
 
-  // Prepare phase: serial pkg mutations (e.g. meta injects into ghAssets) — must finish before any run().
-  for (const p of active) await p.prepare?.(pkg)
+  // Prepare phase: serial pkg mutations (e.g. meta injects into ghAssets).
+  await prepare(activeTransport, pkg)
 
-  if (!snapshot) await pushReleaseTag(pkg, ctx)
+  // Stage artifacts in temp directories — after this, courier is project-dir-free.
+  const artifacts = await prepareArtifacts(pkg, activeTransport)
+
+  const directive = buildDirective(pkg, ctx, {
+    snapshot,
+    publishers: activeTransport,
+    ...artifacts,
+  })
+
+  const cmdActive = pubNames.includes('cmd') && filterActive(['cmd'], pkg, {snapshot}).length > 0
+
   try {
-    await Promise.all(active.map(p => p.run(pkg, run)))
+    await deliver(directive)
+    if (cmdActive) await runPublisher('cmd', pkg, run)
   } catch (e) {
-    // Roll back full release for npm-published packages; git-tag-only packages keep their tag — it IS the release.
     if (!snapshot && isNpmPublished(pkg)) await rollbackRelease(pkg, ctx)
     throw e
   }
+
   pkg.published = true
 })

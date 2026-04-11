@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import changelog from '../../main/js/processor/publishers/changelog.js'
+import changelog from '../../main/js/courier/publishers/changelog.js'
 
 const test = suite('publisher.changelog')
 

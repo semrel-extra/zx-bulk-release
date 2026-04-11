@@ -2,6 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within, fs} from 'zx-extra'
 import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
+import {publishers} from '../../main/js/courier/index.js'
 
 const test = suite('steps.publish')
 
@@ -15,6 +16,11 @@ const setup = async (responses = []) => {
   $.memo = new Map()
   $.report = undefined
   return mock
+}
+
+const registerTestPublisher = (name, impl) => {
+  publishers[name] = {name, ...impl}
+  return () => { delete publishers[name] }
 }
 
 test('publish throws when version not synced', async () => {
@@ -41,9 +47,11 @@ test('publish pushes tag and runs publishers', async () => {
     const {publish} = await import(`../../main/js/processor/steps/publish.js?t=${Date.now()}`)
 
     const ran = []
-    const publishers = [
-      {name: 'test-pub', when: () => true, run: async () => ran.push('test-pub'), snapshot: false},
-    ]
+    const cleanup = registerTestPublisher('test-pub', {
+      when: () => true,
+      run: async () => ran.push('test-pub'),
+      snapshot: false,
+    })
 
     const pkg = makePkg({
       version: '1.0.1',
@@ -53,7 +61,7 @@ test('publish pushes tag and runs publishers', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({publishers, flags: {}})
+    const ctx = makeCtx({publishers: ['git-tag', 'test-pub'], flags: {}})
     pkg.ctx = ctx
 
     await publish(pkg, ctx)
@@ -62,6 +70,8 @@ test('publish pushes tag and runs publishers', async () => {
     assert.ok(ran.includes('test-pub'))
     assert.ok(has(mock.calls, 'git tag -m'))
     assert.ok(has(mock.calls, 'git push'))
+
+    cleanup()
   })
 })
 
@@ -71,9 +81,11 @@ test('publish in snapshot mode skips tag push', async () => {
     const {publish} = await import(`../../main/js/processor/steps/publish.js?t=${Date.now()}`)
 
     const ran = []
-    const publishers = [
-      {name: 'snap-pub', when: () => true, run: async () => ran.push('snap-pub'), snapshot: true},
-    ]
+    const cleanup = registerTestPublisher('snap-pub', {
+      when: () => true,
+      run: async () => ran.push('snap-pub'),
+      snapshot: true,
+    })
 
     const pkg = makePkg({
       version: '1.0.1',
@@ -83,7 +95,7 @@ test('publish in snapshot mode skips tag push', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({publishers, flags: {snapshot: true}})
+    const ctx = makeCtx({publishers: ['snap-pub'], flags: {snapshot: true}})
     pkg.ctx = ctx
 
     await publish(pkg, ctx)
@@ -92,6 +104,8 @@ test('publish in snapshot mode skips tag push', async () => {
     assert.ok(ran.includes('snap-pub'))
     // snapshot mode should NOT push a release tag
     assert.ok(!has(mock.calls, 'git tag -m'))
+
+    cleanup()
   })
 })
 
@@ -101,9 +115,12 @@ test('publish calls prepare on publishers', async () => {
     const {publish} = await import(`../../main/js/processor/steps/publish.js?t=${Date.now()}`)
 
     const prepared = []
-    const publishers = [
-      {name: 'prep-pub', when: () => true, prepare: async () => prepared.push('done'), run: async () => {}, snapshot: false},
-    ]
+    const cleanup = registerTestPublisher('prep-pub', {
+      when: () => true,
+      prepare: async () => prepared.push('done'),
+      run: async () => {},
+      snapshot: false,
+    })
 
     const pkg = makePkg({
       version: '1.0.1',
@@ -113,12 +130,14 @@ test('publish calls prepare on publishers', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({publishers, flags: {}})
+    const ctx = makeCtx({publishers: ['prep-pub'], flags: {}})
     pkg.ctx = ctx
 
     await publish(pkg, ctx)
 
     assert.equal(prepared, ['done'])
+
+    cleanup()
   })
 })
 

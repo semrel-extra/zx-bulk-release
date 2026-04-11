@@ -4,7 +4,7 @@ import {$, within, fs, tempy} from 'zx-extra'
 import path from 'node:path'
 import {createMock, defaultResponses, makePkg} from './utils/mock.js'
 import {createGhServer} from './utils/gh-server.js'
-import ghRelease from '../../main/js/processor/publishers/gh-release.js'
+import ghRelease from '../../main/js/courier/publishers/gh-release.js'
 
 const test = suite('publisher.gh-release')
 
@@ -23,6 +23,17 @@ const setup = (responses = []) => {
   return mock
 }
 
+const makeData = (pkg, overrides = {}) => ({
+  tag: pkg.tag,
+  token: pkg.config.ghToken,
+  apiUrl: pkg.config.ghApiUrl,
+  repoName: 'test-org/test-repo',
+  releaseNotes: '## release notes',
+  assets: pkg.config.ghAssets,
+  assetsDir: overrides.assetsDir,
+  ...overrides,
+})
+
 test('when checks ghToken', () => {
   assert.is(ghRelease.when({config: {ghToken: 'tok'}}), true)
   assert.is(ghRelease.when({config: {}}), false)
@@ -40,7 +51,7 @@ test('run creates release', async () => {
     })
 
     const pkg = makePkg({config: {ghToken: 'tok', ghApiUrl: gh.url, ghBasicAuth: 'x:tok'}})
-    await ghRelease.run(pkg)
+    await ghRelease.run(makeData(pkg))
 
     assert.is(gh.requests.length, 1)
     assert.is(gh.requests[0].method, 'POST')
@@ -53,7 +64,7 @@ test('run skips when no ghToken', async () => {
   await within(async () => {
     setup()
     const pkg = makePkg({config: {ghToken: '', ghApiUrl: gh.url}})
-    const result = await ghRelease.run(pkg)
+    const result = await ghRelease.run(makeData(pkg))
     assert.is(result, null)
     assert.is(gh.requests.length, 0)
   })
@@ -80,7 +91,8 @@ test('run uploads assets', async () => {
       absPath: cwd,
       config: {ghToken: 'tok', ghApiUrl: gh.url, ghBasicAuth: 'x:tok', ghAssets: [{name: 'dist.txt', source: 'dist.txt'}]},
     })
-    await ghRelease.run(pkg)
+    // Legacy fallback: no assetsDir, uses gitRoot
+    await ghRelease.run(makeData(pkg, {gitRoot: cwd}))
 
     assert.ok(gh.requests.some(r => r.url.includes('/uploads')))
   })

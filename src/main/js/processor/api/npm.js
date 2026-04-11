@@ -77,7 +77,7 @@ export const npmRestore = async (pkg) => {
 }
 
 export const npmPublish = async (pkg) => {
-  const {absPath: cwd, name, version, manifest, config: {npmPublish, npmRegistry, npmToken, npmConfig, npmProvenance, npmOidc}} = pkg
+  const {name, version, manifest, config: {npmPublish, npmRegistry, npmToken, npmConfig, npmProvenance, npmOidc}} = pkg
 
   if (manifest.private || npmPublish === false) return
 
@@ -105,7 +105,9 @@ export const npmPublish = async (pkg) => {
     if (npmProvenance) npmFlags.push('--provenance')
   }
 
-  await $({cwd})`npm publish ${npmFlags.filter(Boolean)}`
+  // Publish from pre-built tarball (courier mode) or project dir (legacy).
+  const target = pkg.npmTarball || pkg.absPath
+  await $`npm publish ${target} ${npmFlags.filter(Boolean)}`
 }
 
 export const getNpmrc = memoizeBy(async ({npmConfig, npmToken, npmRegistry}) => {
