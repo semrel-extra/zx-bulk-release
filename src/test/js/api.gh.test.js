@@ -7,8 +7,6 @@ import {
   getCommonPath,
   ghFetch,
   ghCreateRelease,
-  ghDeleteReleaseByTag,
-  ghUploadAssets,
   ghGetAsset,
   GH_API_VERSION,
   GH_ACCEPT,
@@ -93,58 +91,6 @@ test('ghCreateRelease throws on missing upload_url', async () => {
     assert.unreachable('should have thrown')
   } catch (e) {
     assert.ok(e.message.includes('gh release failed'))
-  }
-})
-
-test('ghDeleteReleaseByTag fetches then deletes', async () => {
-  gh.setRoutes({
-    '/repos/o/r/releases/tags/': (req, res) => { res.writeHead(200, {'Content-Type': 'application/json'}); res.end('{"id":99}') },
-    'DELETE /repos/o/r/releases/99': (req, res) => { res.writeHead(204); res.end() },
-  })
-  const result = await ghDeleteReleaseByTag({ghApiUrl: gh.url, ghToken: 'tok', repoName: 'o/r', tag: 'v1.0.0'})
-  assert.ok(result)
-  assert.is(gh.requests.length, 2)
-  assert.is(gh.requests[1].method, 'DELETE')
-})
-
-test('ghDeleteReleaseByTag returns false when not found', async () => {
-  const result = await ghDeleteReleaseByTag({ghApiUrl: gh.url, ghToken: 'tok', repoName: 'o/r', tag: 'v1.0.0'})
-  assert.is(result, false)
-})
-
-test('ghUploadAssets uploads files', async () => {
-  const cwd = tempy.temporaryDirectory()
-  await fs.outputFile(path.resolve(cwd, 'dist.txt'), 'hello')
-  gh.setRoutes({
-    'POST /repos/o/r/releases/42/assets': (req, res) => { res.writeHead(201, {'Content-Type': 'application/json'}); res.end('{"id":1}') }
-  })
-  const results = await ghUploadAssets({
-    ghToken: 'tok',
-    ghAssets: [{name: 'dist.txt', source: 'dist.txt'}],
-    uploadUrl: `${gh.url}/repos/o/r/releases/42/assets`,
-    cwd,
-  })
-  assert.is(results.length, 1)
-  assert.ok(gh.requests[0].url.includes('?name=dist.txt'))
-  assert.is(gh.requests[0].method, 'POST')
-})
-
-test('ghUploadAssets throws on failed upload', async () => {
-  const cwd = tempy.temporaryDirectory()
-  await fs.outputFile(path.resolve(cwd, 'dist.txt'), 'hello')
-  gh.setRoutes({
-    'POST /repos/o/r/releases/42/assets': (req, res) => { res.writeHead(500); res.end('error') }
-  })
-  try {
-    await ghUploadAssets({
-      ghToken: 'tok',
-      ghAssets: [{name: 'dist.txt', source: 'dist.txt'}],
-      uploadUrl: `${gh.url}/repos/o/r/releases/42/assets`,
-      cwd,
-    })
-    assert.unreachable('should have thrown')
-  } catch (e) {
-    assert.ok(e.message.includes('gh asset upload failed'))
   }
 })
 

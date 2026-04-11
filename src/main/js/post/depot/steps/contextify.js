@@ -7,7 +7,7 @@ import {getRoot, getSha} from '../../api/git.js'
  * Built by `createContext()` in release.js and extended with runtime bits (run, publishers).
  *
  * @typedef {object} ReleaseContext
- * @property {object}                 flags       CLI flags (build, test, publish, snapshot, dryRun, recover, ...).
+ * @property {object}                 flags       CLI flags (build, test, publish, snapshot, dryRun, pack, deliver, ...).
  * @property {Record<string,string>}  env         Resolved process env (process.env merged with per-run overrides).
  * @property {string}                 cwd         Repo working directory.
  * @property {object}                 root        Root package descriptor (from topo()).

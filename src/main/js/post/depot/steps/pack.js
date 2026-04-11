@@ -1,21 +1,29 @@
 import {$, tempy, fs, path} from 'zx-extra'
 import {memoizeBy, asTuple} from '../../../util.js'
-import {filterActive, prepare, buildParcels} from '../../courier/index.js'
+import {channels, prepare, buildParcels} from '../../courier/index.js'
 import {npmPersist} from '../../api/npm.js'
 import {getRepo} from '../../api/git.js'
 import {formatReleaseNotes} from '../generators/notes.js'
 import {ghPrepareAssets} from '../../api/gh.js'
 import {packTar, hashFile} from '../../tar.js'
 
+const filterActive = (names, pkg, {snapshot = false} = {}) =>
+  names.filter(n => {
+    const ch = channels[n]
+    return ch && ch.transport !== false && (!snapshot || ch.snapshot) && ch.when(pkg)
+  })
+
 export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const {channels: channelNames = [], flags} = ctx
   const snapshot = !!flags.snapshot
-  const active = filterActive(channelNames.filter(n => n !== 'cmd'), pkg, {snapshot})
+  const active = filterActive(channelNames, pkg, {snapshot})
 
   await prepare(active, pkg)
   await npmPersist(pkg)
 
-  const stageDir = tempy.temporaryDirectory()
+  const outputDir = flags.pack || null
+  const stageDir = outputDir || tempy.temporaryDirectory()
+  if (outputDir) await fs.ensureDir(outputDir)
   const {repoName, repoHost, originUrl} = await getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})
   const artifacts = {repoName, repoHost, originUrl}
 

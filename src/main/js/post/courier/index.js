@@ -12,25 +12,11 @@ export {buildParcels} from './parcel.js'
 export const channels = {meta, npm, 'gh-release': ghRelease, 'gh-pages': ghPages, changelog, cmd}
 export const defaultOrder = ['meta', 'npm', 'gh-release', 'gh-pages', 'changelog', 'cmd']
 
-export const filterActive = (names, pkg, {snapshot = false} = {}) =>
-  names.filter(n => {
-    const ch = channels[n]
-    return ch && (!snapshot || ch.snapshot) && ch.when(pkg)
-  })
-
 export const prepare = async (names, pkg) => {
   for (const n of names) await channels[n]?.prepare?.(pkg)
 }
 
 export const runChannel = async (name, ...args) => channels[name]?.run(...args)
-
-export const undo = async (names, pkg, opts) => {
-  for (const n of [...names].reverse()) {
-    const ch = channels[n]
-    if (!ch?.undo || !ch.when(pkg)) continue
-    try { await ch.undo(pkg, opts) } catch {}
-  }
-}
 
 export const resolveManifest = (manifest, env = process.env) => {
   const resolved = {}

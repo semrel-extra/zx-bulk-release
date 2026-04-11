@@ -1,7 +1,6 @@
 import {fs, path} from 'zx-extra'
 import {log} from '../../log.js'
-import {getRepo, getRoot} from '../../api/git.js'
-import {ghCreateRelease, ghDeleteReleaseByTag, ghFetch} from '../../api/gh.js'
+import {ghCreateRelease, ghFetch} from '../../api/gh.js'
 
 const run = async (manifest, dir) => {
   const {tag, token, apiUrl, repoName, releaseNotes, assets} = manifest
@@ -28,17 +27,9 @@ const run = async (manifest, dir) => {
   log.info(`duration gh release: ${Date.now() - now}`)
 }
 
-const undo = async (pkg, {tag}) => {
-  const {ghBasicAuth: basicAuth, ghToken, ghApiUrl} = pkg.config
-  if (!ghToken) return
-  const repoName = pkg.repoName || (await getRepo(await getRoot(pkg.absPath), {basicAuth})).repoName
-  await ghDeleteReleaseByTag({ghApiUrl, ghToken, repoName, tag})
-}
-
 export default {
   name: 'gh-release',
   requires: ['token', 'repoName'],
   when: (pkg) => !!pkg.config.ghToken,
   run,
-  undo,
 }

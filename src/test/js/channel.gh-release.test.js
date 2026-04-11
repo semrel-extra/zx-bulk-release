@@ -96,34 +96,4 @@ test('run uploads assets', async () => {
   })
 })
 
-test('undo deletes release by tag', async () => {
-  await within(async () => {
-    setup()
-    gh.setRoutes({
-      '/repos/test-org/test-repo/releases/tags/': (req, res) => {
-        res.writeHead(200, {'Content-Type': 'application/json'})
-        res.end('{"id":42}')
-      },
-      'DELETE /repos/test-org/test-repo/releases/42': (req, res) => {
-        res.writeHead(204)
-        res.end()
-      },
-    })
-
-    const pkg = makePkg({config: {ghToken: 'tok', ghApiUrl: gh.url, ghBasicAuth: 'x:tok'}})
-    await ghRelease.undo(pkg, {tag: 'v1.0.0'})
-
-    assert.ok(gh.requests.some(r => r.method === 'DELETE'))
-  })
-})
-
-test('undo skips when no ghToken', async () => {
-  await within(async () => {
-    setup()
-    const pkg = makePkg({config: {ghToken: '', ghApiUrl: gh.url}})
-    await ghRelease.undo(pkg, {tag: 'v1.0.0'})
-    assert.is(gh.requests.length, 0)
-  })
-})
-
 test.run()
