@@ -12,8 +12,8 @@ import {
   semanticRules,
   releaseSeverityOrder,
   analyze,
-} from '../../main/js/processor/steps/analyze.js'
-import {getCommits} from '../../main/js/processor/api/git.js'
+} from '../../main/js/post/depot/steps/analyze.js'
+import {getCommits} from '../../main/js/post/api/git.js'
 import {createFakeRepo} from './utils/repo.js'
 import {createMock, defaultResponses, makePkg, makeCtx} from './utils/mock.js'
 

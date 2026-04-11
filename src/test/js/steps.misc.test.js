@@ -18,7 +18,7 @@ const setup = (responses = []) => {
 test('contextify attaches ctx to pkg', async () => {
   await within(async () => {
     setup()
-    const {contextify} = await import(`../../main/js/processor/steps/contextify.js?t=${Date.now()}`)
+    const {contextify} = await import(`../../main/js/post/depot/steps/contextify.js?t=${Date.now()}`)
 
     const ctx = makeCtx()
     const pkg = makePkg()
@@ -36,7 +36,7 @@ test('contextify attaches ctx to pkg', async () => {
 test('contextify is idempotent', async () => {
   await within(async () => {
     setup()
-    const {contextify} = await import(`../../main/js/processor/steps/contextify.js?t=${Date.now()}`)
+    const {contextify} = await import(`../../main/js/post/depot/steps/contextify.js?t=${Date.now()}`)
 
     const ctx = makeCtx()
     const pkg = makePkg()
@@ -50,7 +50,7 @@ test('contextify is idempotent', async () => {
 test('build runs buildCmd via exec', async () => {
   await within(async () => {
     const mock = setup()
-    const {build} = await import(`../../main/js/processor/steps/build.js?t=${Date.now()}`)
+    const {build} = await import(`../../main/js/post/depot/steps/build.js?t=${Date.now()}`)
 
     const ran = []
     const pkg = makePkg({extra: {manifest: {version: '1.0.1', private: false, name: 'test-pkg'}}})
@@ -68,7 +68,7 @@ test('build runs buildCmd via exec', async () => {
 test('build skips buildCmd when fetched', async () => {
   await within(async () => {
     setup()
-    const {build} = await import(`../../main/js/processor/steps/build.js?t=${Date.now()}`)
+    const {build} = await import(`../../main/js/post/depot/steps/build.js?t=${Date.now()}`)
 
     const ran = []
     const pkg = makePkg({extra: {fetched: true, manifest: {version: '1.0.1', private: false, name: 'test-pkg'}}})
@@ -86,7 +86,7 @@ test('build skips buildCmd when fetched', async () => {
 test('test runs testCmd via exec', async () => {
   await within(async () => {
     setup()
-    const {test: testStep} = await import(`../../main/js/processor/steps/test.js?t=${Date.now()}`)
+    const {test: testStep} = await import(`../../main/js/post/depot/steps/test.js?t=${Date.now()}`)
 
     const ran = []
     const pkg = makePkg()
@@ -103,7 +103,7 @@ test('test runs testCmd via exec', async () => {
 test('test skips testCmd when fetched', async () => {
   await within(async () => {
     setup()
-    const {test: testStep} = await import(`../../main/js/processor/steps/test.js?t=${Date.now()}`)
+    const {test: testStep} = await import(`../../main/js/post/depot/steps/test.js?t=${Date.now()}`)
 
     const ran = []
     const pkg = makePkg({extra: {fetched: true}})
@@ -120,7 +120,7 @@ test('test skips testCmd when fetched', async () => {
 test('clean calls unsetUserConfig', async () => {
   await within(async () => {
     const mock = setup()
-    const {clean} = await import(`../../main/js/processor/steps/clean.js?t=${Date.now()}`)
+    const {clean} = await import(`../../main/js/post/depot/steps/clean.js?t=${Date.now()}`)
 
     const pkg = makePkg({extra: {skipped: true}})
     await clean({cwd: '/tmp/fakerepo', packages: {[pkg.name]: pkg}})

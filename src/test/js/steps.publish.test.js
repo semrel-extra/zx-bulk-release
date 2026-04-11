@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within, fs} from 'zx-extra'
 import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
-import {publishers} from '../../main/js/courier/index.js'
+import {channels} from '../../main/js/post/courier/index.js'
 
 const test = suite('steps.publish')
 
@@ -18,15 +18,15 @@ const setup = async (responses = []) => {
   return mock
 }
 
-const registerTestPublisher = (name, impl) => {
-  publishers[name] = {name, ...impl}
-  return () => { delete publishers[name] }
+const registerTestChannel = (name, impl) => {
+  channels[name] = {name, ...impl}
+  return () => { delete channels[name] }
 }
 
 test('publish throws when version not synced', async () => {
   await within(async () => {
     await setup()
-    const {publish} = await import(`../../main/js/processor/steps/publish.js?t=${Date.now()}`)
+    const {publish} = await import(`../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
 
     const pkg = makePkg({version: '2.0.0', extra: {manifest: {name: 'test-pkg', version: '1.0.0'}}})
     const ctx = makeCtx()
@@ -44,10 +44,10 @@ test('publish throws when version not synced', async () => {
 test('publish pushes tag and runs publishers', async () => {
   await within(async () => {
     const mock = await setup()
-    const {publish} = await import(`../../main/js/processor/steps/publish.js?t=${Date.now()}`)
+    const {publish} = await import(`../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
 
     const ran = []
-    const cleanup = registerTestPublisher('test-pub', {
+    const cleanup = registerTestChannel('test-pub', {
       when: () => true,
       run: async () => ran.push('test-pub'),
       snapshot: false,
@@ -61,7 +61,7 @@ test('publish pushes tag and runs publishers', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({publishers: ['git-tag', 'test-pub'], flags: {}})
+    const ctx = makeCtx({channels: ['git-tag', 'test-pub'], flags: {}})
     pkg.ctx = ctx
 
     await publish(pkg, ctx)
@@ -78,10 +78,10 @@ test('publish pushes tag and runs publishers', async () => {
 test('publish in snapshot mode skips tag push', async () => {
   await within(async () => {
     const mock = await setup()
-    const {publish} = await import(`../../main/js/processor/steps/publish.js?t=${Date.now()}`)
+    const {publish} = await import(`../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
 
     const ran = []
-    const cleanup = registerTestPublisher('snap-pub', {
+    const cleanup = registerTestChannel('snap-pub', {
       when: () => true,
       run: async () => ran.push('snap-pub'),
       snapshot: true,
@@ -95,7 +95,7 @@ test('publish in snapshot mode skips tag push', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({publishers: ['snap-pub'], flags: {snapshot: true}})
+    const ctx = makeCtx({channels: ['snap-pub'], flags: {snapshot: true}})
     pkg.ctx = ctx
 
     await publish(pkg, ctx)
@@ -112,10 +112,10 @@ test('publish in snapshot mode skips tag push', async () => {
 test('publish calls prepare on publishers', async () => {
   await within(async () => {
     await setup()
-    const {publish} = await import(`../../main/js/processor/steps/publish.js?t=${Date.now()}`)
+    const {publish} = await import(`../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
 
     const prepared = []
-    const cleanup = registerTestPublisher('prep-pub', {
+    const cleanup = registerTestChannel('prep-pub', {
       when: () => true,
       prepare: async () => prepared.push('done'),
       run: async () => {},
@@ -130,7 +130,7 @@ test('publish calls prepare on publishers', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({publishers: ['prep-pub'], flags: {}})
+    const ctx = makeCtx({channels: ['prep-pub'], flags: {}})
     pkg.ctx = ctx
 
     await publish(pkg, ctx)

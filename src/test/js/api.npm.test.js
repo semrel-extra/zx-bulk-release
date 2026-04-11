@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {fetchManifest, fetchPkg, getNpmrc} from '../../main/js/processor/api/npm.js'
+import {fetchManifest, fetchPkg, getNpmrc} from '../../main/js/post/api/npm.js'
 import {tempy, fs} from 'zx-extra'
 import {parseEnv} from '../../main/js/config.js'
 
