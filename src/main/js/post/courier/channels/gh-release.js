@@ -3,8 +3,8 @@ import {log} from '../../log.js'
 import {getRepo, getRoot} from '../../api/git.js'
 import {ghCreateRelease, ghDeleteReleaseByTag, ghFetch} from '../../api/gh.js'
 
-const run = async (data) => {
-  const {tag, token, apiUrl, repoName, releaseNotes, assets, assetsDir} = data
+const run = async (manifest, dir) => {
+  const {tag, token, apiUrl, repoName, releaseNotes, assets} = manifest
   if (!token) return null
 
   log.info('create gh release')
@@ -14,16 +14,14 @@ const run = async (data) => {
 
   if (assets?.length) {
     const uploadUrl = res.upload_url.slice(0, res.upload_url.indexOf('{'))
-    if (assetsDir) {
+    const assetsDir = path.join(dir, 'assets')
+    if (await fs.pathExists(assetsDir)) {
       await Promise.all(assets.map(async ({name}) => {
         const url = `${uploadUrl}?name=${name}`
         const body = await fs.readFile(path.join(assetsDir, name))
         const r = await ghFetch(url, {ghToken: token, method: 'POST', headers: {'Content-Type': 'application/octet-stream'}, body})
         if (!r.ok) throw new Error(`gh asset upload failed for '${name}': ${r.status}`)
       }))
-    } else {
-      const {ghUploadAssets} = await import('../../api/gh.js')
-      await ghUploadAssets({ghToken: token, ghAssets: assets, uploadUrl, cwd: data.gitRoot})
     }
   }
 

@@ -73,8 +73,8 @@ test('run skips when no ghToken', async () => {
 test('run uploads assets', async () => {
   await within(async () => {
     setup()
-    const cwd = tempy.temporaryDirectory()
-    await fs.outputFile(path.resolve(cwd, 'dist.txt'), 'hello')
+    const dir = tempy.temporaryDirectory()
+    await fs.outputFile(path.resolve(dir, 'assets/dist.txt'), 'hello')
 
     gh.setRoutes({
       'POST /repos/test-org/test-repo/releases': (req, res) => {
@@ -88,11 +88,9 @@ test('run uploads assets', async () => {
     })
 
     const pkg = makePkg({
-      absPath: cwd,
       config: {ghToken: 'tok', ghApiUrl: gh.url, ghBasicAuth: 'x:tok', ghAssets: [{name: 'dist.txt', source: 'dist.txt'}]},
     })
-    // Legacy fallback: no assetsDir, uses gitRoot
-    await ghRelease.run(makeData(pkg, {gitRoot: cwd}))
+    await ghRelease.run(makeData(pkg), dir)
 
     assert.ok(gh.requests.some(r => r.url.includes('/uploads')))
   })

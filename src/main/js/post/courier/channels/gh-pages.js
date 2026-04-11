@@ -1,9 +1,11 @@
+import {path} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {log} from '../../log.js'
 import {pushCommit} from '../../api/git.js'
 
-const run = queuefy(async (data) => {
-  const {docsDir, branch, to, msg, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = data
+const run = queuefy(async (manifest, dir) => {
+  const {branch, to, msg, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
+  const docsDir = path.join(dir, 'docs')
 
   log.info(`publish docs to ${branch}`)
 

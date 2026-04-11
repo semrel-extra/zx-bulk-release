@@ -3,6 +3,7 @@ import {log} from '../log.js'
 import {attempt2, attempt3, memoizeBy} from '../../util.js'
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => {
+  if (!_origin && !_cwd) throw new Error('fetchRepo requires either origin or cwd')
   const origin = _origin || (await getRepo(_cwd, {basicAuth})).repoAuthedUrl
   const cwd = tempy.temporaryDirectory()
   const _$ = $({cwd})
