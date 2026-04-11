@@ -1,3 +1,8 @@
+## [3.0.5](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.4...v3.0.5) (2026-04-11)
+
+### Fixes & improvements
+* perf: minor code imprs ([2564f3f](https://github.com/semrel-extra/zx-bulk-release/commit/2564f3fd8fdd42c08a2aa32e1e9f2cfee7d3199d))
+
 ## [3.0.4](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.3...v3.0.4) (2026-04-11)
 
 ### Fixes & improvements
