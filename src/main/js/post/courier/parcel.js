@@ -24,6 +24,7 @@ const entry = {
     channel: 'gh-release',
     manifest: {
       channel: 'gh-release',
+      name: pkg.name, version: pkg.version,
       tag: pkg.tag, repoHost: a.repoHost, repoName: a.repoName, releaseNotes: a.releaseNotes,
       token: '${{GH_TOKEN}}', apiUrl: pkg.config.ghApiUrl,
       assets: pkg.config.ghAssets ? [...pkg.config.ghAssets] : undefined,
@@ -35,7 +36,7 @@ const entry = {
     const [branch = 'gh-pages', , to = '.', ..._msg] = asTuple(pkg.config.ghPages, ['branch', 'from', 'to', 'msg'])
     return {
       channel: 'gh-pages',
-      manifest: {channel: 'gh-pages', branch, to, msg: msgJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}'), ...gitFields(a, pkg)},
+      manifest: {channel: 'gh-pages', name: pkg.name, version: pkg.version, branch, to, msg: msgJoin(_msg, pkg, 'docs: update docs ${{name}} ${{version}}'), ...gitFields(a, pkg)},
       files: a.docsDir ? [{name: 'docs', source: a.docsDir}] : [],
     }
   },
@@ -44,7 +45,7 @@ const entry = {
     const [branch = 'changelog', file = `${pkg.name.replace(/[^a-z0-9-]/ig, '')}-changelog.md`, ..._msg] = asTuple(pkg.config.changelog, ['branch', 'file', 'msg'])
     return {
       channel: 'changelog',
-      manifest: {channel: 'changelog', releaseNotes: a.releaseNotes, branch, file, msg: msgJoin(_msg, pkg, 'chore: update changelog ${{name}}'), ...gitFields(a, pkg)},
+      manifest: {channel: 'changelog', name: pkg.name, version: pkg.version, releaseNotes: a.releaseNotes, branch, file, msg: msgJoin(_msg, pkg, 'chore: update changelog ${{name}}'), ...gitFields(a, pkg)},
       files: [],
     }
   },
