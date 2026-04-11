@@ -1,3 +1,20 @@
+## [3.0.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.21.1...v3.0.0) (2026-04-11)
+
+### Fixes & improvements
+* refactor: enhance courier inners ([0a75468](https://github.com/semrel-extra/zx-bulk-release/commit/0a75468a1736291d194e307c8fef39cbaae55948))
+* refactor: use `parcels` as default artifacts dir ([b1c589e](https://github.com/semrel-extra/zx-bulk-release/commit/b1c589edfcdfba2c548c09f35950b058e6cc2f8c))
+* refactor: simplify parcel contracts ([0a93948](https://github.com/semrel-extra/zx-bulk-release/commit/0a93948b2b4013ad3a620bcf93cf468651c0380b))
+* refactor: move git-tag phase to depot ([a736ead](https://github.com/semrel-extra/zx-bulk-release/commit/a736ead83a75014f4bf592b9b60d5a5073bb4381))
+* refactor: extract pack step from publish ([213a286](https://github.com/semrel-extra/zx-bulk-release/commit/213a28603ccfd3a9deed0d48652bca2864e17ef9))
+* refactor: lift api/ to post/ level as shared ([bc51e2c](https://github.com/semrel-extra/zx-bulk-release/commit/bc51e2c8e9517261de5107a7b67680018f8fe71d))
+* refactor: extract courier module with sealed directive ([20617d8](https://github.com/semrel-extra/zx-bulk-release/commit/20617d83f87b0409963b178b8a34fd11ad22df33))
+
+### BREAKING CHANGES
+* - --recover flag removed. Use --deliver <dir> to re-deliver pre-packed tars. ([c45ab47](https://github.com/semrel-extra/zx-bulk-release/commit/c45ab47a853a887f45abe6a0fa27eade0f71c4dc))
+
+### Features
+* feat: seal delivery flow — tar containers, template credentials ([2ba819a](https://github.com/semrel-extra/zx-bulk-release/commit/2ba819aef7e2d74f55db6bd6fc05f6589ddbc700))
+
 ## [2.21.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.21.0...v2.21.1) (2026-04-11)
 
 ### Fixes & improvements
