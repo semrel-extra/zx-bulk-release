@@ -1,3 +1,8 @@
+## [3.0.4](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.3...v3.0.4) (2026-04-11)
+
+### Fixes & improvements
+* docs: update gh action examples ([0511f95](https://github.com/semrel-extra/zx-bulk-release/commit/0511f95d62999c8f9a1b42562307a71f8b62c698))
+
 ## [3.0.3](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.2...v3.0.3) (2026-04-11)
 
 ### Fixes & improvements
