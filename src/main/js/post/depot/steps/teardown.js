@@ -4,20 +4,21 @@
 //   - rollbackRelease: called inline from publish.js on mid-publish failure (tag known from pkg.ctx).
 //   - recover:         standalone --recover mode — detect orphan tags (tagged but missing on npm) and tear them down.
 //
-// Teardown delegates to courier's undo(), which walks the channels in reverse.
-// git-tag is a regular channel, so its undo (deleteRemoteTag) runs as part of the reverse walk.
+// Teardown undoes courier channels in reverse, then deletes the git tag.
+// Tag is depot's responsibility — it was pushed by depot, so depot removes it.
 
 import {log} from '../../log.js'
+import {deleteRemoteTag} from '../../api/git.js'
 import {fetchManifest} from '../../api/npm.js'
 import {isNpmPublished} from '../../courier/channels/npm.js'
 import {undo} from '../../courier/index.js'
 
-// Tear down a release: undo every applicable channel (including git-tag) in reverse.
-// Failures in individual undo steps are warned, not thrown — teardown is best-effort.
+// Tear down a release: undo channels in reverse, then delete the tag.
 const teardownRelease = async (pkg, ctx, {tag, version, reason}) => {
   if (!pkg.config.ghBasicAuth) throw new Error(`${reason} requires git credentials (GH_TOKEN)`)
 
   await undo(ctx.channels, pkg, {tag, version, reason})
+  await deleteRemoteTag({cwd: ctx.git.root, tag})
 }
 
 // Rollback a release that failed mid-publish (called inline from publish.js).

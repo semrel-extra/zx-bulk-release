@@ -62,7 +62,7 @@ test('publish pushes tag and runs channels', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({channels: ['git-tag', 'test-pub'], flags: {}})
+    const ctx = makeCtx({channels: ['test-pub'], flags: {}})
     pkg.ctx = ctx
 
     await pack(pkg, ctx)

@@ -6,13 +6,6 @@
 import {asTuple, msgJoin} from '../../util.js'
 
 const entry = {
-  'git-tag': (pkg, ctx) => ({
-    tag: pkg.tag,
-    gitRoot: ctx.git?.root,
-    gitCommitterEmail: pkg.config.gitCommitterEmail,
-    gitCommitterName: pkg.config.gitCommitterName,
-  }),
-
   npm: (pkg, ctx, a) => ({
     name: pkg.name,
     version: pkg.version,

@@ -1,6 +1,6 @@
 // Courier: sealed delivery of release artifacts.
 //
-// Owns the full channel registry. Depot references channels by name,
+// Owns the channel registry. Depot references channels by name,
 // never by direct import — courier is the single place that knows how to
 // resolve a name like 'npm' or 'gh-release' into runnable code.
 //
@@ -8,7 +8,6 @@
 // cmd is in the registry (teardown/filtering may need it) but deliver() skips it.
 
 import {log} from '../log.js'
-import gitTag from './channels/git-tag.js'
 import meta from './channels/meta.js'
 import npm from './channels/npm.js'
 import ghRelease from './channels/gh-release.js'
@@ -18,11 +17,11 @@ import cmd from './channels/cmd.js'
 
 export {buildParcel} from './parcel.js'
 
-// Full channel registry, keyed by name.
-export const channels = {'git-tag': gitTag, meta, npm, 'gh-release': ghRelease, 'gh-pages': ghPages, changelog, cmd}
+// Channel registry, keyed by name.
+export const channels = {meta, npm, 'gh-release': ghRelease, 'gh-pages': ghPages, changelog, cmd}
 
 // Default channel order. Depot passes this into ctx.
-export const defaultOrder = ['git-tag', 'meta', 'npm', 'gh-release', 'gh-pages', 'changelog', 'cmd']
+export const defaultOrder = ['meta', 'npm', 'gh-release', 'gh-pages', 'changelog', 'cmd']
 
 // Which of `names` are active for this pkg + snapshot combo.
 export const filterActive = (names, pkg, {snapshot = false} = {}) =>
@@ -55,16 +54,10 @@ export const undo = async (names, pkg, opts) => {
 
 // Deliver a sealed parcel. Transport-only — cmd is excluded.
 // Each channel receives a single self-contained data envelope.
-// git-tag runs first (other channels may reference the tag), then the rest in parallel.
 export const deliver = async (parcel) => {
   const entries = Object.entries(parcel.channels).filter(([n]) => n !== 'cmd')
 
-  const tag = entries.find(([n]) => n === 'git-tag')
-  if (tag) await channels['git-tag'].run(tag[1])
-
   await Promise.all(
-    entries
-      .filter(([n]) => n !== 'git-tag')
-      .map(([name, data]) => channels[name]?.run(data))
+    entries.map(([name, data]) => channels[name]?.run(data))
   )
 }
