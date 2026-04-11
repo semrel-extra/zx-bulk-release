@@ -1,3 +1,8 @@
+## [2.21.1](https://github.com/semrel-extra/zx-bulk-release/compare/v2.21.0...v2.21.1) (2026-04-11)
+
+### Fixes & improvements
+* docs: add snapshot flow example ([5b2c2b5](https://github.com/semrel-extra/zx-bulk-release/commit/5b2c2b5faac712892c9feeea7ebae6e1dd36e93f))
+
 ## [2.21.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.20.0...v2.21.0) (2026-04-10)
 
 ### Fixes & improvements
