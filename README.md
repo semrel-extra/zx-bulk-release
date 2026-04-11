@@ -147,6 +147,50 @@ OIDC mode is also auto-detected when `NPM_TOKEN` is not set and `ACTIONS_ID_TOKE
 
 When OIDC is active, `NPM_TOKEN` and `NPMRC` are ignored for publishing and `--provenance` is enabled automatically.
 
+### Snapshot releases from PRs
+The `--snapshot` flag publishes packages to the `snapshot` npm dist-tag with a pre-release version like `1.2.1-snap.a3f0c12`. This is useful for testing changes from a feature branch before merging.
+
+**What snapshot does differently:**
+- Version gets a `-snap.<short-sha>` suffix instead of a clean bump
+- Git release tags are **not** pushed
+- Only `npm` and `publishCmd` publishers run (no gh-release, no changelog, no gh-pages, no meta)
+- npm tag is `snapshot` instead of `latest`
+
+**Workflow example** (`.github/workflows/snapshot.yml`):
+```yaml
+name: Snapshot
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  snapshot:
+    if: github.event.label.name == 'snapshot'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write    # for OIDC trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: yarn install
+      - run: npx zx-bulk-release --snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+**How to use:**
+1. Push a feature branch and open a PR.
+2. Add the `snapshot` label to the PR.
+3. The workflow publishes snapshot versions to npm.
+4. Consumers install snapshots via `npm install yourpkg@snapshot`.
+5. After merge, the regular release flow on `master` publishes clean versions to `latest`.
+
 ### Selective testing along the change graph
 In a monorepo, `--dry-run` combined with `--no-build` lets you run tests only for packages affected by the current changes — following the dependency graph, without publishing anything. This gives you a precise CI check scoped to what actually changed:
 ```shell
