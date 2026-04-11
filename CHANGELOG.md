@@ -1,3 +1,8 @@
+## [3.0.2](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.1...v3.0.2) (2026-04-11)
+
+### Fixes & improvements
+* fix: fix output dir resolve ([c0d0d86](https://github.com/semrel-extra/zx-bulk-release/commit/c0d0d86a8944bb8042f198e9fc19bf5aae66e05a))
+
 ## [3.0.1](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.0...v3.0.1) (2026-04-11)
 
 ### Fixes & improvements
