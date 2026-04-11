@@ -1,3 +1,8 @@
+## [3.0.1](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.0...v3.0.1) (2026-04-11)
+
+### Fixes & improvements
+* docs: add v2 > v3 migration guide ([18f68fa](https://github.com/semrel-extra/zx-bulk-release/commit/18f68fa62d700ae48f0f2da19b42bf91b23b5d14))
+
 ## [3.0.0](https://github.com/semrel-extra/zx-bulk-release/compare/v2.21.1...v3.0.0) (2026-04-11)
 
 ### Fixes & improvements
