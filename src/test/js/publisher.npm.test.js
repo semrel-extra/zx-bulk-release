@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import npm, {isNpmPublished} from '../../main/js/processor/publishers/npm.js'
+import npm, {isNpmPublished} from '../../main/js/courier/publishers/npm.js'
 
 const test = suite('publisher.npm')
 

@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import meta from '../../main/js/processor/publishers/meta.js'
+import meta from '../../main/js/courier/publishers/meta.js'
 
 const test = suite('publisher.meta')
 

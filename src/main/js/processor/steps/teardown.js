@@ -4,33 +4,23 @@
 //   - rollbackRelease: called inline from publish.js on mid-publish failure (tag known from pkg.ctx).
 //   - recover:         standalone --recover mode — detect orphan tags (tagged but missing on npm) and tear them down.
 //
-// Teardown walks the publishers registry in reverse and calls undo() on each that applies.
+// Teardown delegates to courier's undo(), which walks the publishers in reverse.
+// git-tag is a regular publisher, so its undo (deleteRemoteTag) runs as part of the reverse walk.
 
 import {log} from '../log.js'
-import {deleteRemoteTag} from '../api/git.js'
 import {fetchManifest} from '../api/npm.js'
-import {isNpmPublished} from '../publishers/npm.js'
+import {isNpmPublished} from '../../courier/publishers/npm.js'
+import {undo} from '../../courier/index.js'
 
-// Tear down a release: undo every applicable publisher, then delete the git tag.
+// Tear down a release: undo every applicable publisher (including git-tag) in reverse.
 // Failures in individual undo steps are warned, not thrown — teardown is best-effort.
 const teardownRelease = async (pkg, ctx, {tag, version, reason}) => {
   if (!pkg.config.ghBasicAuth) throw new Error(`${reason} requires git credentials (GH_TOKEN)`)
 
-  for (const p of [...ctx.publishers].reverse()) {
-    if (!p.undo || !p.when(pkg)) continue
-    try {
-      const result = await p.undo(pkg, {tag, version, reason})
-      if (result !== false) log.info(`${reason}: ${p.name} undone for '${tag}'`)
-    } catch (e) {
-      log.warn(`${reason}: ${p.name} undo failed`, e)
-    }
-  }
-
-  await deleteRemoteTag({cwd: ctx.git.root, tag})
+  await undo(ctx.publishers, pkg, {tag, version, reason})
 }
 
 // Rollback a release that failed mid-publish (called inline from publish.js).
-// Uses the current release tag; skips the npm existence check — we already know it failed.
 export const rollbackRelease = async (pkg, ctx = pkg.ctx) => {
   const tag = ctx.git.tag
   if (!tag) return

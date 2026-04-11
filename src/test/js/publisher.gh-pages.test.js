@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import ghPages from '../../main/js/processor/publishers/gh-pages.js'
+import ghPages from '../../main/js/courier/publishers/gh-pages.js'
 
 const test = suite('publisher.gh-pages')
 

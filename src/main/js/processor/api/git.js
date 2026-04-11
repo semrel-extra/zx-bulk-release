@@ -15,7 +15,7 @@ export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, b
   }
 
   return cwd
-}, async ({cwd, branch}) => `${await getRoot(cwd)}:${branch}`)
+}, async ({cwd, branch, origin}) => origin ? `${origin}:${branch}` : `${await getRoot(cwd)}:${branch}`)
 
 export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => {
   const _cwd = await fetchRepo({cwd, branch, origin, basicAuth})

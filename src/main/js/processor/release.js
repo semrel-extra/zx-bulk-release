@@ -15,15 +15,7 @@ import {publish} from './steps/publish.js'
 import {clean} from './steps/clean.js'
 import {test} from './steps/test.js'
 
-import meta from './publishers/meta.js'
-import npm from './publishers/npm.js'
-import ghRelease from './publishers/gh-release.js'
-import ghPages from './publishers/gh-pages.js'
-import changelog from './publishers/changelog.js'
-import cmd from './publishers/cmd.js'
-
-// Publisher registry. Order = publish order; teardown walks it in reverse.
-const publishers = [meta, npm, ghRelease, ghPages, changelog, cmd]
+import {defaultOrder as publishers} from '../courier/index.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   $.memo = new Map()

@@ -2,6 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
 import {createMock, defaultResponses, makePkg, makeCtx, has} from './utils/mock.js'
+import {publishers} from '../../main/js/courier/index.js'
 
 const test = suite('steps.teardown')
 
@@ -15,25 +16,30 @@ const setup = (responses = []) => {
   return mock
 }
 
+const registerTestPublisher = (name, impl) => {
+  publishers[name] = {name, ...impl}
+  return () => { delete publishers[name] }
+}
+
 test('rollbackRelease calls undo on publishers in reverse', async () => {
   await within(async () => {
     const mock = setup()
     const {rollbackRelease} = await import(`../../main/js/processor/steps/teardown.js?t=${Date.now()}`)
 
     const undone = []
-    const publishers = [
-      {name: 'p1', when: () => true, undo: async () => undone.push('p1')},
-      {name: 'p2', when: () => true, undo: async () => undone.push('p2')},
-    ]
+    const c1 = registerTestPublisher('p1', {when: () => true, undo: async () => undone.push('p1')})
+    const c2 = registerTestPublisher('p2', {when: () => true, undo: async () => undone.push('p2')})
 
     const pkg = makePkg()
-    const ctx = makeCtx({publishers, git: {sha: 'abc', root: '/tmp/fakerepo', tag: '2026.1.1-test-pkg.1.0.1-f0'}})
+    const ctx = makeCtx({publishers: ['git-tag', 'p1', 'p2'], git: {sha: 'abc', root: '/tmp/fakerepo', tag: '2026.1.1-test-pkg.1.0.1-f0'}})
     pkg.ctx = ctx
 
     await rollbackRelease(pkg, ctx)
 
     assert.equal(undone, ['p2', 'p1'])
     assert.ok(has(mock.calls, 'git push origin :refs/tags/'))
+
+    c1(); c2()
   })
 })
 

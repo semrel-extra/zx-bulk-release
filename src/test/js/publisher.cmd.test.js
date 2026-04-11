@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import cmd from '../../main/js/processor/publishers/cmd.js'
+import cmd from '../../main/js/courier/publishers/cmd.js'
 import {makePkg} from './utils/mock.js'
 
 const test = suite('publisher.cmd')
