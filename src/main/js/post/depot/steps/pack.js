@@ -21,7 +21,7 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   await prepare(active, pkg)
   await npmPersist(pkg)
 
-  const outputDir = flags.pack ? (typeof flags.pack === 'string' ? flags.pack : 'parcels') : null
+  const outputDir = flags.pack ? path.resolve(ctx.git.root, typeof flags.pack === 'string' ? flags.pack : 'parcels') : null
   const stageDir = outputDir || tempy.temporaryDirectory()
   if (outputDir) await fs.ensureDir(outputDir)
   const {repoName, repoHost, originUrl} = await getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})
