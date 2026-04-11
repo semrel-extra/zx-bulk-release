@@ -445,11 +445,14 @@ test('pack → deliver: multiple channels in one pass', async () => {
   })
 })
 
-// --- deliver validation: fail-fast ---
+// --- deliver validation: warn and skip ---
 
-test('deliver throws before any channel runs if credentials missing', async () => {
+test('deliver skips parcels with missing credentials and logs warning', async () => {
   await within(async () => {
     await setup()
+    const warnings = []
+    $.report = {log() {}, warn(...args) { warnings.push(args.join(' ')) }}
+
     const dir = tempy.temporaryDirectory()
     const tarPath = path.join(dir, 'test.npm.tar')
     await packTar(tarPath, {channel: 'npm', name: 'pkg', version: '1.0.0', registry: '', token: '${{NPM_TOKEN}}'},
@@ -459,22 +462,20 @@ test('deliver throws before any channel runs if credentials missing', async () =
     const origRun = channels.npm.run
     channels.npm.run = async () => ran.push('npm')
 
-    try {
-      await deliver([tarPath], {PATH: process.env.PATH})
-      assert.unreachable('should have thrown')
-    } catch (e) {
-      assert.ok(e.message.includes('missing credentials'))
-      assert.ok(e.message.includes('npm'))
-    }
+    await deliver([tarPath], {PATH: process.env.PATH})
 
     channels.npm.run = origRun
     assert.is(ran.length, 0)
+    assert.ok(warnings.some(w => w.includes('missing credentials')))
   })
 })
 
-test('deliver reports all missing credentials at once', async () => {
+test('deliver warns for each skipped parcel with missing credentials', async () => {
   await within(async () => {
     await setup()
+    const warnings = []
+    $.report = {log() {}, warn(...args) { warnings.push(args.join(' ')) }}
+
     const dir = tempy.temporaryDirectory()
     const npmTar = path.join(dir, 'npm.tar')
     await packTar(npmTar, {channel: 'npm', name: 'pkg', version: '1.0.0', token: '${{NPM_TOKEN}}'},
@@ -483,13 +484,19 @@ test('deliver reports all missing credentials at once', async () => {
     await packTar(clTar, {channel: 'changelog', releaseNotes: '#', branch: 'cl', file: 'CL.md', msg: 'up',
       gitCommitterEmail: 'b@b.com', gitCommitterName: 'Bot'})
 
-    try {
-      await deliver([npmTar, clTar], {PATH: process.env.PATH})
-      assert.unreachable('should have thrown')
-    } catch (e) {
-      assert.ok(e.message.includes('npm'))
-      assert.ok(e.message.includes('changelog'))
-    }
+    const ran = []
+    const origNpm = channels.npm.run
+    const origCl = channels.changelog.run
+    channels.npm.run = async () => ran.push('npm')
+    channels.changelog.run = async () => ran.push('changelog')
+
+    await deliver([npmTar, clTar], {PATH: process.env.PATH})
+
+    channels.npm.run = origNpm
+    channels.changelog.run = origCl
+    assert.is(ran.length, 0)
+    assert.ok(warnings.some(w => w.includes('npm.tar')))
+    assert.ok(warnings.some(w => w.includes('cl.tar')))
   })
 })
 

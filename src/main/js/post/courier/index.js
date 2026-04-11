@@ -1,5 +1,6 @@
-import {$, tempy, within} from 'zx-extra'
+import {$, tempy, within, path, semver, fs} from 'zx-extra'
 import {unpackTar} from '../tar.js'
+import {log} from '../log.js'
 import meta from './channels/meta.js'
 import npm from './channels/npm.js'
 import ghRelease from './channels/gh-release.js'
@@ -20,11 +21,8 @@ export const runChannel = async (name, ...args) => channels[name]?.run(...args)
 
 export const resolveManifest = (manifest, env = process.env) => {
   const resolved = {}
-  for (const [k, v] of Object.entries(manifest)) {
-    resolved[k] = typeof v === 'string'
-      ? v.replace(/\$\{\{(\w+)\}\}/g, (_, name) => env[name] || '')
-      : v
-  }
+  for (const [k, v] of Object.entries(manifest))
+    resolved[k] = typeof v === 'string' ? v.replace(/\$\{\{(\w+)\}\}/g, (_, n) => env[n] || '') : v
 
   const {repoHost, repoName, originUrl} = resolved
   const token = env.GH_TOKEN || env.GITHUB_TOKEN || ''
@@ -40,25 +38,76 @@ export const resolveManifest = (manifest, env = process.env) => {
   return resolved
 }
 
-// Takes an array of tar paths. Each tar is self-describing via manifest.channel.
-export const deliver = async (tars, env = process.env) => {
-  const parcels = await Promise.all(tars.map(async (tarPath) => {
-    const destDir = tempy.temporaryDirectory()
-    const {manifest} = await unpackTar(tarPath, destDir)
-    const resolved = resolveManifest(manifest, env)
-    const ch = channels[resolved.channel]
-    return ch ? {ch, resolved, destDir} : null
-  }))
+const openParcel = async (tarPath, env) => {
+  const content = await fs.readFile(tarPath, 'utf8').catch(() => null)
+  if (content === 'released' || content === 'skip') return null
 
-  const ready = parcels.filter(Boolean)
+  const destDir = tempy.temporaryDirectory()
+  const {manifest} = await unpackTar(tarPath, destDir)
+  const resolved = resolveManifest(manifest, env)
+  const ch = channels[resolved.channel]
 
-  const missing = ready.flatMap(({ch, resolved}) =>
-    (ch.requires || []).filter(f => !resolved[f]).map(f => `${ch.name}: missing '${f}'`)
-  )
-  if (missing.length) throw new Error(`deliver: missing credentials — ${missing.join(', ')}`)
+  if (!ch) return {warn: `unknown channel '${resolved.channel || '<none>'}'`}
 
-  await Promise.all(ready.map(({ch, resolved, destDir}) => within(async () => {
-    $.scope = resolved.name || resolved.channel
-    await ch.run(resolved, destDir)
-  })))
+  const missing = (ch.requires || []).filter(f => !resolved[f])
+  if (missing.length) return {warn: `missing credentials — ${missing.join(', ')}`, tarPath}
+
+  return {ch, resolved, destDir, tarPath}
+}
+
+const pool = async (tasks, concurrency, fn) => {
+  const active = new Set()
+  let i = 0
+  await new Promise((resolve, reject) => {
+    const next = () => {
+      if (i >= tasks.length && active.size === 0) return resolve()
+      while (active.size < concurrency && i < tasks.length) {
+        const t = tasks[i++]
+        const p = fn(t).then(() => { active.delete(p); next() }, reject)
+        active.add(p)
+      }
+    }
+    next()
+  })
+}
+
+// Parcels grouped by package, sorted by semver asc (latest last).
+// Groups run in parallel (concurrency-limited), entries within a group — sequential.
+export const deliver = async (tars, env = process.env, {concurrency = 4} = {}) => {
+  const groups = new Map()
+
+  for (const tarPath of tars) {
+    const fname = path.basename(tarPath)
+    try {
+      const p = await openParcel(tarPath, env)
+      if (!p) continue
+      if (p.warn) {
+        log.warn(`skipping ${fname}: ${p.warn}`)
+        if (p.tarPath) await fs.writeFile(tarPath, 'skip')
+        continue
+      }
+      const key = p.resolved.name || p.resolved.channel
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push(p)
+    } catch (e) {
+      log.warn(`skipping ${fname}: ${e.message}`)
+    }
+  }
+
+  for (const g of groups.values())
+    g.sort((a, b) => semver.compare(a.resolved.version || '0.0.0', b.resolved.version || '0.0.0'))
+
+  let delivered = 0
+  await pool([...groups.values()], concurrency, async (group) => {
+    for (const {ch, resolved, destDir, tarPath} of group) {
+      await within(async () => {
+        $.scope = resolved.name || resolved.channel
+        await ch.run(resolved, destDir)
+      })
+      await fs.writeFile(tarPath, 'released')
+      delivered++
+    }
+  })
+
+  return delivered
 }
