@@ -16,6 +16,8 @@ import {test} from './depot/steps/test.js'
 
 import {deliver, defaultOrder as channels} from './courier/index.js'
 
+const PARCELS_DIR = 'parcels'
+
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   $.memo = new Map()
 
@@ -25,13 +27,14 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     return
   }
 
-  // --deliver <dir>: standalone delivery from pre-packed tars.
+  // --deliver [dir]: standalone delivery from pre-packed tars.
   if (flags.deliver) {
-    const tars = await glob(path.join(flags.deliver, '*.tar'))
-    if (!tars.length) throw new Error(`no tars found in ${flags.deliver}`)
+    const dir = typeof flags.deliver === 'string' ? flags.deliver : PARCELS_DIR
+    const tars = await glob(path.join(dir, '*.tar'))
+    if (!tars.length) throw new Error(`no tars found in ${dir}`)
     const _env = {...process.env, ...env}
     log.secret(_env.GH_TOKEN, _env.GITHUB_TOKEN, _env.NPM_TOKEN)
-    log.info(`deliver: ${tars.length} tar(s) from ${flags.deliver}`)
+    log.info(`deliver: ${tars.length} tar(s) from ${dir}`)
     await deliver(tars, _env)
     log.info('deliver: done')
     return

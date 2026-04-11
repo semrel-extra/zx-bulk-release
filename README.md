@@ -40,8 +40,8 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
 | Flag                         | Description                                                                                       | Default          |
 |------------------------------|---------------------------------------------------------------------------------------------------|------------------|
-| `--pack <dir>`               | Pack only: build, test, and write delivery tars to `<dir>`. No credentials needed.                |                  |
-| `--deliver <dir>`            | Deliver only: read tars from `<dir>` and run delivery channels. No source code needed.            |                  |
+| `--pack [dir]`               | Pack only: build, test, and write delivery tars to `dir`. No credentials needed.                  | `parcels`        |
+| `--deliver [dir]`            | Deliver only: read tars from `dir` and run delivery channels. No source code needed.              | `parcels`        |
 | `--ignore`                   | Packages to ignore: `a, b`                                                                        |                  |
 | `--include-private`          | Include `private` packages                                                                        | `false`          |
 | `--concurrency`              | `build/publish` threads limit                                                                     | `os.cpus.length` |
@@ -66,9 +66,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - run: npx zx-bulk-release --pack ./tars
+      - run: npx zx-bulk-release --pack
       - uses: actions/upload-artifact@v4
-        with: { name: tars, path: ./tars }
+        with: { name: parcels, path: parcels }
 
 # Job 2: deliver (only delivery credentials, no source code)
   deliver:
@@ -76,8 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
-        with: { name: tars, path: ./tars }
-      - run: npx zx-bulk-release --deliver ./tars
+        with: { name: parcels, path: parcels }
+      - run: npx zx-bulk-release --deliver
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
