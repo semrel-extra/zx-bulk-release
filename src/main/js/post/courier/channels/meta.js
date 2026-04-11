@@ -1,4 +1,4 @@
-// Meta publisher: pushes meta artifacts to the `meta` branch and undoes them on rollback.
+// Meta channel: pushes meta artifacts to the `meta` branch and undoes them on rollback.
 
 import {queuefy} from 'queuefy'
 import {fs, path} from 'zx-extra'
@@ -7,8 +7,8 @@ import {fetchRepo, pushCommit} from '../../api/git.js'
 import {getArtifactPath, isAssetMode} from '../../depot/generators/meta.js'
 import {prepareMeta} from '../../depot/generators/meta.js'
 
-const pushMetaBranch = queuefy(async (data) => {
-  const {name, version, tag, type, data: meta, gitRoot, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = data
+const pushMetaBranch = queuefy(async (manifest, dir) => {
+  const {name, version, tag, type, data: meta, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
   if (type === null || isAssetMode(type)) return
 
   log.info('push artifact to branch \'meta\'')
@@ -17,7 +17,6 @@ const pushMetaBranch = queuefy(async (data) => {
   const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
   await pushCommit({
-    cwd: gitRoot,
     to: '.',
     branch: 'meta',
     msg,

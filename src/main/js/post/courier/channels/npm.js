@@ -1,3 +1,4 @@
+import {path} from 'zx-extra'
 import {npmPublish} from '../../api/npm.js'
 
 export const isNpmPublished = (pkg) =>
@@ -6,18 +7,18 @@ export const isNpmPublished = (pkg) =>
 export default {
   name:     'npm',
   when:     isNpmPublished,
-  run:      (data) => npmPublish({
-    name: data.name,
-    version: data.version,
-    npmTarball: data.tarball,
-    preversion: data.preversion,
+  run:      (manifest, dir) => npmPublish({
+    name: manifest.name,
+    version: manifest.version,
+    npmTarball: path.join(dir, 'package.tgz'),
+    preversion: manifest.preversion,
     manifest: {},
     config: {
-      npmRegistry: data.registry,
-      npmToken: data.token,
-      npmConfig: data.config,
-      npmProvenance: data.provenance,
-      npmOidc: data.oidc,
+      npmRegistry: manifest.registry,
+      npmToken: manifest.token,
+      npmConfig: manifest.config,
+      npmProvenance: manifest.provenance,
+      npmOidc: manifest.oidc,
     },
   }),
   snapshot: true,
