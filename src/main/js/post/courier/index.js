@@ -129,6 +129,7 @@ export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun 
       await within(async () => {
         $.scope = resolved.name || resolved.channel
         await ch.run(resolved, destDir)
+        log.info(`${resolved.channel} ${resolved.version}`)
       })
       await fs.writeFile(tarPath, 'released')
       entries.push(toEntry({resolved}))

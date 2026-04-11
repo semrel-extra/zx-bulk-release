@@ -48,8 +48,6 @@ const runDeliver = async ({env, flags}) => {
   const result = await deliver(tars, env, {dryRun: flags.dryRun})
   report.set('delivery', result).setStatus('success')
 
-  for (const {channel, name, version} of result.entries)
-    log.info(`${channel} ${name}@${version}`)
   log.info(`done: ${result.delivered} delivered, ${result.skipped} skipped`)
 }
 
