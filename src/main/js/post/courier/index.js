@@ -74,8 +74,9 @@ const pool = async (tasks, concurrency, fn) => {
 
 // Parcels grouped by package, sorted by semver asc (latest last).
 // Groups run in parallel (concurrency-limited), entries within a group — sequential.
-export const deliver = async (tars, env = process.env, {concurrency = 4} = {}) => {
-  const groups = new Map()
+export const inspect = async (tars, env = process.env) => {
+  const parcels = []
+  const skipped = []
 
   for (const tarPath of tars) {
     const fname = path.basename(tarPath)
@@ -83,22 +84,46 @@ export const deliver = async (tars, env = process.env, {concurrency = 4} = {}) =
       const p = await openParcel(tarPath, env)
       if (!p) continue
       if (p.warn) {
-        log.warn(`skipping ${fname}: ${p.warn}`)
-        if (p.tarPath) await fs.writeFile(tarPath, 'skip')
+        skipped.push({file: fname, reason: p.warn, tarPath: p.tarPath})
         continue
       }
-      const key = p.resolved.name || p.resolved.channel
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key).push(p)
+      parcels.push(p)
     } catch (e) {
-      log.warn(`skipping ${fname}: ${e.message}`)
+      skipped.push({file: fname, reason: e.message})
     }
   }
 
+  // group by package, sort by semver asc within each group
+  const groups = new Map()
+  for (const p of parcels) {
+    const key = p.resolved.name || p.resolved.channel
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(p)
+  }
   for (const g of groups.values())
     g.sort((a, b) => semver.compare(a.resolved.version || '0.0.0', b.resolved.version || '0.0.0'))
 
-  let delivered = 0
+  return {groups, skipped, total: tars.length, pending: parcels.length}
+}
+
+export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun = false} = {}) => {
+  const {groups, skipped, total, pending} = await inspect(tars, env)
+
+  for (const {file, reason, tarPath} of skipped) {
+    log.warn(`skipping ${file}: ${reason}`)
+    if (!dryRun && tarPath) await fs.writeFile(tarPath, 'skip')
+  }
+
+  const entries = []
+  const toEntry = ({resolved}) => ({channel: resolved.channel, name: resolved.name, version: resolved.version})
+
+  if (dryRun) {
+    for (const group of groups.values())
+      for (const p of group)
+        entries.push(toEntry(p))
+    return {total, pending: entries.length, delivered: 0, skipped: skipped.length, entries}
+  }
+
   await pool([...groups.values()], concurrency, async (group) => {
     for (const {ch, resolved, destDir, tarPath} of group) {
       await within(async () => {
@@ -106,9 +131,9 @@ export const deliver = async (tars, env = process.env, {concurrency = 4} = {}) =
         await ch.run(resolved, destDir)
       })
       await fs.writeFile(tarPath, 'released')
-      delivered++
+      entries.push(toEntry({resolved}))
     }
   })
 
-  return delivered
+  return {total, pending, delivered: entries.length, skipped: skipped.length, entries}
 }

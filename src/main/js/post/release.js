@@ -1,11 +1,11 @@
 import os from 'node:os'
 import {createRequire} from 'node:module'
-import {$, within, fs, glob, path} from 'zx-extra'
+import {$, within, glob, path} from 'zx-extra'
 import {queuefy} from 'queuefy'
-import {topo, traverseQueue} from './depot/deps.js'
-import {createReport, log} from './log.js'
-import {exec} from './depot/exec.js'
 
+import {createReport, log} from './log.js'
+import {topo, traverseQueue} from './depot/deps.js'
+import {exec} from './depot/exec.js'
 import {contextify} from './depot/steps/contextify.js'
 import {analyze} from './depot/steps/analyze.js'
 import {build} from './depot/steps/build.js'
@@ -13,48 +13,58 @@ import {pack} from './depot/steps/pack.js'
 import {publish} from './depot/steps/publish.js'
 import {clean} from './depot/steps/clean.js'
 import {test} from './depot/steps/test.js'
-
 import {deliver, defaultOrder as channels} from './courier/index.js'
 
 const PARCELS_DIR = 'parcels'
+const ZBR_VERSION = createRequire(import.meta.url)('../../../../package.json').version
 
-export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
+export const run = async ({cwd = process.cwd(), env: _env, flags = {}} = {}) => within(async () => {
+  if (flags.v || flags.version)
+    return console.log(ZBR_VERSION)
+
+  const env = {...process.env, ..._env}
+  log.secret(env.GH_TOKEN, env.GITHUB_TOKEN, env.NPM_TOKEN)
+  log.info(`zx-bulk-release@${ZBR_VERSION}`)
+
+  return flags.deliver
+    ? runDeliver({env, flags})
+    : runPipeline({cwd, env, flags})
+})
+
+// --deliver [dir]
+const runDeliver = async ({env, flags}) => {
+  const dir = typeof flags.deliver === 'string' ? flags.deliver : PARCELS_DIR
+  const report = createReport({flags})
+
   $.memo = new Map()
+  $.report = report
 
-  const {version: zbrVersion} = createRequire(import.meta.url)('../../../../package.json')
-  if (flags.v || flags.version) {
-    console.log(zbrVersion)
-    return
-  }
+  report.setStatus('inspecting')
 
-  // --deliver [dir]: standalone delivery from pre-packed tars.
-  if (flags.deliver) {
-    const dir = typeof flags.deliver === 'string' ? flags.deliver : PARCELS_DIR
-    const tars = await glob(path.join(dir, 'parcel.*.tar'))
-    if (!tars.length) {
-      log.info(`deliver: no parcels in ${dir}, nothing to do`)
-      return
-    }
-    const _env = {...process.env, ...env}
-    log.secret(_env.GH_TOKEN, _env.GITHUB_TOKEN, _env.NPM_TOKEN)
-    log.info(`deliver: ${tars.length} tar(s) from ${dir}`)
-    const delivered = await deliver(tars, _env)
-    log.info(`deliver: done, ${delivered} delivered`)
-    return
-  }
+  const tars = await glob(path.join(dir, 'parcel.*.tar'))
+  if (!tars.length) return report.setStatus('success').log(`no parcels in ${dir}`)
 
+  report.setStatus('delivering').log(`parcels: ${tars.length}`)
+  const result = await deliver(tars, env, {dryRun: flags.dryRun})
+  report.set('delivery', result).setStatus('success')
+
+  for (const {channel, name, version} of result.entries)
+    log.info(`${channel} ${name}@${version}`)
+  log.info(`done: ${result.delivered} delivered, ${result.skipped} skipped`)
+}
+
+// full pipeline (legacy / --pack)
+const runPipeline = async ({cwd, env, flags}) => {
   const ctx = await createContext({flags, env, cwd})
   const {report, packages, queue, prev} = ctx
 
   const forEachPkg = (cb) => traverseQueue({queue, prev, cb: (name) => within(async () => {
     $.scope = name
-    const pkg = packages[name]
-    await contextify(pkg, ctx)
-    return cb(pkg)
+    await contextify(packages[name], ctx)
+    return cb(packages[name])
   })})
 
   report
-    .log(`zx-bulk-release@${zbrVersion}`)
     .log('queue:', queue)
     .log('graphs', ctx.graphs)
 
@@ -74,36 +84,16 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     report.setStatus('pending')
 
     await forEachPkg(async (pkg) => {
-      if (!pkg.releaseType) {
-        report.setStatus('skipped', pkg.name)
-        pkg.skipped = true
-        return
-      }
-      if (flags.build !== false) {
-        report.setStatus('building', pkg.name)
-        await build(pkg)
-      }
-      if (flags.test !== false) {
-        report.setStatus('testing', pkg.name)
-        await test(pkg)
-      }
-      if (flags.dryRun || flags.publish === false) {
-        report.setStatus('success', pkg.name)
-        return
-      }
+      if (!pkg.releaseType) { pkg.skipped = true; return report.setStatus('skipped', pkg.name) }
+      if (flags.build !== false) { report.setStatus('building',  pkg.name); await build(pkg) }
+      if (flags.test  !== false) { report.setStatus('testing',   pkg.name); await test(pkg)  }
+      if (flags.dryRun || flags.publish === false) return report.setStatus('success', pkg.name)
 
-      report.setStatus('packing', pkg.name)
-      await pack(pkg)
+      report.setStatus('packing',    pkg.name); await pack(pkg)
+      if (flags.pack) return report.setStatus('packed', pkg.name)
 
-      // --pack <dir>: pack only, skip delivery.
-      if (flags.pack) {
-        report.setStatus('packed', pkg.name)
-        return
-      }
-
-      report.setStatus('publishing', pkg.name)
-      await publish(pkg)
-      report.setStatus('success', pkg.name)
+      report.setStatus('publishing', pkg.name); await publish(pkg)
+      report.setStatus('success',    pkg.name)
     })
   } catch (e) {
     report.error(e, e.stack).set('error', e).setStatus('failure')
@@ -112,23 +102,18 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     await clean(ctx)
   }
   report.setStatus('success').log('Great success!')
-})
+}
 
-export const createContext = async ({flags, env: _env, cwd}) => {
+export const createContext = async ({flags, env, cwd}) => {
   const {packages, queue, root, prev, graphs} = await topo({cwd, flags})
   const report = createReport({packages, queue, flags})
-  const env = {...process.env, ..._env}
-
-  log.secret(env.GH_TOKEN, env.GITHUB_TOKEN, env.NPM_TOKEN)
 
   $.report  = report
   $.env     = env
   $.verbose = !!(flags.debug || env.DEBUG) || $.verbose
   $.quiet   = !$.verbose
+  $.memo    = new Map()
 
-  return {
-    cwd, env, flags, root, packages, queue, prev, graphs, report,
-    channels,
-    run: queuefy(exec, flags.concurrency || os.cpus().length),
-  }
+  return {cwd, env, flags, root, packages, queue, prev, graphs, report, channels,
+    run: queuefy(exec, flags.concurrency || os.cpus().length)}
 }
