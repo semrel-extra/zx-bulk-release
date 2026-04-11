@@ -1,10 +1,8 @@
 import {memoizeBy} from '../../../util.js'
 import {exec} from '../exec.js'
 import {log} from '../../log.js'
-import {deliver, filterActive, runChannel} from '../../courier/index.js'
+import {deliver, channels, runChannel} from '../../courier/index.js'
 import {pushTag} from '../../api/git.js'
-import {isNpmPublished} from '../../courier/channels/npm.js'
-import {rollbackRelease} from './teardown.js'
 
 export const publish = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   if (pkg.version !== pkg.manifest.version)
@@ -21,15 +19,11 @@ export const publish = memoizeBy(async (pkg, ctx = pkg.ctx) => {
     await pushTag({cwd: ctx.git.root, tag, gitCommitterEmail, gitCommitterName})
   }
 
-  const cmdActive = channelNames.includes('cmd') && filterActive(['cmd'], pkg, {snapshot}).length > 0
+  await deliver(tars, ctx.env)
 
-  try {
-    await deliver(tars, ctx.env)
-    if (cmdActive) await runChannel('cmd', pkg, run)
-  } catch (e) {
-    if (!snapshot && isNpmPublished(pkg)) await rollbackRelease(pkg, ctx)
-    throw e
-  }
+  const cmd = channels.cmd
+  if (channelNames.includes('cmd') && cmd?.when(pkg) && (!snapshot || cmd.snapshot))
+    await runChannel('cmd', pkg, run)
 
   pkg.published = true
 })

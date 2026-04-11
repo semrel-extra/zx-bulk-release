@@ -107,15 +107,6 @@ export const pushTag = async ({cwd, tag, gitCommitterName, gitCommitterEmail}) =
     git push origin ${tag}`
 }
 
-export const fetchTags = async (cwd) =>
-  $({cwd})`git fetch --tags`
-
-export const deleteRemoteTag = async ({cwd, tag}) => {
-  log.info(`rolling back remote tag '${tag}'`)
-  await $({cwd, nothrow: true})`git push origin :refs/tags/${tag}`
-  await $({cwd, nothrow: true})`git tag -d ${tag}`
-}
-
 // Memoize prevents .git/config lock
 // https://github.com/qiwi/packasso/actions/runs/4539987310/jobs/8000403413#step:7:282
 export const setUserConfig = memoizeBy(async(cwd, gitCommitterName, gitCommitterEmail) => $({cwd})`

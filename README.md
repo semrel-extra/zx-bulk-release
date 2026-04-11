@@ -14,10 +14,11 @@
 * Pkg changelogs go to `changelog` branch (configurable).
 * Docs are published to `gh-pages` branch (configurable).
 * No extra builds. The required deps are fetched from the pkg registry (`npmFetch` config opt).
+* **Two-phase pipeline**: build and delivery can run as separate jobs with isolated credentials.
 
 ## Roadmap
 * [x] Store release metrics to `meta`.
-* [ ] ~~Self-repair. Restore broken/missing metadata from external registries (npm, pypi, m2)~~. Tags should be the only source of truth
+* [x] Two-phase pipeline (pack / deliver).
 * [ ] Multistack. Add support for java/kt/py.
 * [ ] Semaphore. Let several release agents to serve the monorepo at the same time.
 
@@ -25,7 +26,6 @@
 * macOS / linux
 * Node.js >= 16.0.0
 * npm >=7 / yarn >= 3
-* ~~wget~~
 * tar
 * git
 
@@ -38,21 +38,52 @@ yarn add zx-bulk-release
 ```shell
 GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
-| Flag                         | Description                                                                                                               | Default          |
-|------------------------------|---------------------------------------------------------------------------------------------------------------------------|------------------|
-| `--ignore`                   | Packages to ignore: `a, b`                                                                                                |                  |
-| `--include-private`          | Include `private` packages                                                                                                | `false`          |
-| `--concurrency`              | `build/publish` threads limit                                                                                             | `os.cpus.length` |
-| `--no-build`                 | Skip `buildCmd` invoke                                                                                                    |                  |
-| `--no-test`                  | Disable `testCmd` run                                                                                                     |                  |
-| `--no-npm-fetch`             | Disable npm artifacts fetching                                                                                            |                  |                      
-| `--only-workspace-deps`      | Recognize only `workspace:` deps as graph edges                                                                           |                  |
-| `--dry-run` / `--no-publish` | Disable any publish logic                                                                                                 |                  |
-| `--report`                   | Persist release state to file                                                                                             |                  |
-| `--snapshot`                 | Disable any publishing steps except of `npm` and `publishCmd` (if defined), then  push packages to the `snapshot` channel |                  |  
-| `--recover`                  | Remove orphan git tags (tag exists but npm publish failed) and exit. Re-run without this flag to release.                  |                  |
-| `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode                                                            |                  |
-| `--version` / `-v`           | Print own version                                                                                                         |                  |
+| Flag                         | Description                                                                                       | Default          |
+|------------------------------|---------------------------------------------------------------------------------------------------|------------------|
+| `--pack <dir>`               | Pack only: build, test, and write delivery tars to `<dir>`. No credentials needed.                |                  |
+| `--deliver <dir>`            | Deliver only: read tars from `<dir>` and run delivery channels. No source code needed.            |                  |
+| `--ignore`                   | Packages to ignore: `a, b`                                                                        |                  |
+| `--include-private`          | Include `private` packages                                                                        | `false`          |
+| `--concurrency`              | `build/publish` threads limit                                                                     | `os.cpus.length` |
+| `--no-build`                 | Skip `buildCmd` invoke                                                                            |                  |
+| `--no-test`                  | Disable `testCmd` run                                                                             |                  |
+| `--no-npm-fetch`             | Disable npm artifacts fetching                                                                    |                  |
+| `--only-workspace-deps`      | Recognize only `workspace:` deps as graph edges                                                   |                  |
+| `--dry-run` / `--no-publish` | Disable any publish logic                                                                         |                  |
+| `--report`                   | Persist release state to file                                                                     |                  |
+| `--snapshot`                 | Publish only to `npm` snapshot channel and run `publishCmd` (if defined), skip everything else    |                  |
+| `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode                                    |                  |
+| `--version` / `-v`           | Print own version                                                                                 |                  |
+
+### Two-phase pipeline
+By default, zbr runs the full pipeline in a single process. For better security isolation, split build and delivery into separate CI jobs:
+
+```yaml
+# Job 1: build (minimal privileges — source code access only)
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: npx zx-bulk-release --pack ./tars
+      - uses: actions/upload-artifact@v4
+        with: { name: tars, path: ./tars }
+
+# Job 2: deliver (only delivery credentials, no source code)
+  deliver:
+    needs: pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: tars, path: ./tars }
+      - run: npx zx-bulk-release --deliver ./tars
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+**Recovery** is simply re-running the deliver job. The tars are self-describing — each contains a `manifest.json` with the channel name and all delivery instructions. No rebuild required.
 
 ### JS API
 ```js
@@ -204,6 +235,18 @@ See [antongolub/misc](https://github.com/antongolub/misc) for a real-world examp
 * [antongolub/misc](https://github.com/antongolub/misc)
 
 ## Implementation notes
+### Architecture
+The release pipeline is split into three subsystems under `post/`:
+
+```
+post/
+  depot/     — preparation: analysis, versioning, building, testing, tar packing
+  courier/   — sealed delivery: receives self-describing tars and delivers through channels
+  api/       — shared infrastructure wrappers (git, npm, gh)
+```
+
+This separation ensures that courier never touches the project directory — it works only with pre-packed tars and credentials resolved at delivery time. The two subsystems can run in separate CI jobs with different privilege levels.
+
 ### Flow
 ```
 topo ─► contextify ─► analyze ──► build ──► test ──► pack ──► publish ─► clean
@@ -213,22 +256,14 @@ topo ─► contextify ─► analyze ──► build ──► test ──► p
 
 By default, packages marked as `private` are omitted. Override with `--include-private`.
 
-### Architecture
-The release pipeline is split into three subsystems under `post/`:
-- **depot** — preparation: analysis, versioning, building, testing, artifact staging.
-- **courier** — sealed delivery: receives a self-contained parcel and delivers through channels.
-- **api** — shared infrastructure wrappers (git, npm, gh).
-
-This separation ensures that courier never touches the project directory — it works only with pre-staged artifacts and credentials. In the future, the parcel can be persisted (git, s3, actions artifacts) and delivered asynchronously by a separate job.
-
 ### Steps
 Each step has a uniform signature `(pkg, ctx)`:
 - **`contextify`** — resolves per-package config, latest release metadata, and git context.
 - **`analyze`** — determines semantic changes, release type, and next version.
 - **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
 - **`test`** — runs `testCmd`.
-- **`pack`** — stages delivery artifacts in temp directories (`npm pack`, docs copy, assets, release notes). After this step, everything the courier needs is outside the project dir. Builds the list of active channels.
-- **`publish`** — pushes the release tag (commitment point), builds a sealed parcel from staged artifacts, hands it to courier's `deliver()`, runs `cmd` channel separately. Rolls back on failure.
+- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `{tag}.{channel}.{hash8}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). After this step, everything the courier needs is outside the project dir.
+- **`publish`** — pushes the release tag (commitment point), hands tars to courier's `deliver()`, runs `cmd` channel separately.
 - **`clean`** — restores `package.json` files and unsets git user config.
 
 Set `config.releaseRules` to override the default rules preset:
@@ -240,19 +275,39 @@ Set `config.releaseRules` to override the default rules preset:
 ]
 ```
 
+### Tar containers
+Each delivery artifact is a self-describing tar archive:
+```
+{tag}.{channel}.{hash8}.tar
+  manifest.json    — channel name, delivery params, template credentials
+  package.tgz     — (npm channel) npm tarball
+  assets/          — (gh-release channel) release assets
+  docs/            — (gh-pages channel) documentation files
+```
+
+The manifest contains `${{ENV_VAR}}` placeholders that are resolved by the courier at delivery time via `resolveManifest()`. This ensures credentials never touch the build phase.
+
 ### Channels
-Delivery channels are a registry of `{name, when, prepare?, run, undo?, snapshot?}` objects:
+Delivery channels are a registry of `{name, when, prepare?, run, requires?, snapshot?, transport?}` objects:
 - **meta** — pushes release metadata to the `meta` branch (or as a GH release asset).
 - **npm** — publishes to the npm registry.
 - **gh-release** — creates a GitHub release with optional file assets.
 - **gh-pages** — pushes docs to a `gh-pages` branch.
 - **changelog** — pushes a changelog entry to a `changelog` branch.
-- **cmd** — runs a custom `publishCmd` (depot-side, not through courier).
+- **cmd** — runs a custom `publishCmd` (depot-side, not through courier; `transport: false`).
 
-Teardown walks the registry in reverse, calling `undo()` on each channel for rollback/recovery.
+Each channel declares `requires` — a list of manifest fields that must be present after credential resolution. Courier validates all parcels before running any channel (fail-fast).
+
+### Credential flow
+```
+depot (build phase)                          courier (deliver phase)
+  manifest: { token: '${{NPM_TOKEN}}' }  →    resolveManifest(manifest, env)
+                                                 → { token: 'actual-secret' }
+```
+Template credentials (`${{ENV_VAR}}`) are written into manifests at pack time. Courier resolves them from `process.env` at delivery time. This means the build phase never sees real secrets.
 
 ### Tags
-[Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don’t follow [semver spec](https://semver.org/). Therefore, we propose another contract:
+[Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don't follow [semver spec](https://semver.org/). Therefore, we propose another contract:
 ```js
 '2022.6.13-optional-org.pkg-name.v1.0.0-beta.1+sha.1-f0'
 // date    name                  version             format

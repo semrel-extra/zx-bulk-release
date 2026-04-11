@@ -1,14 +1,12 @@
 import os from 'node:os'
 import {createRequire} from 'node:module'
-import {$, within} from 'zx-extra'
+import {$, within, fs, glob, path} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {topo, traverseQueue} from './depot/deps.js'
 import {createReport, log} from './log.js'
 import {exec} from './depot/exec.js'
 
 import {contextify} from './depot/steps/contextify.js'
-import {recover} from './depot/steps/teardown.js'
-import {fetchTags} from './api/git.js'
 import {analyze} from './depot/steps/analyze.js'
 import {build} from './depot/steps/build.js'
 import {pack} from './depot/steps/pack.js'
@@ -16,7 +14,7 @@ import {publish} from './depot/steps/publish.js'
 import {clean} from './depot/steps/clean.js'
 import {test} from './depot/steps/test.js'
 
-import {defaultOrder as channels} from './courier/index.js'
+import {deliver, defaultOrder as channels} from './courier/index.js'
 
 export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within(async () => {
   $.memo = new Map()
@@ -27,10 +25,21 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     return
   }
 
+  // --deliver <dir>: standalone delivery from pre-packed tars.
+  if (flags.deliver) {
+    const tars = await glob(path.join(flags.deliver, '*.tar'))
+    if (!tars.length) throw new Error(`no tars found in ${flags.deliver}`)
+    const _env = {...process.env, ...env}
+    log.secret(_env.GH_TOKEN, _env.GITHUB_TOKEN, _env.NPM_TOKEN)
+    log.info(`deliver: ${tars.length} tar(s) from ${flags.deliver}`)
+    await deliver(tars, _env)
+    log.info('deliver: done')
+    return
+  }
+
   const ctx = await createContext({flags, env, cwd})
   const {report, packages, queue, prev} = ctx
 
-  // Per-package scope: $.scope, packages[name] lookup, contextify on first touch.
   const forEachPkg = (cb) => traverseQueue({queue, prev, cb: (name) => within(async () => {
     $.scope = name
     const pkg = packages[name]
@@ -42,15 +51,6 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
     .log(`zx-bulk-release@${zbrVersion}`)
     .log('queue:', queue)
     .log('graphs', ctx.graphs)
-
-  // --recover: standalone mode — clean orphan tags and exit.
-  if (flags.recover) {
-    await fetchTags(cwd)
-    let recovered = 0
-    await forEachPkg(async (pkg) => { if (await recover(pkg)) recovered++ })
-    report.log(`recover: cleaned ${recovered} orphan tag(s)`)
-    return
-  }
 
   try {
     await forEachPkg(async (pkg) => {
@@ -81,12 +81,19 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
         report.setStatus('testing', pkg.name)
         await test(pkg)
       }
-      if (!flags.dryRun && flags.publish !== false) {
-        report.setStatus('packing', pkg.name)
-        await pack(pkg)
-        report.setStatus('publishing', pkg.name)
-        await publish(pkg)
+      if (flags.dryRun || flags.publish === false) return
+
+      report.setStatus('packing', pkg.name)
+      await pack(pkg)
+
+      // --pack <dir>: pack only, skip delivery.
+      if (flags.pack) {
+        report.setStatus('packed', pkg.name)
+        return
       }
+
+      report.setStatus('publishing', pkg.name)
+      await publish(pkg)
       report.setStatus('success', pkg.name)
     })
   } catch (e) {
@@ -103,7 +110,6 @@ export const createContext = async ({flags, env: _env, cwd}) => {
   const report = createReport({packages, queue, flags})
   const env = {...process.env, ..._env}
 
-  // Register known secrets so the logger redacts them from all output.
   log.secret(env.GH_TOKEN, env.GITHUB_TOKEN, env.NPM_TOKEN)
 
   $.report  = report

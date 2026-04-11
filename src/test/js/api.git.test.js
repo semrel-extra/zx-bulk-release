@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$} from 'zx-extra'
 
-import {pushTag, deleteRemoteTag} from '../../main/js/post/api/git.js'
+import {pushTag} from '../../main/js/post/api/git.js'
 import {createFakeRepo} from './utils/repo.js'
 
 const test = suite('api.git')
@@ -38,28 +38,6 @@ test('pushTag() throws when tag already exists in remote', async () => {
   } catch (e) {
     assert.ok(e.message.includes('already exists') || e.exitCode === 1)
   }
-})
-
-test('deleteRemoteTag() removes tag from remote and local', async () => {
-  const cwd = await setupRepo()
-
-  await pushTag({cwd, tag: '1.0.0-del', gitCommitterName: 'Test', gitCommitterEmail: 'test@test.com'})
-
-  let remoteTags = (await $({cwd})`git ls-remote --tags origin`).toString()
-  assert.ok(remoteTags.includes('1.0.0-del'))
-
-  await deleteRemoteTag({cwd, tag: '1.0.0-del'})
-
-  remoteTags = (await $({cwd})`git ls-remote --tags origin`).toString()
-  assert.ok(!remoteTags.includes('1.0.0-del'))
-
-  const localTags = (await $({cwd})`git tag -l`).toString()
-  assert.ok(!localTags.includes('1.0.0-del'))
-})
-
-test('deleteRemoteTag() does not throw for non-existent tag', async () => {
-  const cwd = await setupRepo()
-  await deleteRemoteTag({cwd, tag: 'nonexistent-tag'})
 })
 
 test.run()

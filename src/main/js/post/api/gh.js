@@ -40,15 +40,6 @@ export const ghCreateRelease = async ({ghApiUrl, ghToken, repoName, tag, body}) 
   return res
 }
 
-// https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#delete-a-release
-export const ghDeleteReleaseByTag = async ({ghApiUrl, ghToken, repoName, tag}) => {
-  const res = await attempt2(() => ghFetch(`${ghApiUrl}/repos/${repoName}/releases/tags/${tag}`, {ghToken}))
-  if (!res.ok) return false
-  const {id} = await res.json()
-  await attempt2(() => ghFetch(`${ghApiUrl}/repos/${repoName}/releases/${id}`, {ghToken, method: 'DELETE'}))
-  return true
-}
-
 // https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
 export const ghPrepareAssets = async (assets, _cwd) => {
   const temp = tempy.temporaryDirectory()
@@ -81,24 +72,6 @@ export const ghPrepareAssets = async (assets, _cwd) => {
   }))
 
   return temp
-}
-
-export const ghUploadAssets = async ({ghToken, ghAssets, uploadUrl, cwd}) => {
-  const temp = await ghPrepareAssets(ghAssets, cwd)
-
-  return Promise.all(ghAssets.map(async ({name}) => {
-    const url = `${uploadUrl}?name=${name}`
-    const res = await ghFetch(url, {
-      ghToken,
-      method: 'POST',
-      headers: {'Content-Type': 'application/octet-stream'},
-      body: await fs.readFile(path.join(temp, name)),
-    })
-    if (!res.ok) {
-      throw new Error(`gh asset upload failed for '${name}': ${res.status}`)
-    }
-    return res
-  }))
 }
 
 export const ghGetAsset = async ({repoName, tag, name, ghUrl}) => {
