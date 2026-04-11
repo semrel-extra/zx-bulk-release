@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
 import {createMock, defaultResponses, makePkg, makeCtx, has} from './utils/mock.js'
-import {publishers} from '../../main/js/courier/index.js'
+import {channels} from '../../main/js/post/courier/index.js'
 
 const test = suite('steps.teardown')
 
@@ -16,22 +16,22 @@ const setup = (responses = []) => {
   return mock
 }
 
-const registerTestPublisher = (name, impl) => {
-  publishers[name] = {name, ...impl}
-  return () => { delete publishers[name] }
+const registerTestChannel = (name, impl) => {
+  channels[name] = {name, ...impl}
+  return () => { delete channels[name] }
 }
 
 test('rollbackRelease calls undo on publishers in reverse', async () => {
   await within(async () => {
     const mock = setup()
-    const {rollbackRelease} = await import(`../../main/js/processor/steps/teardown.js?t=${Date.now()}`)
+    const {rollbackRelease} = await import(`../../main/js/post/depot/steps/teardown.js?t=${Date.now()}`)
 
     const undone = []
-    const c1 = registerTestPublisher('p1', {when: () => true, undo: async () => undone.push('p1')})
-    const c2 = registerTestPublisher('p2', {when: () => true, undo: async () => undone.push('p2')})
+    const c1 = registerTestChannel('p1', {when: () => true, undo: async () => undone.push('p1')})
+    const c2 = registerTestChannel('p2', {when: () => true, undo: async () => undone.push('p2')})
 
     const pkg = makePkg()
-    const ctx = makeCtx({publishers: ['git-tag', 'p1', 'p2'], git: {sha: 'abc', root: '/tmp/fakerepo', tag: '2026.1.1-test-pkg.1.0.1-f0'}})
+    const ctx = makeCtx({channels: ['git-tag', 'p1', 'p2'], git: {sha: 'abc', root: '/tmp/fakerepo', tag: '2026.1.1-test-pkg.1.0.1-f0'}})
     pkg.ctx = ctx
 
     await rollbackRelease(pkg, ctx)
@@ -46,7 +46,7 @@ test('rollbackRelease calls undo on publishers in reverse', async () => {
 test('rollbackRelease skips when no tag', async () => {
   await within(async () => {
     setup()
-    const {rollbackRelease} = await import(`../../main/js/processor/steps/teardown.js?t=${Date.now()}`)
+    const {rollbackRelease} = await import(`../../main/js/post/depot/steps/teardown.js?t=${Date.now()}`)
 
     const pkg = makePkg()
     const ctx = makeCtx({git: {sha: 'abc', root: '/tmp/fakerepo', tag: undefined}})
@@ -60,7 +60,7 @@ test('rollbackRelease skips when no tag', async () => {
 test('recover returns false when pkg is not npm-published', async () => {
   await within(async () => {
     setup()
-    const {recover} = await import(`../../main/js/processor/steps/teardown.js?t=${Date.now()}`)
+    const {recover} = await import(`../../main/js/post/depot/steps/teardown.js?t=${Date.now()}`)
 
     const pkg = makePkg({config: {npmPublish: false}, extra: {manifest: {private: true, version: '1.0.1', name: 'test-pkg'}}})
     const ctx = makeCtx()
@@ -74,7 +74,7 @@ test('recover returns false when pkg is not npm-published', async () => {
 test('recover returns false when no latest tag', async () => {
   await within(async () => {
     setup()
-    const {recover} = await import(`../../main/js/processor/steps/teardown.js?t=${Date.now()}`)
+    const {recover} = await import(`../../main/js/post/depot/steps/teardown.js?t=${Date.now()}`)
 
     const pkg = makePkg({latest: {tag: null}})
     const ctx = makeCtx()

@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert'
 
 import {tempy, fs, path, $ as _$} from 'zx-extra'
 import {run} from '../../main/js/index.js'
-import {formatTag} from '../../main/js/processor/generators/tag.js'
+import {formatTag} from '../../main/js/post/depot/generators/tag.js'
 import {addCommits, createFakeRepo, createNpmRegistry, fixtures} from './utils/repo.js'
 
 const test = suite('integration')

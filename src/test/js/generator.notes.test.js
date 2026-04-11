@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
 import {createMock, defaultResponses} from './utils/mock.js'
-import {interpolate, DIFF_TAG_URL, DIFF_COMMIT_URL} from '../../main/js/processor/generators/notes.js'
+import {interpolate, DIFF_TAG_URL, DIFF_COMMIT_URL} from '../../main/js/post/depot/generators/notes.js'
 
 const test = suite('generator.notes')
 
@@ -15,7 +15,7 @@ test('formatReleaseNotes generates markdown', async () => {
     $.memo = new Map()
     $.report = undefined
 
-    const {formatReleaseNotes} = await import(`../../main/js/processor/generators/notes.js?t=${Date.now()}`)
+    const {formatReleaseNotes} = await import(`../../main/js/post/depot/generators/notes.js?t=${Date.now()}`)
 
     const pkg = {
       name: 'test-pkg',

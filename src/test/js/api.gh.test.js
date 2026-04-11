@@ -12,7 +12,7 @@ import {
   ghGetAsset,
   GH_API_VERSION,
   GH_ACCEPT,
-} from '../../main/js/processor/api/gh.js'
+} from '../../main/js/post/api/gh.js'
 import {createGhServer} from './utils/gh-server.js'
 
 const test = suite('api.gh')

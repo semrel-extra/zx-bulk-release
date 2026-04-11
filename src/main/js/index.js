@@ -1,1 +1,1 @@
-export {run} from './processor/release.js'
+export {run} from './post/release.js'
