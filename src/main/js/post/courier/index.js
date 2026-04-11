@@ -1,4 +1,4 @@
-import {tempy} from 'zx-extra'
+import {$, tempy, within} from 'zx-extra'
 import {unpackTar} from '../tar.js'
 import meta from './channels/meta.js'
 import npm from './channels/npm.js'
@@ -57,5 +57,8 @@ export const deliver = async (tars, env = process.env) => {
   )
   if (missing.length) throw new Error(`deliver: missing credentials — ${missing.join(', ')}`)
 
-  await Promise.all(ready.map(({ch, resolved, destDir}) => ch.run(resolved, destDir)))
+  await Promise.all(ready.map(({ch, resolved, destDir}) => within(async () => {
+    $.scope = resolved.name || resolved.channel
+    await ch.run(resolved, destDir)
+  })))
 }
