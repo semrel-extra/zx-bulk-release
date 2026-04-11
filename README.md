@@ -228,7 +228,7 @@ Each step has a uniform signature `(pkg, ctx)`:
 - **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
 - **`test`** — runs `testCmd`.
 - **`pack`** — stages delivery artifacts in temp directories (`npm pack`, docs copy, assets, release notes). After this step, everything the courier needs is outside the project dir. Builds the list of active channels.
-- **`publish`** — builds a sealed parcel from staged artifacts, hands it to courier's `deliver()`, runs `cmd` channel separately. Rolls back on failure.
+- **`publish`** — pushes the release tag (commitment point), builds a sealed parcel from staged artifacts, hands it to courier's `deliver()`, runs `cmd` channel separately. Rolls back on failure.
 - **`clean`** — restores `package.json` files and unsets git user config.
 
 Set `config.releaseRules` to override the default rules preset:
@@ -242,7 +242,6 @@ Set `config.releaseRules` to override the default rules preset:
 
 ### Channels
 Delivery channels are a registry of `{name, when, prepare?, run, undo?, snapshot?}` objects:
-- **git-tag** — pushes the release tag. Runs first; other channels may reference it.
 - **meta** — pushes release metadata to the `meta` branch (or as a GH release asset).
 - **npm** — publishes to the npm registry.
 - **gh-release** — creates a GitHub release with optional file assets.

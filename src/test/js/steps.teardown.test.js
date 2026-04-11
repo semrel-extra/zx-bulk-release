@@ -31,7 +31,7 @@ test('rollbackRelease calls undo on publishers in reverse', async () => {
     const c2 = registerTestChannel('p2', {when: () => true, undo: async () => undone.push('p2')})
 
     const pkg = makePkg()
-    const ctx = makeCtx({channels: ['git-tag', 'p1', 'p2'], git: {sha: 'abc', root: '/tmp/fakerepo', tag: '2026.1.1-test-pkg.1.0.1-f0'}})
+    const ctx = makeCtx({channels: ['p1', 'p2'], git: {sha: 'abc', root: '/tmp/fakerepo', tag: '2026.1.1-test-pkg.1.0.1-f0'}})
     pkg.ctx = ctx
 
     await rollbackRelease(pkg, ctx)
