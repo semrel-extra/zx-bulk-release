@@ -31,7 +31,10 @@ export const run = async ({cwd = process.cwd(), env, flags = {}} = {}) => within
   if (flags.deliver) {
     const dir = typeof flags.deliver === 'string' ? flags.deliver : PARCELS_DIR
     const tars = await glob(path.join(dir, 'parcel.*.tar'))
-    if (!tars.length) throw new Error(`no tars found in ${dir}`)
+    if (!tars.length) {
+      log.info(`deliver: no parcels in ${dir}, nothing to do`)
+      return
+    }
     const _env = {...process.env, ...env}
     log.secret(_env.GH_TOKEN, _env.GITHUB_TOKEN, _env.NPM_TOKEN)
     log.info(`deliver: ${tars.length} tar(s) from ${dir}`)

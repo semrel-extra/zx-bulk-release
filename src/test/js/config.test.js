@@ -1,6 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {parseEnv, normalizeMetaConfig, GH_URL} from '../../main/js/config.js'
+import {parseEnv, normalizeMetaConfig} from '../../main/js/config.js'
+import {GH_URL} from '../../main/js/post/api/gh.js'
 
 const test = suite('config')
 

@@ -24,8 +24,8 @@ const entry = {
     channel: 'gh-release',
     manifest: {
       channel: 'gh-release',
-      tag: pkg.tag, repoName: a.repoName, releaseNotes: a.releaseNotes,
-      token: '${{GH_TOKEN}}', apiUrl: '${{GH_API_URL}}',
+      tag: pkg.tag, repoHost: a.repoHost, repoName: a.repoName, releaseNotes: a.releaseNotes,
+      token: '${{GH_TOKEN}}', apiUrl: pkg.config.ghApiUrl,
       assets: pkg.config.ghAssets ? [...pkg.config.ghAssets] : undefined,
     },
     files: a.assetsDir ? [{name: 'assets', source: a.assetsDir}] : [],

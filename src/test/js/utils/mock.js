@@ -86,6 +86,7 @@ export const makePkg = (overrides = {}) => ({
     gitCommitterEmail: 'bot@test.com',
     ghBasicAuth: 'x-access-token:ghp_test',
     ghToken: 'ghp_test',
+    ghApiUrl: 'https://api.github.com',
     npmPublish: true,
     npmFetch: false,
     changelog: 'changelog',

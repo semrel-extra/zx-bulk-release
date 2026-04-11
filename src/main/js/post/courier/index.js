@@ -49,7 +49,8 @@ const openParcel = async (tarPath, env) => {
 
   if (!ch) return {warn: `unknown channel '${resolved.channel || '<none>'}'`}
 
-  const missing = (ch.requires || []).filter(f => !resolved[f])
+  const reqs = typeof ch.requires === 'function' ? ch.requires(resolved) : (ch.requires || [])
+  const missing = reqs.filter(f => !resolved[f])
   if (missing.length) return {warn: `missing credentials — ${missing.join(', ')}`, tarPath}
 
   return {ch, resolved, destDir, tarPath}

@@ -6,7 +6,7 @@ export const isNpmPublished = (pkg) =>
 
 export default {
   name:     'npm',
-  requires: ['token'],
+  requires: (manifest) => manifest.oidc ? [] : ['token'],
   when:     isNpmPublished,
   run:      (manifest, dir) => npmPublish({
     name: manifest.name,

@@ -1,5 +1,6 @@
 import { cosmiconfig } from 'cosmiconfig'
 import { asArray, camelize, memoizeBy } from './util.js'
+import { GH_URL, resolveGhApiUrl } from './post/api/gh.js'
 
 const CONFIG_NAME = 'release'
 const CONFIG_FILES = [
@@ -57,11 +58,6 @@ export const normalizeMetaConfig = (meta) =>
       : typeof meta === 'string'
         ? { type: meta } // 'commit' | 'asset' | 'tag'
         : { type: null }
-
-export const GH_URL = 'https://github.com'
-
-const resolveGhApiUrl = (ghUrl) =>
-  ghUrl === GH_URL ? 'https://api.github.com' : `${ghUrl.replace(/\/$/, '')}/api/v3`
 
 export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GH_URL: _GH_URL, GITHUB_URL, GITHUB_USER, GITHUB_USERNAME, GH_TOKEN, GITHUB_TOKEN, NPM_TOKEN, NPM_REGISTRY, NPMRC, NPM_USERCONFIG, NPM_CONFIG_USERCONFIG, NPM_PROVENANCE, NPM_OIDC, ACTIONS_ID_TOKEN_REQUEST_URL, GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL} = process.env) => {
   const ghUrl = _GH_URL || GITHUB_URL || GH_URL

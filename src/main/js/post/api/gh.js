@@ -3,6 +3,15 @@
 import {$, path, tempy, glob, fs, fetch} from 'zx-extra'
 import {asArray, attempt2} from '../../util.js'
 
+export const GH_URL     = 'https://github.com'
+export const GH_API_URL = 'https://api.github.com'
+export const GH_API_VERSION = '2022-11-28'
+export const GH_ACCEPT = 'application/vnd.github.v3+json'
+
+export const resolveGhApiUrl = (ghUrl) =>
+  ghUrl === GH_URL ? GH_API_URL : new URL('/api/v3', ghUrl).href
+
+
 export const getCommonPath = files => {
   const f0 = files[0]
   const common = files.length === 1
@@ -11,9 +20,6 @@ export const getCommonPath = files => {
   const p = f0.slice(0, common)
   return p.endsWith('/') ? p : p.slice(0, p.lastIndexOf('/') + 1)
 }
-
-export const GH_API_VERSION = '2022-11-28'
-export const GH_ACCEPT = 'application/vnd.github.v3+json'
 
 export const ghFetch = (url, {ghToken, method = 'GET', headers, body} = {}) => fetch(url, {
   method,
@@ -75,7 +81,7 @@ export const ghPrepareAssets = async (assets, _cwd) => {
 }
 
 export const ghGetAsset = async ({repoName, tag, name, ghUrl}) => {
-  const url = `${ghUrl || 'https://github.com'}/${repoName}/releases/download/${tag.ref || tag}/${name}`
+  const url = `${ghUrl}/${repoName}/releases/download/${tag.ref || tag}/${name}`
   const res = await attempt2(() => fetch(url))
   if (!res.ok) {
     throw new Error(`gh asset fetch failed for '${name}': ${res.status} ${url}`)
