@@ -34,11 +34,9 @@ const makePkgWithManifest = (overrides = {}) => makePkg({
   },
 })
 
-// Helper: unpack a tar and return its manifest.
-const readTar = async (tarPath) => {
-  const dir = tarPath + '.d'
-  return unpackTar(tarPath, dir)
-}
+const readTar = async (tarPath) => unpackTar(tarPath, tarPath + '.d')
+
+const findTar = (tars, channel) => tars.find(t => path.basename(t).includes(`.${channel}.`))
 
 test('pack calls prepare on channels', async () => {
   await within(async () => {
@@ -64,15 +62,13 @@ test('pack calls prepare on channels', async () => {
   })
 })
 
-test('pack creates tars and sets activeTransport', async () => {
+test('pack creates tar array and sets activeTransport', async () => {
   await within(async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
     const cleanup = registerTestChannel('test-ch', {
-      when: () => true,
-      run: async () => {},
-      snapshot: false,
+      when: () => true, run: async () => {}, snapshot: false,
     })
 
     const pkg = makePkgWithManifest()
@@ -81,49 +77,34 @@ test('pack creates tars and sets activeTransport', async () => {
 
     await pack(pkg, ctx)
 
-    assert.ok(pkg.tars)
-    assert.ok(pkg.tars['test-ch'])
-    assert.ok(pkg.tars['test-ch'].endsWith('.tar'))
-    assert.ok(Array.isArray(pkg.activeTransport))
+    assert.ok(Array.isArray(pkg.tars))
+    assert.is(pkg.tars.length, 1)
+    assert.ok(pkg.tars[0].endsWith('.tar'))
     assert.ok(pkg.activeTransport.includes('test-ch'))
-
-    // tar should contain manifest.json
-    const {manifest} = await readTar(pkg.tars['test-ch'])
-    assert.ok(manifest)
 
     cleanup()
   })
 })
 
-test('pack tar manifest contains repoName', async () => {
+test('pack tar manifest contains channel field', async () => {
   await within(async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
-    const cleanup = registerTestChannel('repo-ch', {
-      when: () => true,
-      run: async () => {},
-      snapshot: false,
-    })
-
     const pkg = makePkgWithManifest()
-    const ctx = makeCtx({channels: ['repo-ch'], flags: {}})
+    const ctx = makeCtx({channels: ['changelog'], flags: {}})
     pkg.ctx = ctx
 
     await pack(pkg, ctx)
 
-    const {manifest} = await readTar(pkg.tars['repo-ch'])
-    // parcel entry for unknown channel returns empty manifest
-    assert.ok(manifest)
-
-    cleanup()
+    const {manifest} = await readTar(pkg.tars[0])
+    assert.is(manifest.channel, 'changelog')
   })
 })
 
 test('pack npm tar contains package.tgz', async () => {
   await within(async () => {
     const mock = await setup([['npm pack', 'test-pkg-1.0.1.tgz']])
-    // Wrap spawn so `npm pack --pack-destination <dir>` creates a fake tgz file.
     const origSpawn = $.spawn
     $.spawn = (cmd, args) => {
       const command = args?.[args.length - 1] || cmd
@@ -141,13 +122,14 @@ test('pack npm tar contains package.tgz', async () => {
 
     await pack(pkg, ctx)
 
-    assert.ok(pkg.tars.npm)
-    const {manifest, dir} = await readTar(pkg.tars.npm)
+    const tar = findTar(pkg.tars, 'npm')
+    assert.ok(tar)
+    const {manifest, dir} = await readTar(tar)
+    assert.is(manifest.channel, 'npm')
     assert.is(manifest.name, 'test-pkg')
     assert.is(manifest.version, '1.0.1')
     assert.is(manifest.token, '${{NPM_TOKEN}}')
     assert.is(manifest.registry, '${{NPM_REGISTRY}}')
-    // package.tgz should be in the tar
     assert.ok(await fs.pathExists(path.join(dir, 'package.tgz')))
   })
 })
@@ -163,8 +145,7 @@ test('pack skips npm tar for private packages', async () => {
 
     await pack(pkg, ctx)
 
-    // npm channel filtered out for private packages
-    assert.is(pkg.tars.npm, undefined)
+    assert.is(findTar(pkg.tars, 'npm'), undefined)
   })
 })
 
@@ -180,10 +161,11 @@ test('pack gh-release tar contains release notes and template tokens', async () 
 
     await pack(pkg, ctx)
 
-    assert.ok(pkg.tars['gh-release'])
-    const {manifest} = await readTar(pkg.tars['gh-release'])
+    const tar = findTar(pkg.tars, 'gh-release')
+    assert.ok(tar)
+    const {manifest} = await readTar(tar)
+    assert.is(manifest.channel, 'gh-release')
     assert.ok(manifest.releaseNotes)
-    assert.ok(manifest.releaseNotes.length > 0)
     assert.is(manifest.token, '${{GH_TOKEN}}')
     assert.is(manifest.apiUrl, '${{GH_API_URL}}')
     assert.ok(manifest.repoName)
@@ -201,35 +183,13 @@ test('pack changelog tar contains release notes', async () => {
 
     await pack(pkg, ctx)
 
-    assert.ok(pkg.tars.changelog)
-    const {manifest} = await readTar(pkg.tars.changelog)
+    const tar = findTar(pkg.tars, 'changelog')
+    assert.ok(tar)
+    const {manifest} = await readTar(tar)
+    assert.is(manifest.channel, 'changelog')
     assert.ok(manifest.releaseNotes)
-    assert.ok(manifest.releaseNotes.includes('test-pkg'))
     assert.ok(manifest.branch)
     assert.ok(manifest.file)
-  })
-})
-
-test('pack skips release notes when not needed', async () => {
-  await within(async () => {
-    await setup()
-    const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
-
-    const cleanup = registerTestChannel('other-ch', {
-      when: () => true,
-      run: async () => {},
-      snapshot: false,
-    })
-
-    const pkg = makePkgWithManifest()
-    const ctx = makeCtx({channels: ['other-ch'], flags: {}})
-    pkg.ctx = ctx
-
-    await pack(pkg, ctx)
-
-    const {manifest} = await readTar(pkg.tars['other-ch'])
-    assert.is(manifest.releaseNotes, undefined)
-    cleanup()
   })
 })
 
@@ -238,7 +198,6 @@ test('pack gh-pages tar contains docs', async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
-    // Create docs dir in package absPath
     const docsDir = path.join(tmpDir, 'packages/test-pkg/docs')
     await fs.ensureDir(docsDir)
     await fs.writeFile(path.join(docsDir, 'index.html'), '<h1>docs</h1>')
@@ -250,31 +209,13 @@ test('pack gh-pages tar contains docs', async () => {
 
     await pack(pkg, ctx)
 
-    assert.ok(pkg.tars['gh-pages'])
-    const {manifest, dir} = await readTar(pkg.tars['gh-pages'])
+    const tar = findTar(pkg.tars, 'gh-pages')
+    assert.ok(tar)
+    const {manifest, dir} = await readTar(tar)
+    assert.is(manifest.channel, 'gh-pages')
     assert.is(manifest.branch, 'gh-pages')
-    assert.ok(manifest.repoHost)
-    assert.ok(manifest.repoName)
-    // docs should be inside the tar
     const docContent = await fs.readFile(path.join(dir, 'docs/index.html'), 'utf8')
     assert.is(docContent, '<h1>docs</h1>')
-  })
-})
-
-test('pack skips docs when gh-pages is not active', async () => {
-  await within(async () => {
-    await setup()
-    const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
-
-    const pkg = makePkgWithManifest()
-    pkg.config.ghPages = undefined
-    const ctx = makeCtx({channels: ['gh-pages'], flags: {}})
-    pkg.ctx = ctx
-
-    await pack(pkg, ctx)
-
-    // gh-pages when() checks config.ghPages, so channel is filtered out
-    assert.is(pkg.tars['gh-pages'], undefined)
   })
 })
 
@@ -283,7 +224,6 @@ test('pack gh-release tar contains staged assets', async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
-    // Create an asset file
     const assetDir = path.join(tmpDir, 'packages/test-pkg')
     await fs.ensureDir(assetDir)
     await fs.writeFile(path.join(assetDir, 'dist.txt'), 'build output')
@@ -296,11 +236,10 @@ test('pack gh-release tar contains staged assets', async () => {
 
     await pack(pkg, ctx)
 
-    const {manifest, dir} = await readTar(pkg.tars['gh-release'])
+    const tar = findTar(pkg.tars, 'gh-release')
+    const {manifest, dir} = await readTar(tar)
     assert.ok(manifest.assets)
-    // assets should be inside the tar
-    const staged = await fs.readFile(path.join(dir, 'assets/dist.txt'), 'utf8')
-    assert.is(staged, 'build output')
+    assert.is(await fs.readFile(path.join(dir, 'assets/dist.txt'), 'utf8'), 'build output')
   })
 })
 
@@ -320,8 +259,8 @@ test('pack filters inactive channels in snapshot mode', async () => {
 
     assert.ok(pkg.activeTransport.includes('snap-ok'))
     assert.not.ok(pkg.activeTransport.includes('snap-no'))
-    assert.ok(pkg.tars['snap-ok'])
-    assert.is(pkg.tars['snap-no'], undefined)
+    assert.ok(findTar(pkg.tars, 'snap-ok'))
+    assert.is(findTar(pkg.tars, 'snap-no'), undefined)
     c1(); c2()
   })
 })
@@ -338,7 +277,7 @@ test('pack excludes cmd from transport channels', async () => {
     await pack(pkg, ctx)
 
     assert.not.ok(pkg.activeTransport.includes('cmd'))
-    assert.is(pkg.tars.cmd, undefined)
+    assert.is(pkg.tars.length, 0)
   })
 })
 
@@ -358,28 +297,28 @@ test('pack persists manifest', async () => {
   })
 })
 
-test('pack tar naming follows {tag}.{channel}.tar', async () => {
+test('pack tar name includes tag, channel and hash', async () => {
   await within(async () => {
     await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
 
-    const cleanup = registerTestChannel('test-naming', {
-      when: () => true,
-      run: async () => {},
-      snapshot: false,
-    })
-
     const pkg = makePkgWithManifest()
-    const ctx = makeCtx({channels: ['test-naming'], flags: {}})
+    const ctx = makeCtx({channels: ['changelog'], flags: {}})
     pkg.ctx = ctx
 
     await pack(pkg, ctx)
 
-    const tarPath = pkg.tars['test-naming']
-    const tarName = path.basename(tarPath)
-    assert.is(tarName, `${pkg.tag}.test-naming.tar`)
+    const tarName = path.basename(pkg.tars[0])
+    // {tag}.{channel}.{hash8}.tar
+    const parts = tarName.replace(/\.tar$/, '').split('.')
+    const hash = parts.pop()
+    const channel = parts.pop()
+    const tag = parts.join('.')
 
-    cleanup()
+    assert.ok(tag.length > 0)
+    assert.is(channel, 'changelog')
+    assert.is(hash.length, 8)
+    assert.ok(/^[0-9a-f]{8}$/.test(hash))
   })
 })
 

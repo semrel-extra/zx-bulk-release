@@ -12,9 +12,8 @@ export const publish = memoizeBy(async (pkg, ctx = pkg.ctx) => {
 
   const {run = exec, channels: channelNames = [], flags} = ctx
   const snapshot = !!flags.snapshot
-  const {tars = {}} = pkg
+  const {tars = []} = pkg
 
-  // Tag is depot's responsibility — the commitment point.
   if (!snapshot) {
     const {tag, config: {gitCommitterEmail, gitCommitterName}} = pkg
     ctx.git.tag = tag

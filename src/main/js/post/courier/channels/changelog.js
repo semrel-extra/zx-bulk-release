@@ -23,6 +23,7 @@ const run = queuefy(async (manifest, dir) => {
 
 export default {
   name: 'changelog',
+  requires: ['repoAuthedUrl'],
   when: (pkg) => !!pkg.config.changelog,
   run,
 }
