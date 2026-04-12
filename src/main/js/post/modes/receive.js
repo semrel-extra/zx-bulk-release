@@ -1,4 +1,3 @@
-import nodeFs from 'node:fs'
 import {$, within} from 'zx-extra'
 
 import {log} from '../log.js'
@@ -10,23 +9,15 @@ import {preflight} from '../depot/reconcile.js'
 import {consumeRebuildSignal} from '../courier/semaphore.js'
 import {writeContext, buildContext} from '../depot/context.js'
 import {getSha} from '../api/git.js'
-
-const setOutput = (name, value) => {
-  const outputFile = process.env.GITHUB_OUTPUT
-  if (outputFile) {
-    try { nodeFs.appendFileSync(outputFile, `${name}=${value}\n`) } catch { /* not in CI */ }
-  }
-}
+import {setOutput, isRebuildTrigger} from '../api/gh.js'
 
 export const runReceive = async ({cwd, env, flags}, ctx) => {
   const {report, packages, queue, prev} = ctx
 
   const sha = await getSha(cwd)
-
-  // try to consume rebuild signal — if it fails, another process claimed it
   const sha7 = sha.slice(0, 7)
-  const isRebuild = !!(env.GITHUB_REF_TYPE === 'tag' && env.GITHUB_REF_NAME?.startsWith('zbr-rebuild.'))
-  if (isRebuild) {
+
+  if (isRebuildTrigger(env)) {
     const result = await consumeRebuildSignal(cwd, sha)
     if (result?.exitCode !== 0 && result?.stderr?.includes('remote ref does not exist')) {
       log.info(`rebuild signal already consumed by another process`)
