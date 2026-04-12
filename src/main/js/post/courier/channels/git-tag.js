@@ -1,5 +1,4 @@
-import {pushTag} from '../../api/git.js'
-import {DEFAULT_GIT_COMMITTER_NAME, DEFAULT_GIT_COMMITTER_EMAIL} from '../../api/git.js'
+import {pushTag, DEFAULT_GIT_COMMITTER_NAME, DEFAULT_GIT_COMMITTER_EMAIL} from '../../api/git.js'
 
 export const isTagConflict = (e) =>
   /already exists|updates were rejected|failed to push/i.test(e?.message || e?.stderr || '')

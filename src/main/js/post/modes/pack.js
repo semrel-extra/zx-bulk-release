@@ -10,9 +10,7 @@ import {publish} from '../depot/steps/publish.js'
 import {clean} from '../depot/steps/clean.js'
 import {test} from '../depot/steps/test.js'
 import {preflight} from '../depot/reconcile.js'
-import {buildDirective} from '../courier/directive.js'
-
-const PARCELS_DIR = 'parcels'
+import {buildDirective, PARCELS_DIR} from '../parcel/index.js'
 
 export const runPack = async ({cwd, env, flags}, ctx) => {
   const {report, packages, queue, prev} = ctx

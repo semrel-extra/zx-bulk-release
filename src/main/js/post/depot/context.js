@@ -1,7 +1,6 @@
 import {fs, path} from 'zx-extra'
-import {channels as channelRegistry} from '../courier/index.js'
 
-const CONTEXT_FILE = '.zbr-context.json'
+export const CONTEXT_FILE = '.zbr-context.json'
 
 export const writeContext = async (cwd, context) => {
   const filePath = path.resolve(cwd, CONTEXT_FILE)
@@ -9,22 +8,24 @@ export const writeContext = async (cwd, context) => {
   return filePath
 }
 
-export const readContext = async (cwd) => {
-  const filePath = path.resolve(cwd, CONTEXT_FILE)
-  try {
-    return await fs.readJson(filePath)
-  } catch {
-    return null
+export const readContext = async (filePath) => {
+  let data
+  try { data = await fs.readJson(filePath) } catch {
+    throw new Error(`context not found: ${filePath}`)
   }
+
+  if (!data || typeof data !== 'object') throw new Error(`context is not an object: ${filePath}`)
+  if (!data.status)                      throw new Error(`context missing status: ${filePath}`)
+  if (data.status === 'proceed') {
+    if (!data.sha || !data.sha7)         throw new Error(`context missing sha: ${filePath}`)
+    if (!data.packages || typeof data.packages !== 'object')
+      throw new Error(`context missing packages: ${filePath}`)
+  }
+
+  return data
 }
 
-const getActiveChannels = (pkg, channelNames, snapshot) =>
-  channelNames.filter(n => {
-    const ch = channelRegistry[n]
-    return ch && ch.transport !== false && (!snapshot || ch.snapshot) && ch.when(pkg)
-  })
-
-export const buildContext = (packages, queue, sha, {channelNames = [], snapshot = false} = {}) => {
+export const buildContext = (packages, queue, sha, {getChannels} = {}) => {
   const pkgs = {}
   for (const name of queue) {
     const pkg = packages[name]
@@ -32,7 +33,7 @@ export const buildContext = (packages, queue, sha, {channelNames = [], snapshot 
     pkgs[name] = {
       version:  pkg.version,
       tag:      pkg.tag,
-      channels: getActiveChannels(pkg, channelNames, snapshot),
+      channels: getChannels ? getChannels(pkg) : [],
     }
   }
 

@@ -1,4 +1,4 @@
-import {$} from 'zx-extra'
+import {fs, path} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {fetchRepo, pushCommit} from '../../api/git.js'
 import {log} from '../../log.js'
@@ -15,8 +15,10 @@ const run = queuefy(async (manifest, dir) => {
   log.info('push changelog')
 
   const _cwd = await fetchRepo({branch, origin: repoAuthedUrl, basicAuth: ghBasicAuth})
+  const filePath = path.resolve(_cwd, file)
+  const prev = await fs.readFile(filePath, 'utf8').catch(() => '')
+  await fs.outputFile(filePath, releaseNotes + '\n' + prev)
 
-  await $({cwd: _cwd})`echo ${releaseNotes}"\n$(cat ./${file})" > ./${file}`
   await pushCommit({
     branch,
     msg,

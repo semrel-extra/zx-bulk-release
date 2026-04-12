@@ -146,18 +146,18 @@ const unzip = (stream, {pick, omit, cwd = process.cwd(), strip = 0} = {}) => new
   extract.on('entry', ({name, type}, stream, cb) => {
     const _name = safePath(strip ? name.split('/').slice(strip).join('/') : name)
     const fp = _path.join(cwd, _name)
+    const skip = type !== 'file' || omit?.includes(_name) || (pick && !pick.includes(_name))
 
-    let data = ''
+    const chunks = []
     stream.on('data', (chunk) => {
-      if (type !== 'file' || omit?.includes(_name) || (pick && !pick.includes(_name))) return
-      data += chunk
+      if (!skip) chunks.push(chunk)
     })
 
     stream.on('end', () => {
-      if (data) {
+      if (chunks.length) {
         results.push(
           _fs.mkdir(_path.dirname(fp), {recursive: true})
-            .then(() => _fs.writeFile(fp, data, 'utf8'))
+            .then(() => _fs.writeFile(fp, Buffer.concat(chunks)))
         )
       }
       cb()

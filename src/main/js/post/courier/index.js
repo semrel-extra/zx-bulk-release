@@ -1,7 +1,8 @@
 import {$, tempy, within, path, semver, fs} from 'zx-extra'
 import {unpackTar} from '../tar.js'
 import {log} from '../log.js'
-import {scanDirectives, invalidateOrphans} from './directive.js'
+import {pool} from '../../util.js'
+import {scanDirectives, invalidateOrphans} from '../parcel/directive.js'
 import {tryLock, unlock, signalRebuild} from './semaphore.js'
 import gitTag from './channels/git-tag.js'
 import meta from './channels/meta.js'
@@ -11,10 +12,15 @@ import ghPages from './channels/gh-pages.js'
 import changelog from './channels/changelog.js'
 import cmd from './channels/cmd.js'
 
-export {buildParcels} from './parcel.js'
 
 export const channels = {'git-tag': gitTag, meta, npm, 'gh-release': ghRelease, 'gh-pages': ghPages, changelog, cmd}
 export const defaultOrder = ['git-tag', 'meta', 'npm', 'gh-release', 'gh-pages', 'changelog', 'cmd']
+
+export const getActiveChannels = (pkg, channelNames, snapshot) =>
+  channelNames.filter(n => {
+    const ch = channels[n]
+    return ch && ch.transport !== false && (!snapshot || ch.snapshot) && ch.when(pkg)
+  })
 
 export const prepare = async (names, pkg) => {
   for (const n of names) await channels[n]?.prepare?.(pkg)
@@ -59,22 +65,6 @@ const openParcel = async (tarPath, env) => {
   if (missing.length) return {warn: `missing credentials — ${missing.join(', ')}`, tarPath}
 
   return {ch, resolved, destDir, tarPath}
-}
-
-const pool = async (tasks, concurrency, fn) => {
-  const active = new Set()
-  let i = 0
-  await new Promise((resolve, reject) => {
-    const next = () => {
-      if (i >= tasks.length && active.size === 0) return resolve()
-      while (active.size < concurrency && i < tasks.length) {
-        const t = tasks[i++]
-        const p = fn(t).then(() => { active.delete(p); next() }, reject)
-        active.add(p)
-      }
-    }
-    next()
-  })
 }
 
 export const inspect = async (tars, env = process.env) => {

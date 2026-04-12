@@ -72,3 +72,19 @@ export const memoizeBy = (fn, getKey = v => v) => {
 export const camelize = s => s.replace(/-./g, x => x[1].toUpperCase())
 
 export const asArray = v => Array.isArray(v) ? v : [v]
+
+export const pool = async (tasks, concurrency, fn) => {
+  const active = new Set()
+  let i = 0
+  await new Promise((resolve, reject) => {
+    const next = () => {
+      if (i >= tasks.length && active.size === 0) return resolve()
+      while (active.size < concurrency && i < tasks.length) {
+        const t = tasks[i++]
+        const p = fn(t).then(() => { active.delete(p); next() }, reject)
+        active.add(p)
+      }
+    }
+    next()
+  })
+}

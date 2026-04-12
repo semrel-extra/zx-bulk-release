@@ -7,6 +7,7 @@ import {analyze} from '../depot/steps/analyze.js'
 import {clean} from '../depot/steps/clean.js'
 import {preflight} from '../depot/reconcile.js'
 import {consumeRebuildSignal} from '../courier/semaphore.js'
+import {getActiveChannels} from '../courier/index.js'
 import {writeContext, buildContext} from '../depot/context.js'
 import {getSha} from '../api/git.js'
 import {setOutput, isRebuildTrigger} from '../api/gh.js'
@@ -45,9 +46,9 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
       if (await preflight(pkg, pkg.ctx) === 'skip') { pkg.skipped = true; return }
     })
 
+    const snapshot = !!flags.snapshot
     const context = buildContext(packages, queue, sha, {
-      channelNames: ctx.channels,
-      snapshot: !!flags.snapshot,
+      getChannels: (pkg) => getActiveChannels(pkg, ctx.channels, snapshot),
     })
     await writeContext(cwd, context)
 

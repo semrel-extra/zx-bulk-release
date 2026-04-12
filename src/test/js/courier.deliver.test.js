@@ -4,7 +4,7 @@ import {$, within, fs, path, tempy} from 'zx-extra'
 import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
 import {createGhServer} from './utils/gh-server.js'
 import {channels, deliver, resolveManifest} from '../../main/js/post/courier/index.js'
-import {buildParcels} from '../../main/js/post/courier/parcel.js'
+import {buildParcels} from '../../main/js/post/parcel/build.js'
 import {packTar, unpackTar} from '../../main/js/post/tar.js'
 
 const test = suite('courier.deliver')

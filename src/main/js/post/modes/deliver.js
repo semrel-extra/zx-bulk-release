@@ -1,8 +1,7 @@
 import {$, glob, path} from 'zx-extra'
 import {createReport, log} from '../log.js'
 import {deliver} from '../courier/index.js'
-
-const PARCELS_DIR = 'parcels'
+import {PARCELS_DIR} from '../parcel/index.js'
 
 export const runDeliver = async ({env, flags}) => {
   const dir = typeof flags.deliver === 'string' ? flags.deliver : PARCELS_DIR

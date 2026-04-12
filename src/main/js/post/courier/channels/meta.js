@@ -1,8 +1,7 @@
 import {queuefy} from 'queuefy'
 import {log} from '../../log.js'
 import {pushCommit} from '../../api/git.js'
-import {getArtifactPath, isAssetMode} from '../../depot/generators/meta.js'
-import {prepareMeta} from '../../depot/generators/meta.js'
+import {getArtifactPath, isAssetMode, prepareMeta} from '../../depot/generators/meta.js'
 import {hasHigherVersion} from '../seniority.js'
 
 const pushMetaBranch = queuefy(async (manifest, dir) => {

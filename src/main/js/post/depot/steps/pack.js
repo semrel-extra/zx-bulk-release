@@ -1,28 +1,22 @@
 import {$, tempy, fs, path} from 'zx-extra'
 import {memoizeBy, asTuple} from '../../../util.js'
-import {channels, prepare, buildParcels} from '../../courier/index.js'
+import {prepare, getActiveChannels} from '../../courier/index.js'
+import {buildParcels, PARCELS_DIR} from '../../parcel/index.js'
 import {npmPersist} from '../../api/npm.js'
 import {getRepo} from '../../api/git.js'
 import {formatReleaseNotes} from '../generators/notes.js'
 import {ghPrepareAssets} from '../../api/gh.js'
 import {packTar, hashFile} from '../../tar.js'
 
-
-const filterActive = (names, pkg, {snapshot = false} = {}) =>
-  names.filter(n => {
-    const ch = channels[n]
-    return ch && ch.transport !== false && (!snapshot || ch.snapshot) && ch.when(pkg)
-  })
-
 export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const {channels: channelNames = [], flags} = ctx
   const snapshot = !!flags.snapshot
-  const active = filterActive(channelNames, pkg, {snapshot})
+  const active = getActiveChannels(pkg, channelNames, snapshot)
 
   await prepare(active, pkg)
   await npmPersist(pkg)
 
-  const outputDir = flags.pack ? path.resolve(ctx.git.root, typeof flags.pack === 'string' ? flags.pack : 'parcels') : null
+  const outputDir = flags.pack ? path.resolve(ctx.git.root, typeof flags.pack === 'string' ? flags.pack : PARCELS_DIR) : null
   const stageDir = outputDir || tempy.temporaryDirectory()
   if (outputDir) await fs.ensureDir(outputDir)
   const {repoName, repoHost, originUrl} = await getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})

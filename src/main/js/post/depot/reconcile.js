@@ -4,9 +4,6 @@ import {getRemoteTagSha, clearTagsCache} from '../api/git.js'
 import {formatTag} from './generators/tag.js'
 import {resolvePkgVersion} from './steps/analyze.js'
 
-export const isTagConflict = (e) =>
-  /already exists|updates were rejected|failed to push/i.test(e?.message || e?.stderr || '')
-
 export const preflight = async (pkg, ctx) => {
   if (!pkg.tag) return 'ok'
 

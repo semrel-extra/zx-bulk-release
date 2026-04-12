@@ -7,7 +7,7 @@
   "exports": {
     ".": "./src/main/js/index.js",
     "./test-utils": "./src/test/js/utils/repo.js",
-    "./meta": "./src/main/js/processor/generators/meta.js"
+    "./meta": "./src/main/js/post/depot/generators/meta.js"
   },
   "bin": "./src/main/js/cli.js",
   "files": [
