@@ -30,10 +30,17 @@ If you don't use `--pack` / `--deliver`, the tool behaves as before — full pip
 
 v2 required all credentials (GH_TOKEN, NPM_TOKEN) at build time. v3 separates concerns:
 
-- **Pack phase** (`--pack`): needs source code and build tools. No secrets required.
-- **Deliver phase** (`--deliver`): needs only delivery credentials. No source code required.
+- **Pack phase** (`--pack`): needs source code and build tools. **No secrets required.** Git tag push is no longer done here — it's a delivery channel now.
+- **Deliver phase** (`--deliver`): needs only delivery credentials (`GH_TOKEN`, `NPM_TOKEN`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`). No source code required.
 
 Credentials are stored as `${{ENV_VAR}}` templates in tar manifests and resolved at delivery time.
+
+### Git tag push moved to courier
+
+v2/v3-early pushed git tags during the `publish` step (build phase). Now `git-tag` is a regular courier channel — the tag is pushed during delivery, alongside npm publish and gh-release. This means:
+- Pack phase needs zero credentials
+- `GIT_COMMITTER_NAME` and `GIT_COMMITTER_EMAIL` are resolved at delivery time
+- The `git-tag` channel runs first, before other channels that depend on the tag (e.g. `gh-release`)
 
 ### Removed APIs
 
@@ -85,12 +92,14 @@ Key differences:
 Delivery artifacts are now self-describing tar archives:
 
 ```
-parcel.{tag}.{channel}.{hash8}.tar
+parcel.{tag}.{channel}.{timestamp}.{sha7}.{hash6}.tar
   manifest.json    — channel, params, ${{ENV_VAR}} templates
   package.tgz     — (npm) npm tarball
   assets/          — (gh-release) release assets
   docs/            — (gh-pages) documentation
 ```
+
+The filename now includes commit timestamp (`20260412t095200z`) and short SHA (7 hex) for artifact seniority tracking.
 
 After delivery, each tar is overwritten with a text marker:
 - `released` — successfully delivered
@@ -143,6 +152,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GIT_COMMITTER_NAME: Semrel Extra Bot
+          GIT_COMMITTER_EMAIL: semrel-extra-bot@hotmail.com
       - if: steps.download.outcome == 'success'
         uses: actions/upload-artifact@v4
         with: { name: parcels, path: parcels, overwrite: true, retention-days: 1 }
@@ -158,4 +169,5 @@ The final `upload-artifact` syncs markers back, so re-running the deliver job sk
 - [ ] Remove any custom `undo()` logic from channel plugins
 - [ ] If using custom channels: update `run()` signature to `(manifest, destDir)`, add `requires` field
 - [ ] Optionally: split CI into pack + deliver jobs for credential isolation
+- [ ] If using two-phase: ensure `GIT_COMMITTER_NAME` / `GIT_COMMITTER_EMAIL` are set in deliver env (defaults apply if unset)
 - [ ] Remove references to `teardown`, `rollbackRelease`, `ghDeleteReleaseByTag`

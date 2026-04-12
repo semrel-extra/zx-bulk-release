@@ -1,6 +1,7 @@
 import {$, tempy, within, path, semver, fs} from 'zx-extra'
 import {unpackTar} from '../tar.js'
 import {log} from '../log.js'
+import gitTag from './channels/git-tag.js'
 import meta from './channels/meta.js'
 import npm from './channels/npm.js'
 import ghRelease from './channels/gh-release.js'
@@ -10,8 +11,8 @@ import cmd from './channels/cmd.js'
 
 export {buildParcels} from './parcel.js'
 
-export const channels = {meta, npm, 'gh-release': ghRelease, 'gh-pages': ghPages, changelog, cmd}
-export const defaultOrder = ['meta', 'npm', 'gh-release', 'gh-pages', 'changelog', 'cmd']
+export const channels = {'git-tag': gitTag, meta, npm, 'gh-release': ghRelease, 'gh-pages': ghPages, changelog, cmd}
+export const defaultOrder = ['git-tag', 'meta', 'npm', 'gh-release', 'gh-pages', 'changelog', 'cmd']
 
 export const prepare = async (names, pkg) => {
   for (const n of names) await channels[n]?.prepare?.(pkg)

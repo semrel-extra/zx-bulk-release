@@ -1,6 +1,7 @@
 import { cosmiconfig } from 'cosmiconfig'
 import { asArray, camelize, memoizeBy } from './util.js'
 import { GH_URL, resolveGhApiUrl } from './post/api/gh.js'
+import { DEFAULT_GIT_COMMITTER_NAME, DEFAULT_GIT_COMMITTER_EMAIL } from './post/api/git.js'
 
 const CONFIG_NAME = 'release'
 const CONFIG_FILES = [
@@ -72,8 +73,8 @@ export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GH_URL: _GH_URL, GITHUB
     npmProvenance:      NPM_PROVENANCE,
     npmOidc:            NPM_OIDC || (!NPM_TOKEN && ACTIONS_ID_TOKEN_REQUEST_URL),
     npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
-    gitCommitterName:   GIT_COMMITTER_NAME || 'Semrel Extra Bot',
-    gitCommitterEmail:  GIT_COMMITTER_EMAIL || 'semrel-extra-bot@hotmail.com',
+    gitCommitterName:   GIT_COMMITTER_NAME || DEFAULT_GIT_COMMITTER_NAME,
+    gitCommitterEmail:  GIT_COMMITTER_EMAIL || DEFAULT_GIT_COMMITTER_EMAIL,
   }
 }
 
