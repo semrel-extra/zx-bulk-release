@@ -1,6 +1,6 @@
 import {getPkgConfig} from '../../../config.js'
 import {getLatest} from '../generators/meta.js'
-import {getRoot, getSha} from '../../api/git.js'
+import {getRoot, getSha, getCommitTimestamp} from '../../api/git.js'
 
 /**
  * Global release context — one per `run()` invocation.
@@ -44,6 +44,7 @@ export const contextify = async (pkg, ctx) => {
     git: {
       sha: await getSha(pkg.absPath),
       root: await getRoot(pkg.absPath),
+      timestamp: await getCommitTimestamp(pkg.absPath),
     },
   }
 }

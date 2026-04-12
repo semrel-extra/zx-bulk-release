@@ -9,6 +9,18 @@ const gitFields = (a, pkg) => ({
 })
 
 const entry = {
+  'git-tag': (pkg, ctx) => ({
+    channel: 'git-tag',
+    manifest: {
+      channel: 'git-tag',
+      name: pkg.name, version: pkg.version, tag: pkg.tag,
+      cwd: ctx.git.root,
+      gitCommitterName: '${{GIT_COMMITTER_NAME}}',
+      gitCommitterEmail: '${{GIT_COMMITTER_EMAIL}}',
+    },
+    files: [],
+  }),
+
   npm: (pkg, ctx, a) => ({
     channel: 'npm',
     manifest: {

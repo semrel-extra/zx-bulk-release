@@ -1,3 +1,6 @@
+export const DEFAULT_GIT_COMMITTER_NAME  = 'Semrel Extra Bot'
+export const DEFAULT_GIT_COMMITTER_EMAIL = 'semrel-extra-bot@hotmail.com'
+
 import {$, fs, path, tempy, copy} from 'zx-extra'
 import {log} from '../log.js'
 import {attempt2, attempt3, memoizeBy} from '../../util.js'
@@ -50,6 +53,8 @@ export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFile
 export const getRoot = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse --show-toplevel`).toString().trim())
 
 export const getSha = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse HEAD`).toString().trim(), getRoot)
+
+export const getCommitTimestamp = memoizeBy(async (cwd) => (await $({cwd})`git log -1 --format=%ct`).toString().trim(), getRoot)
 
 export const parseOrigin = (originUrl) => {
   const [, , repoHost, repoName] = originUrl.replace(':', '/').replace(/\.git/, '').match(/.+(@|\/\/)([^/]+)\/(.+)$/) || []

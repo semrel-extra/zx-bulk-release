@@ -41,7 +41,7 @@ test('publish throws when version not synced', async () => {
   })
 })
 
-test('publish pushes tag and runs channels', async () => {
+test('publish delivers parcels and pushes tag via git-tag channel', async () => {
   await within(async () => {
     const mock = await setup()
     const {pack} = await import(`../../main/js/post/depot/steps/pack.js?t=${Date.now()}`)
@@ -62,7 +62,7 @@ test('publish pushes tag and runs channels', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({channels: ['test-pub'], flags: {}})
+    const ctx = makeCtx({channels: ['git-tag', 'test-pub'], flags: {}})
     pkg.ctx = ctx
 
     await pack(pkg, ctx)
@@ -70,6 +70,7 @@ test('publish pushes tag and runs channels', async () => {
 
     assert.ok(pkg.published)
     assert.ok(ran.includes('test-pub'))
+    // git-tag channel pushes the tag via deliver
     assert.ok(has(mock.calls, 'git tag -m'))
     assert.ok(has(mock.calls, 'git push'))
 
@@ -98,7 +99,7 @@ test('publish in snapshot mode skips tag push', async () => {
         manifestAbsPath: `${tmpDir}/package.json`,
       },
     })
-    const ctx = makeCtx({channels: ['snap-pub'], flags: {snapshot: true}})
+    const ctx = makeCtx({channels: ['git-tag', 'snap-pub'], flags: {snapshot: true}})
     pkg.ctx = ctx
 
     await pack(pkg, ctx)
@@ -106,7 +107,7 @@ test('publish in snapshot mode skips tag push', async () => {
 
     assert.ok(pkg.published)
     assert.ok(ran.includes('snap-pub'))
-    // snapshot mode should NOT push a release tag
+    // snapshot mode: git-tag channel's when() returns false, no tag push
     assert.ok(!has(mock.calls, 'git tag -m'))
 
     cleanup()

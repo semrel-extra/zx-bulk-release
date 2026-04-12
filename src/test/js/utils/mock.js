@@ -112,7 +112,7 @@ export const makeCtx = (overrides = {}) => ({
   report: overrides.report ?? makeReport(),
   channels: overrides.channels ?? [],
   run: overrides.run ?? (async () => {}),
-  git: {sha: 'abc1234567890', root: tmpDir, ...overrides.git},
+  git: {sha: 'abc1234567890', root: tmpDir, timestamp: '1700000000', ...overrides.git},
 })
 
 export const makeReport = () => {

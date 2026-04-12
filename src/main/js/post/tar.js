@@ -26,7 +26,7 @@ export const packTar = async (tarPath, manifest, files = []) => {
 export const hashFile = async (filePath) => {
   const hash = crypto.createHash('sha1')
   await pipeline(createReadStream(filePath), hash)
-  return hash.digest('hex').slice(0, 8)
+  return hash.digest('hex').slice(0, 6)
 }
 
 const addDir = async (pack, prefix, dirPath) => {

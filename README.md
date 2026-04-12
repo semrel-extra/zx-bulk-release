@@ -90,6 +90,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GIT_COMMITTER_NAME: Semrel Extra Bot
+          GIT_COMMITTER_EMAIL: semrel-extra-bot@hotmail.com
       - if: steps.download.outcome == 'success'
         uses: actions/upload-artifact@v4
         with: { name: parcels, path: parcels, overwrite: true, retention-days: 1 }
@@ -276,8 +278,8 @@ Each step has a uniform signature `(pkg, ctx)`:
 - **`analyze`** — determines semantic changes, release type, and next version.
 - **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
 - **`test`** — runs `testCmd`.
-- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `{tag}.{channel}.{hash8}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). After this step, everything the courier needs is outside the project dir.
-- **`publish`** — pushes the release tag (commitment point), hands tars to courier's `deliver()`, runs `cmd` channel separately.
+- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `parcel.{tag}.{channel}.{timestamp}.{sha7}.{hash6}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). After this step, everything the courier needs is outside the project dir.
+- **`publish`** — hands tars to courier's `deliver()`, runs `cmd` channel separately. Tag push is handled by the `git-tag` channel.
 - **`clean`** — restores `package.json` files and unsets git user config.
 
 Set `config.releaseRules` to override the default rules preset:
@@ -292,20 +294,22 @@ Set `config.releaseRules` to override the default rules preset:
 ### Tar containers
 Each delivery artifact is a self-describing tar archive:
 ```
-{tag}.{channel}.{hash8}.tar
+parcel.{tag}.{channel}.{timestamp}.{sha7}.{hash6}.tar
   manifest.json    — channel name, delivery params, template credentials
   package.tgz     — (npm channel) npm tarball
   assets/          — (gh-release channel) release assets
   docs/            — (gh-pages channel) documentation files
 ```
+The filename encodes commit timestamp (`20260412t095200z`), short SHA (7 hex), and content hash (6 hex). Timestamp enables artifact seniority checks without git history.
 
 The manifest contains `${{ENV_VAR}}` placeholders that are resolved by the courier at delivery time via `resolveManifest()`. This ensures credentials never touch the build phase.
 
 ### Channels
 Delivery channels are a registry of `{name, when, prepare?, run, requires?, snapshot?, transport?}` objects:
+- **git-tag** — pushes the release tag to git remote. Runs before other channels. Skipped in snapshot mode.
 - **meta** — pushes release metadata to the `meta` branch (or as a GH release asset).
 - **npm** — publishes to the npm registry.
-- **gh-release** — creates a GitHub release with optional file assets.
+- **gh-release** — creates a GitHub release with optional file assets (requires tag to exist).
 - **gh-pages** — pushes docs to a `gh-pages` branch.
 - **changelog** — pushes a changelog entry to a `changelog` branch.
 - **cmd** — runs a custom `publishCmd` (depot-side, not through courier; `transport: false`).
@@ -318,7 +322,7 @@ depot (build phase)                          courier (deliver phase)
   manifest: { token: '${{NPM_TOKEN}}' }  →    resolveManifest(manifest, env)
                                                  → { token: 'actual-secret' }
 ```
-Template credentials (`${{ENV_VAR}}`) are written into manifests at pack time. Courier resolves them from `process.env` at delivery time. This means the build phase never sees real secrets.
+Template credentials (`${{ENV_VAR}}`) are written into manifests at pack time. Courier resolves them from `process.env` at delivery time. This means the build phase never sees real secrets — including git push credentials (`GH_TOKEN`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`) which are now resolved by the `git-tag` channel at delivery time.
 
 ### Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don't follow [semver spec](https://semver.org/). Therefore, we propose another contract:

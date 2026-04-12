@@ -7,6 +7,9 @@ import {formatReleaseNotes} from '../generators/notes.js'
 import {ghPrepareAssets} from '../../api/gh.js'
 import {packTar, hashFile} from '../../tar.js'
 
+const formatTimestamp = (epoch) =>
+  new Date(epoch * 1000).toISOString().toLowerCase().slice(0, -5).replace(/[^0-9t]/g, '') + 'z'
+
 const filterActive = (names, pkg, {snapshot = false} = {}) =>
   names.filter(n => {
     const ch = channels[n]
@@ -49,7 +52,9 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
     const tmpPath = path.join(stageDir, `_tmp.${channel}.tar`)
     await packTar(tmpPath, manifest, files)
     const hash = await hashFile(tmpPath)
-    const finalPath = path.join(stageDir, `parcel.${pkg.tag}.${channel}.${hash}.tar`)
+    const sha7 = ctx.git.sha.slice(0, 7)
+    const ts = formatTimestamp(ctx.git.timestamp)
+    const finalPath = path.join(stageDir, `parcel.${pkg.tag}.${channel}.${ts}.${sha7}.${hash}.tar`)
     await fs.rename(tmpPath, finalPath)
     tars.push(finalPath)
   }
