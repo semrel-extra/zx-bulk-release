@@ -25,10 +25,10 @@ Without phase flags, the tool runs all phases in one process (all-in-one mode).
 
 | Flag | Description |
 |------|-------------|
-| `--receive` | Consume rebuild signal, analyze, preflight, write `.zbr-context.json`. Run *before* deps install. |
+| `--receive` | Consume rebuild signal, analyze, preflight, write `zbr-context.json`. Run *before* deps install. |
 | `--pack [dir]` | Build, test, write delivery tars to `dir`. No credentials needed. |
 | `--verify [dir]` | Validate untrusted parcels against trusted context, copy valid ones to `parcels/`. |
-| `--context <path>` | Path to trusted `.zbr-context.json` (used with `--verify`). |
+| `--context <path>` | Path to trusted `zbr-context.json` (used with `--verify`). |
 | `--deliver [dir]` | Read tars from `dir` and deliver. No source code needed. |
 
 ### Recovery replaces rollback
@@ -237,7 +237,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: context-${{ github.run_id }}
-          path: .zbr-context.json
+          path: zbr-context.json
 
       # Phase 2: pack — zero credentials
       - if: steps.receive.outputs.status == 'proceed'

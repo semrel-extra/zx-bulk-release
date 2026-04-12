@@ -44,10 +44,10 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
 | Flag                         | Description                                                                                       | Default          |
 |------------------------------|---------------------------------------------------------------------------------------------------|------------------|
-| `--receive`                  | Consume rebuild signal, analyze, preflight. Writes `.zbr-context.json`. Run before deps install.  |                  |
+| `--receive`                  | Consume rebuild signal, analyze, preflight. Writes `zbr-context.json`. Run before deps install.  |                  |
 | `--pack [dir]`               | Pack only: build, test, and write delivery tars to `dir`. No credentials needed.                  | `parcels`        |
 | `--verify [dir]`             | Verify untrusted parcels against context, copy valid ones to `parcels/`. Use `--context` for path. | `parcels`       |
-| `--context <path>`           | Path to trusted `.zbr-context.json` (used with `--verify`).                                       | `.zbr-context.json` |
+| `--context <path>`           | Path to trusted `zbr-context.json` (used with `--verify`).                                       | `zbr-context.json` |
 | `--deliver [dir]`            | Deliver only: read tars from `dir` and run delivery channels. No source code needed.              | `parcels`        |
 | `--ignore`                   | Packages to ignore: `a, b`                                                                        |                  |
 | `--include-private`          | Include `private` packages                                                                        | `false`          |
@@ -152,7 +152,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: context-${{ github.run_id }}
-          path: .zbr-context.json
+          path: zbr-context.json
 
       # pack — deps installed, hostile code may run, zero credentials
       - if: steps.receive.outputs.status == 'proceed'

@@ -141,7 +141,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: context-${{ github.run_id }}
-          path: .zbr-context.json
+          path: zbr-context.json
 
       # Phase 2: pack — zero credentials
       - if: steps.receive.outputs.status == 'proceed'

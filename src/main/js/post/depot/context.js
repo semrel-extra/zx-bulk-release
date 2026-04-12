@@ -1,6 +1,6 @@
 import {fs, path} from 'zx-extra'
 
-export const CONTEXT_FILE = '.zbr-context.json'
+export const CONTEXT_FILE = 'zbr-context.json'
 
 export const writeContext = async (cwd, context) => {
   const filePath = path.resolve(cwd, CONTEXT_FILE)
