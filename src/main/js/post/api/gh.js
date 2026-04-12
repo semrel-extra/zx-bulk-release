@@ -1,5 +1,6 @@
 // Low-level GitHub API primitives. No domain knowledge, no imports from processor/ or steps/.
 
+import nodeFs from 'node:fs'
 import {$, path, tempy, glob, fs, fetch} from 'zx-extra'
 import {asArray, attempt2} from '../../util.js'
 
@@ -88,3 +89,13 @@ export const ghGetAsset = async ({repoName, tag, name, ghUrl}) => {
   }
   return res.text()
 }
+
+export const setOutput = (name, value) => {
+  const outputFile = process.env.GITHUB_OUTPUT
+  if (outputFile) {
+    try { nodeFs.appendFileSync(outputFile, `${name}=${value}\n`) } catch { /* not in CI */ }
+  }
+}
+
+export const isRebuildTrigger = (env) =>
+  !!(env.GITHUB_REF_TYPE === 'tag' && env.GITHUB_REF_NAME?.startsWith('zbr-rebuild.'))

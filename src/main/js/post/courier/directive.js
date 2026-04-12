@@ -4,6 +4,9 @@ import {log} from '../log.js'
 
 const GIT_CHANNELS = new Set(['git-tag', 'gh-release', 'changelog', 'gh-pages', 'meta'])
 
+// parcel.{sha7}.{channel}.{...}.tar — channel is the 3rd dot-segment
+export const parcelChannel = (name) => name.replace(/\.tar$/, '').split('.')[2]
+
 const splitSteps = (channelNames) => {
   const git = channelNames.filter(n => GIT_CHANNELS.has(n))
   const ext = channelNames.filter(n => !GIT_CHANNELS.has(n))
@@ -68,7 +71,7 @@ export const invalidateOrphans = async (dir, directive) => {
 
   for (const tarPath of all) {
     const name = path.basename(tarPath)
-    if (name.includes('.directive.')) continue
+    if (parcelChannel(name) === 'directive') continue
     if (owned.has(name)) continue
     await fs.writeFile(tarPath, 'orphan')
     count++

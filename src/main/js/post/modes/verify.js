@@ -1,5 +1,6 @@
 import {glob, path, fs} from 'zx-extra'
 import {log} from '../log.js'
+import {parcelChannel} from '../courier/directive.js'
 
 const PARCELS_DIR = 'parcels'
 
@@ -35,17 +36,14 @@ export const runVerify = async ({cwd, flags}) => {
       continue
     }
 
-    // directive
-    if (name.includes('.directive.')) {
-      verified.push(tarPath)
+    const channel = parcelChannel(name)
+    if (!channel) {
+      errors.push(`malformed name: ${name}`)
       continue
     }
 
-    // parcel.{sha7}.{channel}.{tag}.{hash}.tar
-    const parts = name.replace(/\.tar$/, '').split('.')
-    const channel = parts[2]
-    if (!channel) {
-      errors.push(`malformed name: ${name}`)
+    if (channel === 'directive') {
+      verified.push(tarPath)
       continue
     }
 
