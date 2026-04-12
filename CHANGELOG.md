@@ -1,3 +1,12 @@
+## [3.1.0](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.5...v3.1.0) (2026-04-12)
+
+### Features
+* feat: coordinated delivery with supply chain security ([772be14](https://github.com/semrel-extra/zx-bulk-release/commit/772be14525e751cf9ca805380d63330c446cd965))
+
+### Fixes & improvements
+* fix: make git-tag a courier channel, remove pushTag from publish ([a34ceb9](https://github.com/semrel-extra/zx-bulk-release/commit/a34ceb9d6ca40b8e8f57d29c80f6f4f055927711))
+* fix: improve logging ([09461c7](https://github.com/semrel-extra/zx-bulk-release/commit/09461c70ee35843fdc106db9a151869657467951))
+
 ## [3.0.5](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.4...v3.0.5) (2026-04-11)
 
 ### Fixes & improvements
