@@ -122,3 +122,17 @@ export const setUserConfig = memoizeBy(async(cwd, gitCommitterName, gitCommitter
 export const unsetUserConfig = async(cwd) => $({cwd, nothrow: true})`
   git config --unset user.name &&
   git config --unset user.email`
+
+export const getRemoteTagSha = async (cwd, tag) =>
+  (await $({cwd, nothrow: true})`git ls-remote --tags origin refs/tags/${tag}`)
+    .toString().split('\t')[0]?.trim() || null
+
+export const deleteRemoteTag = async (cwd, tag) =>
+  $({cwd, nothrow: true})`git push origin :refs/tags/${tag}`
+
+export const pushAnnotatedTag = async (cwd, tag, message) => {
+  await $({cwd})`git tag -a ${tag} -m ${message}`
+  await $({cwd})`git push origin ${tag}`
+}
+
+export const clearTagsCache = () => { $.memo?.delete?.(getTags) }

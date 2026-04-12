@@ -14,17 +14,17 @@
 * Pkg changelogs go to `changelog` branch (configurable).
 * Docs are published to `gh-pages` branch (configurable).
 * No extra builds. The required deps are fetched from the pkg registry (`npmFetch` config opt).
-* **Two-phase pipeline**: build and delivery can run as separate jobs with isolated credentials.
-
+* **Flexible pipeline**: run all phases in one command, split into two (pack/deliver), or use all four (receive/pack/verify/deliver) for maximum supply chain security.
+* **Coordinated delivery**: multiple release agents can safely serve the same monorepo concurrently via git-tag-based semaphores.
 
 > [!NOTE]
-> **[Migration guide v2 → v3](./MIGRATION_V2_V3.md)**
+> **[Migration guide v2 → v3](./MIGRATION_V2_V3.md)** | **[Delivery specification](./DELIVER_SPEC.md)** | **[Security model](./SECURITY.md)**
 
 ## Roadmap
 * [x] Store release metrics to `meta`.
 * [x] Two-phase pipeline (pack / deliver).
+* [x] Semaphore. Let several release agents serve the monorepo at the same time.
 * [ ] Multistack. Add support for java/kt/py.
-* [ ] Semaphore. Let several release agents to serve the monorepo at the same time.
 
 ## Requirements
 * macOS / linux
@@ -44,7 +44,10 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 ```
 | Flag                         | Description                                                                                       | Default          |
 |------------------------------|---------------------------------------------------------------------------------------------------|------------------|
+| `--receive`                  | Consume rebuild signal, analyze, preflight. Writes `.zbr-context.json`. Run before deps install.  |                  |
 | `--pack [dir]`               | Pack only: build, test, and write delivery tars to `dir`. No credentials needed.                  | `parcels`        |
+| `--verify [dir]`             | Verify untrusted parcels against context, copy valid ones to `parcels/`. Use `--context` for path. | `parcels`       |
+| `--context <path>`           | Path to trusted `.zbr-context.json` (used with `--verify`).                                       | `.zbr-context.json` |
 | `--deliver [dir]`            | Deliver only: read tars from `dir` and run delivery channels. No source code needed.              | `parcels`        |
 | `--ignore`                   | Packages to ignore: `a, b`                                                                        |                  |
 | `--include-private`          | Include `private` packages                                                                        | `false`          |
@@ -59,8 +62,29 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 | `--debug`                    | Enable [zx](https://github.com/google/zx#verbose) verbose mode                                    |                  |
 | `--version` / `-v`           | Print own version                                                                                 |                  |
 
-### Two-phase pipeline
-By default, zbr runs the full pipeline in a single process. For better security isolation, split build and delivery into separate CI jobs:
+### Pipeline modes
+
+zbr supports three deployment schemes — pick the one that matches your security requirements.
+
+#### All-in-one
+A single command runs all phases in one process. Simple but requires all credentials at build time.
+
+```yaml
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: yarn install
+      - run: npx zx-bulk-release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+#### Two phases: pack + deliver
+Build and delivery run as separate jobs. The pack phase needs no credentials — tars contain `${{ENV_VAR}}` templates resolved at delivery time.
 
 ```yaml
 jobs:
@@ -69,11 +93,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+      - run: yarn install
       - run: npx zx-bulk-release --pack
       - uses: actions/upload-artifact@v4
         with:
-          name: parcels
-          path: parcels
+          name: parcels-${{ github.run_id }}
+          path: parcels/
           retention-days: 1
           if-no-files-found: ignore
 
@@ -83,7 +108,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         id: download
-        with: { name: parcels, path: parcels }
+        with:
+          name: parcels-${{ github.run_id }}
+          path: parcels/
         continue-on-error: true
       - if: steps.download.outcome == 'success'
         run: npx zx-bulk-release --deliver
@@ -92,12 +119,80 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GIT_COMMITTER_NAME: Semrel Extra Bot
           GIT_COMMITTER_EMAIL: semrel-extra-bot@hotmail.com
-      - if: steps.download.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with: { name: parcels, path: parcels, overwrite: true, retention-days: 1 }
 ```
 
-After delivery, each tar is replaced with a marker (`released` or `skip`). The final `upload-artifact` syncs these markers back to CI storage, so a re-run of the deliver job will skip already-delivered parcels. Artifacts expire naturally via retention policy.
+#### Four phases: receive + pack + verify + deliver
+Maximum supply chain security. Each phase has strict trust boundaries. See [SECURITY.md](./SECURITY.md) for the threat model.
+
+- **receive** — runs *before* `yarn install`, consumes rebuild signals, analyzes, writes trusted context
+- **pack** — runs *after* deps install with zero credentials, builds and packs tars
+- **verify** — validates untrusted parcels against the trusted context
+- **deliver** — delivers only verified parcels
+
+```yaml
+on:
+  push:
+    branches: [master]
+    tags: ['zbr-rebuild.*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      # receive — runs BEFORE deps install, safe to use GH_TOKEN
+      - run: npx zx-bulk-release --receive
+        id: receive
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Trust anchor: context uploaded before any third-party code
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-${{ github.run_id }}
+          path: .zbr-context.json
+
+      # pack — deps installed, hostile code may run, zero credentials
+      - if: steps.receive.outputs.status == 'proceed'
+        run: |
+          yarn install
+          npx zx-bulk-release --pack
+
+      - if: steps.receive.outputs.status == 'proceed'
+        uses: actions/upload-artifact@v4
+        with:
+          name: parcels-${{ github.run_id }}
+          path: parcels/
+
+  deliver:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Download trusted context and untrusted parcels separately
+      - uses: actions/download-artifact@v4
+        with:
+          name: context-${{ github.run_id }}
+          path: .
+      - uses: actions/download-artifact@v4
+        with:
+          name: parcels-${{ github.run_id }}
+          path: parcels-unverified/
+
+      # verify — validate untrusted parcels against trusted context
+      - run: npx zx-bulk-release --verify parcels-unverified/
+
+      # deliver — only verified parcels
+      - run: npx zx-bulk-release --deliver
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GIT_COMMITTER_NAME: Semrel Extra Bot
+          GIT_COMMITTER_EMAIL: semrel-extra-bot@hotmail.com
+```
+
+After delivery, each tar is replaced with a marker (`released`, `skip`, `conflict`, or `orphan`). In the four-phase mode, parcels are verified against the trusted context (uploaded before deps install) before any delivery begins.
 
 **Recovery** is simply re-running the deliver job. Only undelivered tars (not yet replaced with markers) will be processed. No rebuild required.
 
@@ -256,6 +351,7 @@ The release pipeline is split into three subsystems under `post/`:
 
 ```
 post/
+  modes/     — pipeline entry points: receive, pack, verify, deliver
   depot/     — preparation: analysis, versioning, building, testing, tar packing
   courier/   — sealed delivery: receives self-describing tars and delivers through channels
   api/       — shared infrastructure wrappers (git, npm, gh)
@@ -265,20 +361,27 @@ This separation ensures that courier never touches the project directory — it 
 
 ### Flow
 ```
-topo ─► contextify ─► analyze ──► build ──► test ──► pack ──► publish ─► clean
-         (per pkg)    (per pkg)   (per pkg)  (per pkg) (per pkg) (per pkg)
+receive:  topo -> contextify -> analyze -> preflight -> context.json
+pack:     build -> test -> pack -> directive
+verify:   validate parcels against context -> copy to output
+deliver:  deliver parcels
+
+all-in-one: topo -> contextify -> analyze -> preflight -> build -> test -> pack -> publish -> clean
 ```
 [`@semrel-extra/topo`](https://github.com/semrel-extra/topo) resolves the release queue respecting dependency graphs. The graph allows parallel execution where the dependency tree permits; `memoizeBy` prevents duplicate work when a package is reached by multiple paths.
 
 By default, packages marked as `private` are omitted. Override with `--include-private`.
 
+**Preflight** runs between `analyze` and `build`. It checks tag availability on git remote and eliminates version conflicts before wasting build/test time. If a tag is already taken by a newer commit, preflight re-resolves the version. If taken by the same or an older commit, the package is skipped.
+
 ### Steps
 Each step has a uniform signature `(pkg, ctx)`:
 - **`contextify`** — resolves per-package config, latest release metadata, and git context.
 - **`analyze`** — determines semantic changes, release type, and next version.
+- **`preflight`** — checks tag availability on remote, re-resolves version on conflict, skips duplicates.
 - **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
 - **`test`** — runs `testCmd`.
-- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `parcel.{tag}.{channel}.{timestamp}.{sha7}.{hash6}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). After this step, everything the courier needs is outside the project dir.
+- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `parcel.{sha7}.{channel}.{tag}.{hash6}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). A directive meta-parcel is also generated, listing all parcels and their delivery steps. After this step, everything the courier needs is outside the project dir.
 - **`publish`** — hands tars to courier's `deliver()`, runs `cmd` channel separately. Tag push is handled by the `git-tag` channel.
 - **`clean`** — restores `package.json` files and unsets git user config.
 
@@ -294,27 +397,42 @@ Set `config.releaseRules` to override the default rules preset:
 ### Tar containers
 Each delivery artifact is a self-describing tar archive:
 ```
-parcel.{tag}.{channel}.{timestamp}.{sha7}.{hash6}.tar
+parcel.{sha7}.{channel}.{tag}.{hash6}.tar
   manifest.json    — channel name, delivery params, template credentials
   package.tgz     — (npm channel) npm tarball
   assets/          — (gh-release channel) release assets
   docs/            — (gh-pages channel) documentation files
 ```
-The filename encodes commit timestamp (`20260412t095200z`), short SHA (7 hex), and content hash (6 hex). Timestamp enables artifact seniority checks without git history.
+The `sha7` prefix groups all parcels of one commit. The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash.
+
+A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels. It contains the complete delivery map: package queue, per-package channel steps, and an authoritative list of parcel filenames. The directive enables coordinated delivery — see [DELIVER_SPEC.md](./DELIVER_SPEC.md).
 
 The manifest contains `${{ENV_VAR}}` placeholders that are resolved by the courier at delivery time via `resolveManifest()`. This ensures credentials never touch the build phase.
 
 ### Channels
 Delivery channels are a registry of `{name, when, prepare?, run, requires?, snapshot?, transport?}` objects:
-- **git-tag** — pushes the release tag to git remote. Runs before other channels. Skipped in snapshot mode.
-- **meta** — pushes release metadata to the `meta` branch (or as a GH release asset).
-- **npm** — publishes to the npm registry.
-- **gh-release** — creates a GitHub release with optional file assets (requires tag to exist).
-- **gh-pages** — pushes docs to a `gh-pages` branch.
-- **changelog** — pushes a changelog entry to a `changelog` branch.
+- **git-tag** — pushes the release tag to git remote. Runs before other channels. Returns `conflict` if the tag already exists. Skipped in snapshot mode.
+- **meta** — pushes release metadata to the `meta` branch (or as a GH release asset). Checks docs seniority before committing.
+- **npm** — publishes to the npm registry. Returns `duplicate` on `EPUBLISHCONFLICT` / 403.
+- **gh-release** — creates a GitHub release with optional file assets (requires tag to exist). Returns `duplicate` on 422.
+- **gh-pages** — pushes docs to a `gh-pages` branch. Checks docs seniority before committing.
+- **changelog** — pushes a changelog entry to a `changelog` branch. Checks docs seniority before committing.
 - **cmd** — runs a custom `publishCmd` (depot-side, not through courier; `transport: false`).
 
-Each channel declares `requires` — a list of manifest fields that must be present after credential resolution. Courier validates all parcels before running any channel (fail-fast).
+Each channel declares `requires` — a list of manifest fields that must be present after credential resolution. Courier validates before delivery; missing credentials produce a warning and `skip` marker.
+
+Channels return one of: `ok` (success), `duplicate` (already published, goal achieved), or `conflict` (version collision, needs rebuild). Unrecoverable errors are thrown.
+
+### Coordinated delivery
+When multiple zbr processes target the same monorepo concurrently, delivery is coordinated via git-tag-based semaphores:
+
+1. **Directive** — each build produces a meta-parcel listing all packages and their delivery steps.
+2. **Semaphore lock** — before delivering, a process pushes `zbr-deliver.{sha7}` as an annotated tag. Atomic push = ownership. Failure = another process is working.
+3. **Orphan cleanup** — the directive invalidates parcels not in its authoritative list (stale artifacts from previous builds).
+4. **Conflict resolution** — if `git-tag` returns `conflict`, all parcels of that package are marked, and a `zbr-rebuild.{sha7}` tag signals CI to rebuild with fresh versions.
+5. **Partial delivery** — skipped parcels (missing credentials) remain valid tarballs. Another process with the right credentials can pick them up later.
+
+See [DELIVER_SPEC.md](./DELIVER_SPEC.md) for the full protocol specification.
 
 ### Credential flow
 ```
