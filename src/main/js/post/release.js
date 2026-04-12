@@ -14,7 +14,39 @@ import {runPack} from './modes/pack.js'
 
 const ZBR_VERSION = createRequire(import.meta.url)('../../../../package.json').version
 
+const HELP = `
+zx-bulk-release v${ZBR_VERSION}
+
+Usage: npx zx-bulk-release [options]
+
+Modes:
+  (no flags)              All-in-one: analyze, build, test, pack, deliver
+  --receive               Analyze & preflight. Writes .zbr-context.json. Run BEFORE deps install.
+  --pack [dir]            Build, test, pack tars to dir.                          [default: parcels]
+  --verify [dir]          Validate parcels against context, copy to parcels/.     [default: parcels]
+  --deliver [dir]         Deliver parcels through channels.                       [default: parcels]
+
+Options:
+  --context <path>        Path to .zbr-context.json (with --verify).     [default: .zbr-context.json]
+  --dry-run, --no-publish Disable any publish / remote-mutating logic.
+  --no-build              Skip buildCmd.
+  --no-test               Skip testCmd.
+  --snapshot              Publish snapshot versions to npm only.
+  --ignore <a,b>          Packages to ignore.
+  --include-private       Include private packages.
+  --concurrency <n>       Build/publish thread limit.                        [default: os.cpus().length]
+  --only-workspace-deps   Recognize only workspace: deps as graph edges.
+  --no-npm-fetch          Disable npm artifact fetching.
+  --report <path>         Persist release state to file.
+  --debug                 Enable verbose mode.
+  -v, --version           Print version.
+  -h, --help              Show this help.
+`.trim()
+
 export const run = async ({cwd = process.cwd(), env: _env, flags = {}} = {}) => within(async () => {
+  if (flags.h || flags.help)
+    return console.log(HELP)
+
   if (flags.v || flags.version)
     return console.log(ZBR_VERSION)
 

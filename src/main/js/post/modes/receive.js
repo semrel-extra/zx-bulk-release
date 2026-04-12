@@ -18,7 +18,7 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
   const sha = await getSha(cwd)
   const sha7 = sha.slice(0, 7)
 
-  if (isRebuildTrigger(env)) {
+  if (isRebuildTrigger(env) && !flags.dryRun) {
     const result = await consumeRebuildSignal(cwd, sha)
     if (result?.exitCode !== 0 && result?.stderr?.includes('remote ref does not exist')) {
       log.info(`rebuild signal already consumed by another process`)
