@@ -1,3 +1,9 @@
+## [3.1.1](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.0...v3.1.1) (2026-04-12)
+
+### Fixes & improvements
+* perf: add `--help` ([99fcfde](https://github.com/semrel-extra/zx-bulk-release/commit/99fcfde332c7730e335e46b4c2a8c844d53f8986))
+* refactor: separate parcel subdomain ([b168044](https://github.com/semrel-extra/zx-bulk-release/commit/b16804497693b42998cea2638ff6d11bd29eb84f))
+
 ## [3.1.0](https://github.com/semrel-extra/zx-bulk-release/compare/v3.0.5...v3.1.0) (2026-04-12)
 
 ### Features
