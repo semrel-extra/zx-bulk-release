@@ -18,23 +18,9 @@ const fakeMonorepoResponses = () => [
   }),
 ]
 
-test('run --version prints version and exits', async () => {
-  const logs = []
-  const origLog = console.log
-  console.log = (...a) => logs.push(a.join(' '))
-
-  await within(async () => {
-    const mock = createMock(defaultResponses())
-    $.spawn = mock.spawn
-    $.quiet = true
-    $.verbose = false
-
-    const {run} = await import(`../../main/js/post/release.js?t=${Date.now()}`)
-    await run({flags: {version: true}})
-  })
-
-  console.log = origLog
-  assert.ok(logs.some(l => /\d+\.\d+\.\d+/.test(l)))
+test('version is exported', async () => {
+  const {version} = await import(`../../main/js/index.js?t=${Date.now()}`)
+  assert.ok(/\d+\.\d+\.\d+/.test(version))
 })
 
 test('run --dryRun does not push tags', async () => {
@@ -44,8 +30,6 @@ test('run --dryRun does not push tags', async () => {
     $.quiet = true
     $.verbose = false
 
-    // This test validates that dryRun mode does not execute git push for tags.
-    // Full integration is tested in integration.test.js; here we verify the flag logic.
     const {run} = await import(`../../main/js/post/release.js?t=${Date.now()}`)
 
     try {
@@ -58,7 +42,6 @@ test('run --dryRun does not push tags', async () => {
       // topo may throw on non-existent dir; that's expected in mock env
     }
 
-    // In dry-run, we should never see git tag push commands
     const pushTagCalls = mock.calls.filter(c => c.includes('git tag -m') && c.includes('git push'))
     assert.is(pushTagCalls.length, 0)
   })

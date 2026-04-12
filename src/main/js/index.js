@@ -1,1 +1,1 @@
-export {run} from './post/release.js'
+export {run, version} from './post/release.js'
