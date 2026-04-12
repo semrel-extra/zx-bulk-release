@@ -1,6 +1,8 @@
 import {$, tempy, within, path, semver, fs} from 'zx-extra'
 import {unpackTar} from '../tar.js'
 import {log} from '../log.js'
+import {scanDirectives, invalidateOrphans} from './directive.js'
+import {tryLock, unlock, signalRebuild} from './semaphore.js'
 import gitTag from './channels/git-tag.js'
 import meta from './channels/meta.js'
 import npm from './channels/npm.js'
@@ -39,9 +41,11 @@ export const resolveManifest = (manifest, env = process.env) => {
   return resolved
 }
 
+const MARKERS = new Set(['released', 'skip', 'conflict', 'orphan'])
+
 const openParcel = async (tarPath, env) => {
   const content = await fs.readFile(tarPath, 'utf8').catch(() => null)
-  if (content === 'released' || content === 'skip') return null
+  if (MARKERS.has(content)) return null
 
   const destDir = tempy.temporaryDirectory()
   const {manifest} = await unpackTar(tarPath, destDir)
@@ -73,8 +77,6 @@ const pool = async (tasks, concurrency, fn) => {
   })
 }
 
-// Parcels grouped by package, sorted by semver asc (latest last).
-// Groups run in parallel (concurrency-limited), entries within a group — sequential.
 export const inspect = async (tars, env = process.env) => {
   const parcels = []
   const skipped = []
@@ -94,7 +96,6 @@ export const inspect = async (tars, env = process.env) => {
     }
   }
 
-  // group by package, sort by semver asc within each group
   const groups = new Map()
   for (const p of parcels) {
     const key = p.resolved.name || p.resolved.channel
@@ -107,7 +108,9 @@ export const inspect = async (tars, env = process.env) => {
   return {groups, skipped, total: tars.length, pending: parcels.length}
 }
 
-export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun = false} = {}) => {
+// --- Legacy deliver (no directive) ---
+
+const deliverLegacy = async (tars, env, {concurrency, dryRun}) => {
   const {groups, skipped, total, pending} = await inspect(tars, env)
 
   for (const {file, reason, tarPath} of skipped) {
@@ -138,4 +141,122 @@ export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun 
   })
 
   return {total, pending, delivered: entries.length, skipped: skipped.length, entries}
+}
+
+// --- Directive-aware deliver ---
+
+const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRun}) => {
+  const p = await openParcel(tarPath, env)
+  if (!p) return 'already'
+  if (p.warn) {
+    log.warn(`skipping ${p.warn}`)
+    return 'skip'
+  }
+
+  if (dryRun) return 'dryrun'
+
+  const {ch, resolved, destDir} = p
+  const res = await within(async () => {
+    $.scope = pkgName
+    const r = await ch.run(resolved, destDir)
+    log.info(`${channelName} ${version}`)
+    return r
+  })
+
+  if (res === 'conflict') return 'conflict'
+
+  await fs.writeFile(tarPath, 'released')
+  return res === 'duplicate' ? 'duplicate' : 'ok'
+}
+
+const deliverDirective = async (directive, tarMap, env, {dryRun}) => {
+  const entries = []
+  const conflicts = []
+  const skipped = []
+
+  for (const pkgName of directive.queue) {
+    const pkg = directive.packages[pkgName]
+    if (!pkg) continue
+
+    let pkgConflict = false
+
+    for (const step of pkg.deliver) {
+      if (pkgConflict) break
+
+      const results = await Promise.all(step.map(async (channelName) => {
+        const parcelName = (pkg.parcels || []).find(p => p.includes(`.${channelName}.`))
+        const tarPath = parcelName && tarMap.get(parcelName)
+        if (!tarPath) return 'missing'
+
+        return deliverParcel(tarPath, channelName, pkgName, pkg.version, env, {dryRun})
+      }))
+
+      for (let i = 0; i < step.length; i++) {
+        const r = results[i]
+        if (r === 'skip') skipped.push({channelName: step[i], pkg: pkgName})
+        else if (r !== 'missing' && r !== 'already') entries.push({channel: step[i], name: pkgName, version: pkg.version})
+      }
+
+      if (results.includes('conflict')) {
+        pkgConflict = true
+        conflicts.push(pkgName)
+        for (const p of pkg.parcels || []) {
+          const tp = tarMap.get(p)
+          if (!tp) continue
+          const c = await fs.readFile(tp, 'utf8').catch(() => null)
+          if (c !== 'released') await fs.writeFile(tp, 'conflict')
+        }
+      }
+    }
+  }
+
+  return {entries, conflicts, skipped}
+}
+
+// --- Main entry point ---
+
+export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun = false, cwd} = {}) => {
+  const dir = tars.length ? path.dirname(tars[0]) : null
+  const directives = dir ? await scanDirectives(dir) : []
+
+  if (!directives.length) return deliverLegacy(tars, env, {concurrency, dryRun})
+
+  const tarMap = new Map(tars.map(t => [path.basename(t), t]))
+  const allEntries = []
+  const allConflicts = []
+  const allSkipped = []
+
+  for (const directive of directives) {
+    const gitRoot = cwd || dir
+    if (!await tryLock(gitRoot, directive)) {
+      log.info(`directive ${directive.sha.slice(0, 7)} locked, skipping`)
+      continue
+    }
+
+    try {
+      await invalidateOrphans(dir, directive)
+      const {entries, conflicts, skipped} = await deliverDirective(directive, tarMap, env, {dryRun})
+      allEntries.push(...entries)
+      allConflicts.push(...conflicts)
+      allSkipped.push(...skipped)
+
+      if (conflicts.length) {
+        await fs.writeFile(directive.tarPath, 'conflict')
+        await signalRebuild(gitRoot, directive.sha)
+      } else if (!skipped.length) {
+        await fs.writeFile(directive.tarPath, 'released')
+      }
+    } finally {
+      await unlock(gitRoot, directive)
+    }
+  }
+
+  return {
+    total: tars.length,
+    pending: allEntries.length,
+    delivered: allEntries.length,
+    skipped: allSkipped.length,
+    entries: allEntries,
+    conflicts: allConflicts,
+  }
 }

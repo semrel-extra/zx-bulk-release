@@ -2,9 +2,15 @@ import {$} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {fetchRepo, pushCommit} from '../../api/git.js'
 import {log} from '../../log.js'
+import {hasHigherVersion} from '../seniority.js'
 
 const run = queuefy(async (manifest, dir) => {
-  const {releaseNotes, branch, file, msg, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
+  const {name, version, releaseNotes, branch, file, msg, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
+
+  if (await hasHigherVersion(dir, name, version)) {
+    log.warn(`skipping changelog for ${name}@${version}: higher version already released`)
+    return 'ok'
+  }
 
   log.info('push changelog')
 
@@ -19,6 +25,7 @@ const run = queuefy(async (manifest, dir) => {
     gitCommitterName,
     basicAuth: ghBasicAuth,
   })
+  return 'ok'
 })
 
 export default {

@@ -2,6 +2,9 @@ import {fs, path} from 'zx-extra'
 import {log} from '../../log.js'
 import {ghCreateRelease, ghFetch} from '../../api/gh.js'
 
+const isDuplicate = (e) =>
+  /already_exists|Validation Failed|422/i.test(e?.message || e?.stderr || '')
+
 const run = async (manifest, dir) => {
   const {tag, token, apiUrl, repoName, releaseNotes, assets} = manifest
   if (!token) return null
@@ -9,7 +12,13 @@ const run = async (manifest, dir) => {
   log.info('create gh release')
   const now = Date.now()
 
-  const res = await ghCreateRelease({ghApiUrl: apiUrl, ghToken: token, repoName, tag, body: releaseNotes})
+  let res
+  try {
+    res = await ghCreateRelease({ghApiUrl: apiUrl, ghToken: token, repoName, tag, body: releaseNotes})
+  } catch (e) {
+    if (isDuplicate(e)) return 'duplicate'
+    throw e
+  }
 
   if (assets?.length) {
     const uploadUrl = res.upload_url.slice(0, res.upload_url.indexOf('{'))
@@ -25,6 +34,7 @@ const run = async (manifest, dir) => {
   }
 
   log.info(`duration gh release: ${Date.now() - now}`)
+  return 'ok'
 }
 
 export default {
