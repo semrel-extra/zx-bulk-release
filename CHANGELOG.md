@@ -1,3 +1,9 @@
+## [3.1.4](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.3...v3.1.4) (2026-04-13)
+
+### Fixes & improvements
+* fix: sync receive/pack via context-driven pack filter ([5b539ff](https://github.com/semrel-extra/zx-bulk-release/commit/5b539ff327b07c171c523b36f28cc2e05c4346d6))
+* refactor: introduce internal di layer ([a32773d](https://github.com/semrel-extra/zx-bulk-release/commit/a32773d37e9454953029f18e0af7de33486c14e3))
+
 ## [3.1.3](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.2...v3.1.3) (2026-04-13)
 
 ### Fixes & improvements
