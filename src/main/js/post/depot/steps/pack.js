@@ -10,7 +10,8 @@ import {packTar, hashFile} from '../../tar.js'
 export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const {channels: channelNames = [], flags} = ctx
   const snapshot = !!flags.snapshot
-  const active = getActiveChannels(pkg, channelNames, snapshot)
+  // In split pipeline, receive already decided which channels are active
+  const active = pkg.contextChannels || getActiveChannels(pkg, channelNames, snapshot)
 
   await prepare(active, pkg)
   await api.npm.npmPersist(pkg)

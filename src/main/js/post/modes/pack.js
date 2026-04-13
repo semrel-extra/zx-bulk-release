@@ -54,6 +54,7 @@ export const runPack = async ({cwd, env, flags}, ctx) => {
         pkg.version = ctxPkg.version
         pkg.tag = ctxPkg.tag
         pkg.manifest.version = ctxPkg.version
+        pkg.contextChannels = ctxPkg.channels
         if (!pkg.releaseType) pkg.releaseType = 'patch'
       } else {
         // Standalone: own analysis decides
