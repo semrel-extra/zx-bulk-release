@@ -1,3 +1,8 @@
+## [3.1.3](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.2...v3.1.3) (2026-04-13)
+
+### Fixes & improvements
+* fix: ensure temp tar dirs ([ffc0b25](https://github.com/semrel-extra/zx-bulk-release/commit/ffc0b2512c16540a4d260ffc6e02488a96b68194))
+
 ## [3.1.2](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.1...v3.1.2) (2026-04-13)
 
 ### Fixes & improvements
