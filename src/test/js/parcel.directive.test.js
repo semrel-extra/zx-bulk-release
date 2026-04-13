@@ -15,9 +15,9 @@ const test = suite('parcel.directive')
 // --- parcelChannel ---
 
 test('parcelChannel extracts channel from parcel filename', () => {
-  assert.is(parcelChannel('parcel.abc1234.npm.tag.aaa111.tar'), 'npm')
-  assert.is(parcelChannel('parcel.abc1234.git-tag.tag.bbb222.tar'), 'git-tag')
-  assert.is(parcelChannel('parcel.abc1234.gh-release.tag.ccc333.tar'), 'gh-release')
+  assert.is(parcelChannel('parcel.abc1234.npm.pkg.1.0.0.aaa111.tar'), 'npm')
+  assert.is(parcelChannel('parcel.abc1234.git-tag.pkg.1.0.0.bbb222.tar'), 'git-tag')
+  assert.is(parcelChannel('parcel.abc1234.gh-release.pkg.1.0.0.ccc333.tar'), 'gh-release')
   assert.is(parcelChannel('parcel.abc1234.directive.1700000000.tar'), 'directive')
 })
 
@@ -33,7 +33,7 @@ test('buildDirective creates a tar, parseDirective reads it back', async () => {
       name: 'pkg-a',
       version: '1.0.0',
       tag: '2026.4.12-pkg-a.1.0.0-f0',
-      tars: [path.join(dir, 'parcel.abc1234.npm.tag.aaa.tar')],
+      tars: [path.join(dir, 'parcel.abc1234.npm.pkg-a.1.0.0.aaa.tar')],
       activeTransport: ['npm', 'git-tag'],
       ctx: {git: {sha, timestamp}},
     },
@@ -141,8 +141,8 @@ test('invalidateOrphans marks unowned parcels as orphan', async () => {
   const dir = tempy.temporaryDirectory()
   const sha7 = 'abc1234'
 
-  const owned = `parcel.${sha7}.npm.tag.aaa.tar`
-  const orphan = `parcel.${sha7}.gh-release.tag.bbb.tar`
+  const owned = `parcel.${sha7}.npm.pkg.1.0.0.aaa.tar`
+  const orphan = `parcel.${sha7}.gh-release.pkg.1.0.0.bbb.tar`
   const directive = `parcel.${sha7}.directive.100.tar`
 
   await fs.writeFile(path.join(dir, owned), 'data')
@@ -163,7 +163,7 @@ test('invalidateOrphans is a no-op when all parcels are owned', async () => {
   const dir = tempy.temporaryDirectory()
   const sha7 = 'abc1234'
 
-  const p1 = `parcel.${sha7}.npm.tag.aaa.tar`
+  const p1 = `parcel.${sha7}.npm.pkg.1.0.0.aaa.tar`
   await fs.writeFile(path.join(dir, p1), 'data')
 
   await invalidateOrphans(dir, {

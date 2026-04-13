@@ -23,7 +23,7 @@ test('delivers tars and reports counts', async () => {
     const {channels} = await import(`../../main/js/post/courier/index.js?t=${Date.now()}`)
 
     const dir = tempy.temporaryDirectory()
-    const tarPath = path.join(dir, 'parcel.abc1234.npm.tag.aaa111.tar')
+    const tarPath = path.join(dir, 'parcel.abc1234.npm.pkg.1.0.0.aaa111.tar')
     await packTar(tarPath, {
       channel: 'npm', name: 'pkg', version: '1.0.0',
       token: '${{NPM_TOKEN}}', registry: '${{NPM_REGISTRY}}',

@@ -3,6 +3,7 @@ import {memoizeBy, asTuple} from '../../../util.js'
 import {api} from '../../api/index.js'
 import {prepare, getActiveChannels} from '../../courier/index.js'
 import {buildParcels, PARCELS_DIR} from '../../parcel/index.js'
+import {sanitizePkgName} from '../../parcel/build.js'
 import {formatReleaseNotes} from '../generators/notes.js'
 import {packTar, hashFile} from '../../tar.js'
 
@@ -43,7 +44,8 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
     await packTar(tmpPath, manifest, files)
     const hash = await hashFile(tmpPath)
     const sha7 = ctx.git.sha.slice(0, 7)
-    const finalPath = path.join(stageDir, `parcel.${sha7}.${channel}.${pkg.tag}.${hash}.tar`)
+    const safeName = sanitizePkgName(pkg.name)
+    const finalPath = path.join(stageDir, `parcel.${sha7}.${channel}.${safeName}.${pkg.version}.${hash}.tar`)
     await fs.move(tmpPath, finalPath)
     tars.push(finalPath)
   }

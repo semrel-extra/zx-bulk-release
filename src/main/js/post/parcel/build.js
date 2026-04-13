@@ -1,5 +1,7 @@
 import {asTuple, msgJoin} from '../../util.js'
 
+export const sanitizePkgName = (name) => name.replace(/[^a-z0-9-]/ig, '-').replace(/^-+|-+$/g, '')
+
 const gitFields = (a, pkg) => ({
   repoHost: a.repoHost,
   repoName: a.repoName,

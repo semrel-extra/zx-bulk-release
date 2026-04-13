@@ -14,7 +14,6 @@ const makeContext = (sha, packages) => ({
 
 const sha = 'abc1234567890abcdef'
 const sha7 = sha.slice(0, 7)
-const tag = '2026.4.12-pkg.1.0.1-f0'
 
 test('copies verified parcels to output dir', async () => {
   const {runVerify} = await import(`../../main/js/post/modes/verify.js?t=${Date.now()}`)
@@ -23,10 +22,10 @@ test('copies verified parcels to output dir', async () => {
   const outDir = tempy.temporaryDirectory()
 
   await fs.writeJson(path.join(dir, 'ctx.json'), makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm', 'git-tag']},
+    pkg: {version: '1.0.1', channels: ['npm', 'git-tag']},
   }))
-  await packTar(path.join(dir, `parcel.${sha7}.npm.${tag}.aaa111.tar`), {channel: 'npm'})
-  await packTar(path.join(dir, `parcel.${sha7}.git-tag.${tag}.bbb222.tar`), {channel: 'git-tag'})
+  await packTar(path.join(dir, `parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`), {channel: 'npm'})
+  await packTar(path.join(dir, `parcel.${sha7}.git-tag.pkg.1.0.1.bbb222.tar`), {channel: 'git-tag'})
 
   await runVerify({cwd: outDir, flags: {verify: dir, context: path.join(dir, 'ctx.json')}})
 
@@ -42,9 +41,9 @@ test('in-place verify does not duplicate files', async () => {
   await fs.ensureDir(parcelsDir)
 
   await fs.writeJson(path.join(dir, 'ctx.json'), makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm']},
+    pkg: {version: '1.0.1', channels: ['npm']},
   }))
-  await packTar(path.join(parcelsDir, `parcel.${sha7}.npm.${tag}.aaa111.tar`), {channel: 'npm'})
+  await packTar(path.join(parcelsDir, `parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`), {channel: 'npm'})
 
   await runVerify({cwd: dir, flags: {verify: parcelsDir, context: path.join(dir, 'ctx.json')}})
 
@@ -78,9 +77,9 @@ test('propagates verification errors as throw', async () => {
 
   const dir = tempy.temporaryDirectory()
   await fs.writeJson(path.join(dir, 'ctx.json'), makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm']},
+    pkg: {version: '1.0.1', channels: ['npm']},
   }))
-  await packTar(path.join(dir, `parcel.XXXXXXX.npm.${tag}.aaa111.tar`), {channel: 'npm'})
+  await packTar(path.join(dir, `parcel.XXXXXXX.npm.pkg.1.0.1.aaa111.tar`), {channel: 'npm'})
 
   try {
     await runVerify({cwd: dir, flags: {verify: dir, context: path.join(dir, 'ctx.json')}})

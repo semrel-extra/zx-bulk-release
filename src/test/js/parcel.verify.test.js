@@ -13,15 +13,14 @@ const makeContext = (sha, packages) => ({
 
 const sha = 'abc1234567890abcdef'
 const sha7 = sha.slice(0, 7)
-const tag = '2026.4.12-pkg.1.0.1-f0'
 
 test('accepts valid parcels matching context', () => {
   const ctx = makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm', 'git-tag']},
+    pkg: {version: '1.0.1', channels: ['npm', 'git-tag']},
   })
   const tars = [
-    `/dir/parcel.${sha7}.npm.${tag}.aaa111.tar`,
-    `/dir/parcel.${sha7}.git-tag.${tag}.bbb222.tar`,
+    `/dir/parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`,
+    `/dir/parcel.${sha7}.git-tag.pkg.1.0.1.bbb222.tar`,
   ]
 
   const {verified, errors} = verifyParcels(tars, ctx)
@@ -31,9 +30,9 @@ test('accepts valid parcels matching context', () => {
 
 test('rejects parcels with wrong sha', () => {
   const ctx = makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm']},
+    pkg: {version: '1.0.1', channels: ['npm']},
   })
-  const tars = [`/dir/parcel.XXXXXXX.npm.${tag}.aaa111.tar`]
+  const tars = [`/dir/parcel.XXXXXXX.npm.pkg.1.0.1.aaa111.tar`]
 
   const {verified, errors} = verifyParcels(tars, ctx)
   assert.is(errors.length, 1)
@@ -43,9 +42,9 @@ test('rejects parcels with wrong sha', () => {
 
 test('rejects parcels with unexpected channel', () => {
   const ctx = makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm']},
+    pkg: {version: '1.0.1', channels: ['npm']},
   })
-  const tars = [`/dir/parcel.${sha7}.gh-release.${tag}.aaa111.tar`]
+  const tars = [`/dir/parcel.${sha7}.gh-release.pkg.1.0.1.aaa111.tar`]
 
   const {verified, errors} = verifyParcels(tars, ctx)
   assert.is(errors.length, 1)
@@ -55,10 +54,9 @@ test('rejects parcels with unexpected channel', () => {
 
 test('rejects parcels with no matching package', () => {
   const ctx = makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm']},
+    pkg: {version: '1.0.1', channels: ['npm']},
   })
-  const otherTag = '2026.4.12-other.2.0.0-f0'
-  const tars = [`/dir/parcel.${sha7}.npm.${otherTag}.aaa111.tar`]
+  const tars = [`/dir/parcel.${sha7}.npm.other.2.0.0.aaa111.tar`]
 
   const {verified, errors} = verifyParcels(tars, ctx)
   assert.is(errors.length, 1)
@@ -75,13 +73,12 @@ test('passes directives through without package match', () => {
   assert.is(verified.length, 1)
 })
 
-test('does not confuse tag containing "directive" with actual directive', () => {
-  const directiveTag = '2026.4.12-my.directive.pkg.1.0.1-f0'
+test('matches scoped package names', () => {
   const ctx = makeContext(sha, {
-    'my-directive-pkg': {version: '1.0.1', tag: directiveTag, channels: ['npm']},
+    '@scope/my-pkg': {version: '1.0.1', channels: ['npm']},
   })
-  // channel (3rd dot-segment) is "npm", not "directive"
-  const tars = [`/dir/parcel.${sha7}.npm.${directiveTag}.aaa111.tar`]
+  // @scope/my-pkg → scope-my-pkg
+  const tars = [`/dir/parcel.${sha7}.npm.scope-my-pkg.1.0.1.aaa111.tar`]
 
   const {verified, errors} = verifyParcels(tars, ctx)
   assert.is(errors.length, 0)
@@ -90,11 +87,11 @@ test('does not confuse tag containing "directive" with actual directive', () => 
 
 test('collects multiple errors', () => {
   const ctx = makeContext(sha, {
-    pkg: {version: '1.0.1', tag, channels: ['npm']},
+    pkg: {version: '1.0.1', channels: ['npm']},
   })
   const tars = [
-    `/dir/parcel.XXXXXXX.npm.${tag}.aaa.tar`,      // sha mismatch
-    `/dir/parcel.${sha7}.gh-release.${tag}.bbb.tar`, // unexpected channel
+    `/dir/parcel.XXXXXXX.npm.pkg.1.0.1.aaa.tar`,       // sha mismatch
+    `/dir/parcel.${sha7}.gh-release.pkg.1.0.1.bbb.tar`, // unexpected channel
   ]
 
   const {verified, errors} = verifyParcels(tars, ctx)

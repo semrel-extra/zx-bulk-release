@@ -1,5 +1,6 @@
 import {path} from 'zx-extra'
 import {parcelChannel} from './directive.js'
+import {sanitizePkgName} from './build.js'
 
 export const verifyParcels = (tars, context) => {
   const {sha7, packages: expected} = context
@@ -25,8 +26,8 @@ export const verifyParcels = (tars, context) => {
       continue
     }
 
-    const belongsTo = Object.entries(expected).find(([, pkg]) =>
-      pkg.tag && name.includes(`.${pkg.tag}.`)
+    const belongsTo = Object.entries(expected).find(([pkgName, pkg]) =>
+      name.includes(`.${sanitizePkgName(pkgName)}.${pkg.version}.`)
     )
     if (!belongsTo) {
       errors.push(`unexpected parcel (no matching package): ${name}`)
