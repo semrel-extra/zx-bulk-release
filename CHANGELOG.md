@@ -1,3 +1,8 @@
+## [3.1.9](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.8...v3.1.9) (2026-04-13)
+
+### Fixes & improvements
+* perf: replace cosmiconfig with own config reader ([f980590](https://github.com/semrel-extra/zx-bulk-release/commit/f980590edbf9aa9311110207e24849c6373c0feb))
+
 ## [3.1.8](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.7...v3.1.8) (2026-04-13)
 
 ### Fixes & improvements
