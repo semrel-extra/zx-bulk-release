@@ -6,6 +6,8 @@ export default defineConfig({
     testTimeout: 30_000,
     coverage: {
       exclude: ['src/test/**'],
+      reporter: ['lcov', 'html', 'text'],
+      reportsDirectory: 'coverage',
     },
   },
 })
