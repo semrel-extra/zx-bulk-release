@@ -1,3 +1,10 @@
+## [3.1.5](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.4...v3.1.5) (2026-04-13)
+
+### Fixes & improvements
+* fix: make git-tag channel work with both local and remote repos ([0102cdd](https://github.com/semrel-extra/zx-bulk-release/commit/0102cddaf6c091e8cc68533be8034f95776c64b4))
+* fix: use package name and version in parcel names ([6b5f1e7](https://github.com/semrel-extra/zx-bulk-release/commit/6b5f1e761c9821460267c1464db01af1029dbaa7))
+* fix: enable git-tag and semaphore in bare deliver repo ([abe82d9](https://github.com/semrel-extra/zx-bulk-release/commit/abe82d9b299a489ce16c0a9f3867894657b4e2a4))
+
 ## [3.1.4](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.3...v3.1.4) (2026-04-13)
 
 ### Fixes & improvements
