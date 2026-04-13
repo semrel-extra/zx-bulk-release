@@ -1,3 +1,8 @@
+## [3.1.11](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.10...v3.1.11) (2026-04-13)
+
+### Fixes & improvements
+* docs: update docs ([fe5760c](https://github.com/semrel-extra/zx-bulk-release/commit/fe5760c307958696d6e13c2d789ee937734d54d9))
+
 ## [3.1.10](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.9...v3.1.10) (2026-04-13)
 
 ### Fixes & improvements
