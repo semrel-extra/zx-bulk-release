@@ -1,7 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within, fs, path} from 'zx-extra'
-import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
+import {createSpawnMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
 import {channels} from '../../main/js/post/courier/index.js'
 import {unpackTar} from '../../main/js/post/tar.js'
 
@@ -10,7 +10,7 @@ const test = suite('steps.pack')
 const setup = async (responses = []) => {
   await fs.ensureDir(tmpDir)
   await fs.writeJson(`${tmpDir}/package.json`, {name: 'test-pkg', version: '1.0.1'}, {spaces: 2})
-  const mock = createMock([...responses, ...defaultResponses()])
+  const mock = createSpawnMock([...responses, ...defaultResponses()])
   $.spawn = mock.spawn
   $.quiet = true
   $.verbose = false

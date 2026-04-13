@@ -1,7 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within, fs, path, tempy} from 'zx-extra'
-import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
+import {createSpawnMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
 import {createGhServer} from './utils/gh-server.js'
 import {channels, deliver, resolveManifest} from '../../main/js/post/courier/index.js'
 import {buildParcels} from '../../main/js/post/parcel/build.js'
@@ -17,7 +17,7 @@ const setup = async (responses = []) => {
   await fs.writeJson(`${tmpDir}/package.json`, {name: 'test-pkg', version: '1.0.1'}, {spaces: 2})
   Object.keys(gh.routes).forEach(k => delete gh.routes[k])
   gh.requests.length = 0
-  const mock = createMock([...responses, ...defaultResponses()])
+  const mock = createSpawnMock([...responses, ...defaultResponses()])
   $.spawn = mock.spawn
   $.quiet = true
   $.verbose = false
@@ -512,6 +512,297 @@ test('fetchRepo throws when both origin and cwd are missing', async () => {
     } catch (e) {
       assert.ok(e.message.includes('fetchRepo requires either origin or cwd'))
     }
+  })
+})
+
+// --- directive-aware deliver ---
+
+const makeDirectiveTars = async (dir, {sha = 'abc1234567890', timestamp = 1700000000, queue, packages, parcels, prev = {}}) => {
+  const sha7 = sha.slice(0, 7)
+  const directiveTarName = `parcel.${sha7}.directive.${timestamp}.tar`
+  const directiveTarPath = path.join(dir, directiveTarName)
+  const directiveManifest = {
+    channel: 'directive',
+    sha,
+    timestamp,
+    queue,
+    packages,
+    parcels,
+    prev,
+  }
+  await packTar(directiveTarPath, directiveManifest, [])
+
+  const allTars = [directiveTarPath]
+  for (const parcelName of parcels) {
+    const channel = parcelName.replace(/\.tar$/, '').split('.')[2]
+    const tarPath = path.join(dir, parcelName)
+    const fakePkg = await writeTmpFile('fake-content')
+    const files = channel === 'npm' ? [{name: 'package.tgz', source: fakePkg}] : []
+    const pkgName = parcelName.replace(/\.tar$/, '').split('.')[3]
+    const pkgVersion = parcelName.replace(/\.tar$/, '').split('.')[4]
+    await packTar(tarPath, {
+      channel,
+      name: pkgName,
+      version: pkgVersion,
+      tag: `v${pkgVersion}-${pkgName}`,
+      sha: sha,
+      registry: channel === 'npm' ? '${{NPM_REGISTRY}}' : undefined,
+      token: '${{GH_TOKEN}}',
+      repoHost: 'github.com',
+      repoName: 'org/repo',
+      originUrl: 'https://github.com/org/repo.git',
+      gitCommitterEmail: 'b@b.com',
+      gitCommitterName: 'Bot',
+    }, files)
+    allTars.push(tarPath)
+  }
+
+  return allTars
+}
+
+test('deliver with directive: delivers parcels through channels', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const parcelName = 'parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'
+    const allTars = await makeDirectiveTars(dir, {
+      queue: ['pkg-a'],
+      packages: {
+        'pkg-a': {
+          version: '1.0.1',
+          tag: '2026.1.1-pkg-a.1.0.1-f0',
+          deliver: [['npm']],
+          parcels: [parcelName],
+        },
+      },
+      parcels: [parcelName],
+    })
+
+    const received = []
+    const origRun = channels.npm.run
+    channels.npm.run = async (manifest, dir) => received.push({manifest, dir})
+
+    await deliver(allTars, {
+      NPM_REGISTRY: 'https://test.registry', NPM_TOKEN: 'tok-npm',
+      GH_TOKEN: 'ghp_test', PATH: process.env.PATH,
+    })
+
+    channels.npm.run = origRun
+
+    assert.is(received.length, 1)
+    assert.is(received[0].manifest.channel, 'npm')
+    assert.is(received[0].manifest.registry, 'https://test.registry')
+
+    // parcel tar should be marked 'released'
+    const parcelContent = await fs.readFile(path.join(dir, parcelName), 'utf8')
+    assert.is(parcelContent, 'released')
+
+    // directive tar should also be marked 'released'
+    const directiveContent = await fs.readFile(allTars[0], 'utf8')
+    assert.is(directiveContent, 'released')
+  })
+})
+
+test('deliver with directive: conflict triggers rebuild signal', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const parcelName = 'parcel.abc1234.git-tag.pkg-a.1.0.1.bbb222.tar'
+    const allTars = await makeDirectiveTars(dir, {
+      queue: ['pkg-a'],
+      packages: {
+        'pkg-a': {
+          version: '1.0.1',
+          tag: '2026.1.1-pkg-a.1.0.1-f0',
+          deliver: [['git-tag']],
+          parcels: [parcelName],
+        },
+      },
+      parcels: [parcelName],
+    })
+
+    const origRun = channels['git-tag'].run
+    channels['git-tag'].run = async () => 'conflict'
+
+    const result = await deliver(allTars, {GH_TOKEN: 'ghp_test', PATH: process.env.PATH})
+
+    channels['git-tag'].run = origRun
+
+    assert.ok(result.conflicts.includes('pkg-a'))
+
+    // parcel tar should be marked 'conflict'
+    const parcelContent = await fs.readFile(path.join(dir, parcelName), 'utf8')
+    assert.is(parcelContent, 'conflict')
+
+    // directive tar should be marked 'conflict'
+    const directiveContent = await fs.readFile(allTars[0], 'utf8')
+    assert.is(directiveContent, 'conflict')
+  })
+})
+
+test('deliver with directive: skips locked directive', async () => {
+  await within(async () => {
+    const mock = await setup([
+      // Make tryLock's pushAnnotatedTag fail (simulating lock held by another process)
+      [/git tag -a/, '', 1],
+    ])
+    const dir = tempy.temporaryDirectory()
+    const parcelName = 'parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'
+    const allTars = await makeDirectiveTars(dir, {
+      queue: ['pkg-a'],
+      packages: {
+        'pkg-a': {
+          version: '1.0.1',
+          tag: '2026.1.1-pkg-a.1.0.1-f0',
+          deliver: [['npm']],
+          parcels: [parcelName],
+        },
+      },
+      parcels: [parcelName],
+    })
+
+    const received = []
+    const origRun = channels.npm.run
+    channels.npm.run = async (manifest, dir) => received.push({manifest, dir})
+
+    await deliver(allTars, {GH_TOKEN: 'ghp_test', NPM_TOKEN: 'tok', NPM_REGISTRY: 'https://r', PATH: process.env.PATH})
+
+    channels.npm.run = origRun
+
+    // Nothing should have been delivered because lock was not acquired
+    assert.is(received.length, 0)
+
+    // parcel tar should still be a valid tar (not overwritten)
+    const parcelContent = await fs.readFile(path.join(dir, parcelName), 'utf8').catch(() => null)
+    assert.not.ok(parcelContent === 'released')
+  })
+})
+
+test('deliver with directive: handles multiple packages in topo order', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const parcelA = 'parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'
+    const parcelB = 'parcel.abc1234.npm.pkg-b.1.0.2.bbb222.tar'
+    const allTars = await makeDirectiveTars(dir, {
+      queue: ['pkg-a', 'pkg-b'],
+      packages: {
+        'pkg-a': {
+          version: '1.0.1',
+          tag: '2026.1.1-pkg-a.1.0.1-f0',
+          deliver: [['npm']],
+          parcels: [parcelA],
+        },
+        'pkg-b': {
+          version: '1.0.2',
+          tag: '2026.1.1-pkg-b.1.0.2-f0',
+          deliver: [['npm']],
+          parcels: [parcelB],
+        },
+      },
+      parcels: [parcelA, parcelB],
+      prev: {'pkg-b': ['pkg-a']},
+    })
+
+    const deliveryOrder = []
+    const origRun = channels.npm.run
+    channels.npm.run = async (manifest, dir) => {
+      deliveryOrder.push(manifest.name)
+    }
+
+    const result = await deliver(allTars, {
+      NPM_REGISTRY: 'https://test.registry', NPM_TOKEN: 'tok',
+      GH_TOKEN: 'ghp_test', PATH: process.env.PATH,
+    })
+
+    channels.npm.run = origRun
+
+    assert.is(deliveryOrder.length, 2)
+    // pkg-a must be delivered before pkg-b (because pkg-b depends on pkg-a via prev)
+    assert.is(deliveryOrder.indexOf('pkg-a') < deliveryOrder.indexOf('pkg-b'), true)
+    assert.is(result.delivered, 2)
+  })
+})
+
+test('deliver with directive: dryRun does not write markers', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const parcelName = 'parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'
+    const allTars = await makeDirectiveTars(dir, {
+      queue: ['pkg-a'],
+      packages: {
+        'pkg-a': {
+          version: '1.0.1',
+          tag: '2026.1.1-pkg-a.1.0.1-f0',
+          deliver: [['npm']],
+          parcels: [parcelName],
+        },
+      },
+      parcels: [parcelName],
+    })
+
+    const origRun = channels.npm.run
+    channels.npm.run = async () => {}
+
+    await deliver(allTars, {
+      NPM_REGISTRY: 'https://test.registry', NPM_TOKEN: 'tok',
+      GH_TOKEN: 'ghp_test', PATH: process.env.PATH,
+    }, {dryRun: true})
+
+    channels.npm.run = origRun
+
+    // parcel tar should NOT be overwritten with 'released' — it should still be a valid tar
+    const parcelContent = await fs.readFile(path.join(dir, parcelName), 'utf8').catch(() => null)
+    assert.is.not(parcelContent, 'released')
+    assert.is.not(parcelContent, 'skip')
+  })
+})
+
+test('deliverParcel: already-marked tar returns early', async () => {
+  await within(async () => {
+    await setup()
+    const dir = tempy.temporaryDirectory()
+    const tarPath = path.join(dir, 'parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar')
+    await fs.ensureDir(dir)
+    await fs.writeFile(tarPath, 'released')
+
+    const received = []
+    const origRun = channels.npm.run
+    channels.npm.run = async (manifest, dir) => received.push({manifest, dir})
+
+    // Use deliver with a directive that references this already-released parcel
+    const directiveTarPath = path.join(dir, 'parcel.abc1234.directive.1700000000.tar')
+    await packTar(directiveTarPath, {
+      channel: 'directive',
+      sha: 'abc1234567890',
+      timestamp: 1700000000,
+      queue: ['pkg-a'],
+      packages: {
+        'pkg-a': {
+          version: '1.0.1',
+          tag: '2026.1.1-pkg-a.1.0.1-f0',
+          deliver: [['npm']],
+          parcels: ['parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'],
+        },
+      },
+      parcels: ['parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'],
+      prev: {},
+    }, [])
+
+    await deliver([directiveTarPath, tarPath], {
+      NPM_REGISTRY: 'https://test.registry', NPM_TOKEN: 'tok',
+      GH_TOKEN: 'ghp_test', PATH: process.env.PATH,
+    })
+
+    channels.npm.run = origRun
+
+    // Channel should NOT have been called since the parcel was already marked
+    assert.is(received.length, 0)
+
+    // Tar should still contain 'released' (not overwritten)
+    const content = await fs.readFile(tarPath, 'utf8')
+    assert.is(content, 'released')
   })
 })
 

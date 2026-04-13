@@ -15,12 +15,12 @@ import {
 } from '../../main/js/post/depot/steps/analyze.js'
 import {getCommits} from '../../main/js/post/api/git.js'
 import {createFakeRepo} from './utils/repo.js'
-import {createMock, defaultResponses, makePkg, makeCtx} from './utils/mock.js'
+import {createSpawnMock, defaultResponses, makePkg, makeCtx} from './utils/mock.js'
 
 const test = suite('steps.analyze')
 
 const setup = (responses = []) => {
-  const mock = createMock([...responses, ...defaultResponses()])
+  const mock = createSpawnMock([...responses, ...defaultResponses()])
   $.spawn = mock.spawn
   $.quiet = true
   $.verbose = false

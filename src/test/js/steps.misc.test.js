@@ -1,12 +1,12 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
-import {createMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
+import {createSpawnMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
 
 const test = suite('steps.misc')
 
 const setup = (responses = []) => {
-  const mock = createMock([...defaultResponses(), ...responses])
+  const mock = createSpawnMock([...defaultResponses(), ...responses])
   $.spawn = mock.spawn
   $.quiet = true
   $.verbose = false

@@ -1,6 +1,6 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
-import {fs, path, tempy, glob} from 'zx-extra'
+import {fs, path, tempy} from 'zx-extra'
 import {packTar} from '../../main/js/post/tar.js'
 import {
   parcelChannel,

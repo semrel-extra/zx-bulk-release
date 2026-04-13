@@ -24,12 +24,13 @@ Multiple zbr processes may concurrently build and deliver artifacts for overlapp
 A tar archive containing the manifest and files for one channel of one package.
 
 ```
-parcel.{sha7}.{channel}.{tag}.{hash6}.tar
+parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
 ```
 
 - `sha7` — first 7 characters of the commit SHA
 - `channel` — delivery channel (`git-tag`, `npm`, `gh-release`, ...)
-- `tag` — semantic release tag (human-readable, informational)
+- `name` — sanitized package name (`@scope/pkg` → `scope-pkg`)
+- `version` — semver version
 - `hash6` — 6-character SHA-1 of tar contents (content-addressable dedup)
 
 The manifest inside the tar contains `${{ENV_VAR}}` placeholders resolved at delivery time via `resolveManifest()`.
@@ -54,9 +55,12 @@ Manifest:
   "timestamp": 1718000000,
   "queue": ["a", "b", "c"],
   "parcels": [
-    "parcel.abc1234.npm.2026.4.12-a.1.0.1-f0.f0e1d2.tar",
-    "parcel.abc1234.git-tag.2026.4.12-a.1.0.1-f0.a1b2c3.tar"
+    "parcel.abc1234.npm.a.1.0.1.f0e1d2.tar",
+    "parcel.abc1234.git-tag.a.1.0.1.a1b2c3.tar"
   ],
+  "prev": {
+    "b": ["a"]
+  },
   "packages": {
     "a": {
       "version": "1.0.1",
@@ -66,8 +70,8 @@ Manifest:
         ["npm"]
       ],
       "parcels": [
-        "parcel.abc1234.git-tag.2026.4.12-a.1.0.1-f0.a1b2c3.tar",
-        "parcel.abc1234.npm.2026.4.12-a.1.0.1-f0.f0e1d2.tar"
+        "parcel.abc1234.git-tag.a.1.0.1.a1b2c3.tar",
+        "parcel.abc1234.npm.a.1.0.1.f0e1d2.tar"
       ]
     }
   }
@@ -79,6 +83,7 @@ Manifest:
 | `sha` | Full commit SHA of the build |
 | `timestamp` | Epoch timestamp of the commit (seconds) |
 | `queue` | Packages in topo-sorted dependency order |
+| `prev` | Dependency graph: `{name: [deps]}`. Used by `traverseQueue` for parallel delivery |
 | `parcels` | Complete list of parcel filenames owned by this directive |
 | `packages[name].deliver` | Array of steps. Channels within a step run in parallel. Steps run sequentially |
 | `packages[name].parcels` | Parcel filenames belonging to this package |
@@ -169,7 +174,9 @@ deliver(parcelsDir, env):
       invalidateOrphans(dir, directive)           // mark stale parcels
       conflicts = []
 
-      for pkgName of directive.queue:
+      // traverseQueue: packages run in parallel respecting topo order
+      // (b waits for a if b depends on a, but independent packages overlap)
+      await traverseQueue(directive.queue, directive.prev, pkgName =>
         pkg = directive.packages[pkgName]
 
         for step of pkg.deliver:                 // steps sequentially
@@ -181,6 +188,7 @@ deliver(parcelsDir, env):
             markConflict(pkg.parcels)             // all package parcels → "conflict"
             conflicts.push(pkgName)
             break                                 // remaining steps skipped
+      )
 
     finally:
       unlock(zbr-deliver.{sha7})                 // release lock
@@ -340,8 +348,8 @@ deliver:
 ### 7. Non-deterministic rebuild (orphan cleanup)
 
 ```
-build 1: produces parcel.abc1234.npm.pkg-v1.0.1.aaa111.tar
-build 2: produces parcel.abc1234.npm.pkg-v1.0.1.bbb222.tar
+build 1: produces parcel.abc1234.npm.pkg.1.0.1.aaa111.tar
+build 2: produces parcel.abc1234.npm.pkg.1.0.1.bbb222.tar
          overwrites directive (same filename, last-writer-wins)
 
 deliver:
@@ -490,7 +498,7 @@ jobs:
           path: parcels-unverified/
 
       # Phase 3: verify — validate against trusted context
-      - run: npx zx-bulk-release --verify parcels-unverified/
+      - run: npx zx-bulk-release --verify parcels-unverified/:parcels/
 
       # Phase 4: deliver — only verified parcels
       - run: npx zx-bulk-release --deliver

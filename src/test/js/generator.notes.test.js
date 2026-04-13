@@ -1,14 +1,14 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
-import {createMock, defaultResponses, makeCtx} from './utils/mock.js'
+import {createSpawnMock, defaultResponses, makeCtx} from './utils/mock.js'
 import {interpolate, DIFF_TAG_URL, DIFF_COMMIT_URL} from '../../main/js/post/depot/generators/notes.js'
 
 const test = suite('generator.notes')
 
 test('formatReleaseNotes generates markdown', async () => {
   await within(async () => {
-    const mock = createMock(defaultResponses())
+    const mock = createSpawnMock(defaultResponses())
     $.spawn = mock.spawn
     $.quiet = true
     $.verbose = false

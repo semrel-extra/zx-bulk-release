@@ -46,7 +46,7 @@ GH_TOKEN=ghtoken GH_USER=username NPM_TOKEN=npmtoken npx zx-bulk-release [opts]
 |------------------------------|---------------------------------------------------------------------------------------------------|------------------|
 | `--receive`                  | Consume rebuild signal, analyze, preflight. Writes `zbr-context.json`. Run before deps install.  |                  |
 | `--pack [dir]`               | Pack only: build, test, and write delivery tars to `dir`. No credentials needed.                  | `parcels`        |
-| `--verify [dir]`             | Verify untrusted parcels against context, copy valid ones to `parcels/`. Use `--context` for path. | `parcels`       |
+| `--verify [in:out]`          | Verify untrusted parcels against context, copy valid ones to output dir. Use `--context` for path. | `parcels:parcels` |
 | `--context <path>`           | Path to trusted `zbr-context.json` (used with `--verify`).                                       | `zbr-context.json` |
 | `--deliver [dir]`            | Deliver only: read tars from `dir` and run delivery channels. No source code needed.              | `parcels`        |
 | `--ignore`                   | Packages to ignore: `a, b`                                                                        |                  |
@@ -181,7 +181,7 @@ jobs:
           path: parcels-unverified/
 
       # verify — validate untrusted parcels against trusted context
-      - run: npx zx-bulk-release --verify parcels-unverified/
+      - run: npx zx-bulk-release --verify parcels-unverified/:parcels/
 
       # deliver — only verified parcels
       - run: npx zx-bulk-release --deliver
@@ -381,7 +381,7 @@ Each step has a uniform signature `(pkg, ctx)`:
 - **`preflight`** — checks tag availability on remote, re-resolves version on conflict, skips duplicates.
 - **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
 - **`test`** — runs `testCmd`.
-- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `parcel.{sha7}.{channel}.{tag}.{hash6}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). A directive meta-parcel is also generated, listing all parcels and their delivery steps. After this step, everything the courier needs is outside the project dir.
+- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). A directive meta-parcel is also generated, listing all parcels and their delivery steps. After this step, everything the courier needs is outside the project dir.
 - **`publish`** — hands tars to courier's `deliver()`, runs `cmd` channel separately. Tag push is handled by the `git-tag` channel.
 - **`clean`** — restores `package.json` files and unsets git user config.
 
@@ -397,13 +397,13 @@ Set `config.releaseRules` to override the default rules preset:
 ### Tar containers
 Each delivery artifact is a self-describing tar archive:
 ```
-parcel.{sha7}.{channel}.{tag}.{hash6}.tar
+parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
   manifest.json    — channel name, delivery params, template credentials
   package.tgz     — (npm channel) npm tarball
   assets/          — (gh-release channel) release assets
   docs/            — (gh-pages channel) documentation files
 ```
-The `sha7` prefix groups all parcels of one commit. The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash.
+The `sha7` prefix groups all parcels of one commit. `name` is the sanitized package name (`@scope/pkg` → `scope-pkg`). The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash.
 
 A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels. It contains the complete delivery map: package queue, per-package channel steps, and an authoritative list of parcel filenames. The directive enables coordinated delivery — see [DELIVER_SPEC.md](./DELIVER_SPEC.md).
 

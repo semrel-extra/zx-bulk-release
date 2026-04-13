@@ -3,8 +3,9 @@ import _fs from 'node:fs/promises'
 import _path from 'node:path'
 import tar from 'tar-stream'
 import {Readable} from 'node:stream'
-import {log} from '../log.js'
 import {$, semver, fs, INI, fetch, tempy} from 'zx-extra'
+
+import {log} from '../log.js'
 import {attempt2, memoizeBy} from '../../util.js'
 
 const FETCH_TIMEOUT_MS = 15_000

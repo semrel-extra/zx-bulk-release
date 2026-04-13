@@ -27,7 +27,7 @@ Without phase flags, the tool runs all phases in one process (all-in-one mode).
 |------|-------------|
 | `--receive` | Consume rebuild signal, analyze, preflight, write `zbr-context.json`. Run *before* deps install. |
 | `--pack [dir]` | Build, test, write delivery tars to `dir`. No credentials needed. |
-| `--verify [dir]` | Validate untrusted parcels against trusted context, copy valid ones to `parcels/`. |
+| `--verify [in:out]` | Validate untrusted parcels against trusted context, copy valid ones to out dir. |
 | `--context <path>` | Path to trusted `zbr-context.json` (used with `--verify`). |
 | `--deliver [dir]` | Read tars from `dir` and deliver. No source code needed. |
 
@@ -129,14 +129,14 @@ Key differences:
 Delivery artifacts are now self-describing tar archives:
 
 ```
-parcel.{sha7}.{channel}.{tag}.{hash6}.tar
+parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
   manifest.json    — channel, params, ${{ENV_VAR}} templates
   package.tgz     — (npm) npm tarball
   assets/          — (gh-release) release assets
   docs/            — (gh-pages) documentation
 ```
 
-The `sha7` prefix groups all parcels of one commit. The `hash6` suffix is a content hash for deduplication.
+The `sha7` prefix groups all parcels of one commit. `name` is the sanitized package name (`@scope/pkg` → `scope-pkg`). The `hash6` suffix is a content hash for deduplication.
 
 A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels, containing the complete delivery map for coordinated delivery.
 
@@ -239,11 +239,12 @@ jobs:
           name: context-${{ github.run_id }}
           path: zbr-context.json
 
-      # Phase 2: pack — zero credentials
+      # Phase 2: build + pack — zero credentials
       - if: steps.receive.outputs.status == 'proceed'
         run: |
           yarn install
-          npx zx-bulk-release --pack
+          yarn build && yarn test
+          npx zx-bulk-release --no-build --no-test --pack
 
       - if: steps.receive.outputs.status == 'proceed'
         uses: actions/upload-artifact@v4
@@ -265,7 +266,7 @@ jobs:
           path: parcels-unverified/
 
       # Phase 3: verify — validate against trusted context
-      - run: npx zx-bulk-release --verify parcels-unverified/
+      - run: npx zx-bulk-release --verify parcels-unverified/:parcels/
 
       # Phase 4: deliver — only verified parcels
       - run: npx zx-bulk-release --deliver

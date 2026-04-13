@@ -1,9 +1,9 @@
-export const DEFAULT_GIT_COMMITTER_NAME  = 'Semrel Extra Bot'
-export const DEFAULT_GIT_COMMITTER_EMAIL = 'semrel-extra-bot@hotmail.com'
-
 import {$, fs, path, tempy, copy} from 'zx-extra'
 import {log} from '../log.js'
 import {attempt2, attempt3, memoizeBy} from '../../util.js'
+
+export const DEFAULT_GIT_COMMITTER_NAME  = 'Semrel Extra Bot'
+export const DEFAULT_GIT_COMMITTER_EMAIL = 'semrel-extra-bot@hotmail.com'
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => {
   if (!_origin && !_cwd) throw new Error('fetchRepo requires either origin or cwd')

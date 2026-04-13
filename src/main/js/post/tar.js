@@ -1,8 +1,7 @@
 import tar from 'tar-stream'
 import crypto from 'node:crypto'
-import {fs, path} from 'zx-extra'
 import {pipeline} from 'node:stream/promises'
-import {createWriteStream, createReadStream} from 'node:fs'
+import {fs, path} from 'zx-extra'
 
 export const packTar = async (tarPath, manifest, files = []) => {
   await fs.ensureDir(path.dirname(tarPath))
@@ -20,13 +19,13 @@ export const packTar = async (tarPath, manifest, files = []) => {
   }
 
   pack.finalize()
-  await pipeline(pack, createWriteStream(tarPath))
+  await pipeline(pack, fs.createWriteStream(tarPath))
   return tarPath
 }
 
 export const hashFile = async (filePath) => {
   const hash = crypto.createHash('sha1')
-  await pipeline(createReadStream(filePath), hash)
+  await pipeline(fs.createReadStream(filePath), hash)
   return hash.digest('hex').slice(0, 6)
 }
 
@@ -68,7 +67,7 @@ export const unpackTar = async (tarPath, destDir) => {
     extract.on('error', reject)
   })
 
-  await pipeline(createReadStream(tarPath), extract)
+  await pipeline(fs.createReadStream(tarPath), extract)
   await done
   return {manifest, dir: destDir}
 }

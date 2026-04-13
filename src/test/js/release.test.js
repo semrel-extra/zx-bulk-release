@@ -1,13 +1,13 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
-import {createMock, defaultResponses} from './utils/mock.js'
+import {createSpawnMock, defaultResponses} from './utils/mock.js'
 
 const test = suite('release')
 
 test('$.log prefixes cmd entries with $.scope', async () => {
   await within(async () => {
-    const mock = createMock(defaultResponses())
+    const mock = createSpawnMock(defaultResponses())
     $.spawn = mock.spawn
     $.quiet = true
     $.verbose = false
@@ -39,7 +39,7 @@ test('$.log prefixes cmd entries with $.scope', async () => {
 
 test('$.log passes non-cmd entries through unchanged', async () => {
   await within(async () => {
-    const mock = createMock(defaultResponses())
+    const mock = createSpawnMock(defaultResponses())
     $.spawn = mock.spawn
     $.quiet = true
     $.verbose = false
@@ -63,7 +63,7 @@ test('$.log passes non-cmd entries through unchanged', async () => {
 
 test('createContext sets up report and env', async () => {
   await within(async () => {
-    const mock = createMock(defaultResponses())
+    const mock = createSpawnMock(defaultResponses())
     $.spawn = mock.spawn
     $.quiet = true
     $.verbose = false
@@ -89,7 +89,7 @@ test('createContext sets up report and env', async () => {
 
 test('run dispatches to verify mode', async () => {
   await within(async () => {
-    const mock = createMock(defaultResponses())
+    const mock = createSpawnMock(defaultResponses())
     $.spawn = mock.spawn
     $.quiet = true
     $.verbose = false

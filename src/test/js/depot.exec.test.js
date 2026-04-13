@@ -1,13 +1,13 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
-import {createMock, defaultResponses} from './utils/mock.js'
+import {createSpawnMock, defaultResponses} from './utils/mock.js'
 
 const test = suite('depot.exec')
 
 test('exec runs templated command', async () => {
   await within(async () => {
-    const mock = createMock([
+    const mock = createSpawnMock([
       ...defaultResponses(),
       [/echo build-test-pkg/, 'built'],
     ])
@@ -37,7 +37,7 @@ test('exec runs templated command', async () => {
 
 test('exec skips when command is empty', async () => {
   await within(async () => {
-    const mock = createMock(defaultResponses())
+    const mock = createSpawnMock(defaultResponses())
     $.spawn = mock.spawn
     $.quiet = true
     $.verbose = false

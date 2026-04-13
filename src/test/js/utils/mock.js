@@ -19,7 +19,7 @@ function proc(stdout = '', code = 0) {
   return p
 }
 
-export function createMock(responses = []) {
+export function createSpawnMock(responses = []) {
   const calls = []
   const spawn = (cmd, args) => {
     const command = args?.[args.length - 1] || cmd

@@ -1,7 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
-import {createMock, has} from './utils/mock.js'
+import {createSpawnMock, has} from './utils/mock.js'
 
 const test = suite('courier.semaphore')
 
@@ -10,7 +10,7 @@ const test = suite('courier.semaphore')
 
 test('tryLock pushes annotated tag and returns true on success', async () => {
   await within(async () => {
-    const mock = createMock([
+    const mock = createSpawnMock([
       [/git tag -a/, ''],
       [/git push origin/, ''],
     ])
@@ -35,7 +35,7 @@ test('tryLock pushes annotated tag and returns true on success', async () => {
 test('tryLock returns false when tag push fails', async () => {
   await within(async () => {
     // git tag -a succeeds but git push fails => error thrown => caught => return false
-    const mock = createMock([
+    const mock = createSpawnMock([
       [/git tag -a/, ''],
       [/git push origin/, '', 128],
     ])
@@ -58,7 +58,7 @@ test('tryLock returns false when tag push fails', async () => {
 
 test('unlock deletes remote tag', async () => {
   await within(async () => {
-    const mock = createMock([
+    const mock = createSpawnMock([
       [/git push origin :refs\/tags/, ''],
     ])
     $.spawn = mock.spawn
@@ -77,7 +77,7 @@ test('unlock deletes remote tag', async () => {
 
 test('signalRebuild pushes rebuild tag', async () => {
   await within(async () => {
-    const mock = createMock([
+    const mock = createSpawnMock([
       [/git tag -a/, ''],
       [/git push origin/, ''],
     ])
@@ -96,7 +96,7 @@ test('signalRebuild pushes rebuild tag', async () => {
 
 test('consumeRebuildSignal deletes rebuild tag', async () => {
   await within(async () => {
-    const mock = createMock([
+    const mock = createSpawnMock([
       [/git push origin :refs\/tags/, ''],
     ])
     $.spawn = mock.spawn

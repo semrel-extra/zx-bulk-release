@@ -2,7 +2,7 @@ import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within, fs, tempy} from 'zx-extra'
 import path from 'node:path'
-import {createMock, defaultResponses, makePkg} from './utils/mock.js'
+import {createSpawnMock, defaultResponses, makePkg} from './utils/mock.js'
 import {createGhServer} from './utils/gh-server.js'
 import ghRelease from '../../main/js/post/courier/channels/gh-release.js'
 
@@ -14,7 +14,7 @@ test.after(() => gh.close())
 const setup = (responses = []) => {
   Object.keys(gh.routes).forEach(k => delete gh.routes[k])
   gh.requests.length = 0
-  const mock = createMock([...responses, ...defaultResponses()])
+  const mock = createSpawnMock([...responses, ...defaultResponses()])
   $.spawn = mock.spawn
   $.quiet = true
   $.verbose = false
@@ -93,6 +93,42 @@ test('run uploads assets', async () => {
     await ghRelease.run(makeData(pkg), dir)
 
     assert.ok(gh.requests.some(r => r.url.includes('/uploads')))
+  })
+})
+
+test('run returns duplicate on already_exists error', async () => {
+  await within(async () => {
+    setup()
+    gh.setRoutes({
+      'POST /repos/test-org/test-repo/releases': (req, res) => {
+        res.writeHead(422, {'Content-Type': 'application/json'})
+        res.end(JSON.stringify({message: 'Validation Failed', errors: [{code: 'already_exists'}]}))
+      }
+    })
+
+    const pkg = makePkg({config: {ghToken: 'tok', ghApiUrl: gh.url, ghBasicAuth: 'x:tok'}})
+    const result = await ghRelease.run(makeData(pkg))
+    assert.is(result, 'duplicate')
+  })
+})
+
+test('run rethrows non-duplicate errors', async () => {
+  await within(async () => {
+    setup()
+    gh.setRoutes({
+      'POST /repos/test-org/test-repo/releases': (req, res) => {
+        res.writeHead(500, {'Content-Type': 'application/json'})
+        res.end(JSON.stringify({message: 'Internal Server Error'}))
+      }
+    })
+
+    const pkg = makePkg({config: {ghToken: 'tok', ghApiUrl: gh.url, ghBasicAuth: 'x:tok'}})
+    try {
+      await ghRelease.run(makeData(pkg))
+      assert.unreachable('should throw')
+    } catch (e) {
+      assert.ok(e.message)
+    }
   })
 })
 

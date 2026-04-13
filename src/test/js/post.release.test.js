@@ -1,7 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
-import {createMock, defaultResponses, has} from './utils/mock.js'
+import {createSpawnMock, defaultResponses, has} from './utils/mock.js'
 
 const test = suite('post.release')
 
@@ -25,7 +25,7 @@ test('version is exported', async () => {
 
 test('run --dryRun does not push tags', async () => {
   await within(async () => {
-    const mock = createMock(fakeMonorepoResponses())
+    const mock = createSpawnMock(fakeMonorepoResponses())
     $.spawn = mock.spawn
     $.quiet = true
     $.verbose = false
