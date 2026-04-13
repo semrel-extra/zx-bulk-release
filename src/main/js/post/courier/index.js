@@ -2,6 +2,7 @@ import {$, tempy, within, path, semver, fs} from 'zx-extra'
 import {unpackTar} from '../tar.js'
 import {log} from '../log.js'
 import {pool} from '../../util.js'
+import {traverseQueue} from '../depot/deps.js'
 import {scanDirectives, invalidateOrphans} from '../parcel/directive.js'
 import {tryLock, unlock, signalRebuild} from './semaphore.js'
 import gitTag from './channels/git-tag.js'
@@ -199,19 +200,21 @@ const deliverPkg = async (pkgName, pkg, tarMap, env, {dryRun, cwd}) => {
   return {entries, conflicts, skipped}
 }
 
-const deliverDirective = async (directive, tarMap, env, {dryRun, cwd, concurrency = 4}) => {
+const deliverDirective = async (directive, tarMap, env, {dryRun, cwd}) => {
   const entries = []
   const conflicts = []
   const skipped = []
 
-  const pkgs = directive.queue.map(name => [name, directive.packages[name]]).filter(([, pkg]) => pkg)
+  const prev = new Map(Object.entries(directive.prev || {}))
 
-  await pool(pkgs, concurrency, async ([pkgName, pkg]) => {
+  await traverseQueue({queue: directive.queue, prev, cb: async (pkgName) => {
+    const pkg = directive.packages[pkgName]
+    if (!pkg) return
     const r = await deliverPkg(pkgName, pkg, tarMap, env, {dryRun, cwd})
     entries.push(...r.entries)
     conflicts.push(...r.conflicts)
     skipped.push(...r.skipped)
-  })
+  }})
 
   return {entries, conflicts, skipped}
 }

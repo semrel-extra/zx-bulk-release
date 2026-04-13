@@ -17,6 +17,7 @@ export const buildDirective = async (ctx, packedPkgs, outputDir) => {
   const {sha, timestamp} = packedPkgs[0].ctx.git
   const packages = {}
   const parcels = []
+  const packedNames = new Set(packedPkgs.map(p => p.name))
 
   for (const pkg of packedPkgs) {
     const pkgParcels = (pkg.tars || []).map(t => path.basename(t))
@@ -29,12 +30,21 @@ export const buildDirective = async (ctx, packedPkgs, outputDir) => {
     parcels.push(...pkgParcels)
   }
 
+  // Store dependency graph for parallel delivery in topo order
+  const prev = {}
+  if (ctx.prev) {
+    for (const name of packedNames) {
+      const deps = (ctx.prev.get(name) || []).filter(d => packedNames.has(d))
+      if (deps.length) prev[name] = deps
+    }
+  }
+
   const sha7 = sha.slice(0, 7)
   const manifest = {
     channel: 'directive',
     sha, timestamp: Number(timestamp),
     queue: packedPkgs.map(p => p.name),
-    packages, parcels,
+    packages, parcels, prev,
   }
 
   const tarPath = path.join(outputDir, `parcel.${sha7}.directive.${timestamp}.tar`)
