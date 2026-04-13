@@ -1,3 +1,9 @@
+## [3.1.7](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.6...v3.1.7) (2026-04-13)
+
+### Fixes & improvements
+* perf: apply traverseQueue to delivery phase ([6f1ba58](https://github.com/semrel-extra/zx-bulk-release/commit/6f1ba58885e7739b23de1d895f80ea4680645347))
+* perf: let `--verify` accept out dir ([80015bb](https://github.com/semrel-extra/zx-bulk-release/commit/80015bb067306892bbcc969c5ee2700a256b22f4))
+
 ## [3.1.6](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.5...v3.1.6) (2026-04-13)
 
 ### Fixes & improvements
