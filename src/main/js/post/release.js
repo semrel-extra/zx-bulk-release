@@ -21,6 +21,14 @@ export const run = async ({cwd = process.cwd(), env: _env, flags = {}} = {}) => 
   log.secret(env.GH_TOKEN, env.GITHUB_TOKEN, env.NPM_TOKEN)
   log.info(`zx-bulk-release@${ZBR_VERSION}`)
 
+  const _log = $.log
+  $.log = (entry) => {
+    if (entry.kind === 'cmd' && $.scope) {
+      entry = {...entry, cmd: `[${$.scope}] ${entry.cmd}`}
+    }
+    _log(entry)
+  }
+
   if (flags.verify)  return runVerify({cwd, flags})
   if (flags.deliver) return runDeliver({env, flags})
 

@@ -1,7 +1,7 @@
 // Meta generator: builds pkg.meta payload and resolves latest-release meta from git tags / gh assets / meta branch.
 
 import {semver, $, fs, path} from 'zx-extra'
-import {fetchRepo, getTags as getGitTags, getRepo} from '../../api/git.js'
+import {fetchRepo, getTags as getGitTags, getRepo, getSha} from '../../api/git.js'
 import {fetchManifest} from '../../api/npm.js'
 import {ghGetAsset} from '../../api/gh.js'
 import {parseTag} from './tag.js'
@@ -16,7 +16,7 @@ export const prepareMeta = async (pkg) => {
   if (type === null) return
 
   const {absPath: cwd} = pkg
-  const hash = (await $.o({cwd})`git rev-parse HEAD`).toString().trim()
+  const hash = await getSha(cwd)
   pkg.meta = {
     META_VERSION: '1',
     hash,

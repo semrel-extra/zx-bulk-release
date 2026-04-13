@@ -42,9 +42,9 @@ export const contextify = async (pkg, ctx) => {
   pkg.ctx = {
     ...ctx,
     git: {
-      sha: await getSha(pkg.absPath),
-      root: await getRoot(pkg.absPath),
-      timestamp: await getCommitTimestamp(pkg.absPath),
+      sha: await getSha(ctx.cwd),
+      root: await getRoot(ctx.cwd),
+      timestamp: await getCommitTimestamp(ctx.cwd),
     },
   }
 }
