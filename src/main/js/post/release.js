@@ -38,6 +38,10 @@ export const run = async ({cwd = process.cwd(), env: _env, flags = {}} = {}) => 
 })
 
 export const createContext = async ({flags, env, cwd}) => {
+  // Ensure remote tags are up-to-date before analysis to avoid
+  // inconsistencies between receive (context) and pack (parcels).
+  try { await $({cwd, quiet: true})`git fetch origin --tags --force` } catch { /* offline / bare */ }
+
   const {packages, queue, root, prev, graphs} = await topo({cwd, flags})
   const report = createReport({packages, queue, flags})
 

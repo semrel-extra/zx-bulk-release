@@ -11,9 +11,14 @@ import {clean} from '../depot/steps/clean.js'
 import {test} from '../depot/steps/test.js'
 import {preflight} from '../depot/reconcile.js'
 import {buildDirective, PARCELS_DIR} from '../parcel/index.js'
+import {CONTEXT_FILE, readContext} from '../depot/context.js'
 
 export const runPack = async ({cwd, env, flags}, ctx) => {
   const {report, packages, queue, prev} = ctx
+
+  // When running in split pipeline (receive → pack → deliver),
+  // the context file is the source of truth for what to release.
+  const contextFilter = await loadContextFilter(cwd, flags)
 
   const forEachPkg = (cb) => traverseQueue({queue, prev, cb: (name) => within(async () => {
     $.scope = name
@@ -42,8 +47,20 @@ export const runPack = async ({cwd, env, flags}, ctx) => {
 
     const packed = []
     await forEachPkg(async (pkg) => {
-      if (!pkg.releaseType) { pkg.skipped = true; return report.setStatus('skipped', pkg.name) }
-      if (await preflight(pkg, pkg.ctx) === 'skip') { pkg.skipped = true; return report.setStatus('skipped', pkg.name) }
+      if (contextFilter) {
+        // Split pipeline: context is the source of truth
+        const ctxPkg = contextFilter[pkg.name]
+        if (!ctxPkg) { pkg.skipped = true; return report.setStatus('skipped', pkg.name) }
+        pkg.version = ctxPkg.version
+        pkg.tag = ctxPkg.tag
+        pkg.manifest.version = ctxPkg.version
+        if (!pkg.releaseType) pkg.releaseType = 'patch'
+      } else {
+        // Standalone: own analysis decides
+        if (!pkg.releaseType) { pkg.skipped = true; return report.setStatus('skipped', pkg.name) }
+        if (await preflight(pkg, pkg.ctx) === 'skip') { pkg.skipped = true; return report.setStatus('skipped', pkg.name) }
+      }
+
       if (flags.build !== false) { report.setStatus('building',  pkg.name); await build(pkg) }
       if (flags.test  !== false) { report.setStatus('testing',   pkg.name); await test(pkg)  }
       if (flags.dryRun || flags.publish === false) return report.setStatus('success', pkg.name)
@@ -66,4 +83,16 @@ export const runPack = async ({cwd, env, flags}, ctx) => {
     await clean(ctx)
   }
   report.setStatus('success').log('Great success!')
+}
+
+const loadContextFilter = async (cwd, flags) => {
+  if (!flags.pack) return null
+  try {
+    const context = await readContext(path.resolve(cwd, CONTEXT_FILE))
+    if (context.status === 'proceed') {
+      log.info(`using context as package filter (${Object.keys(context.packages).length} package(s))`)
+      return context.packages
+    }
+  } catch { /* no context file — standalone mode */ }
+  return null
 }

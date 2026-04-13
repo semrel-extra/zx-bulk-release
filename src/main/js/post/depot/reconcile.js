@@ -38,7 +38,7 @@ export const preflight = async (pkg, ctx) => {
     pkg.version = resolvePkgVersion(pkg.releaseType, latestVersion, pkg.manifest.version, pre)
     pkg.manifest.version = pkg.version
     pkg.tag = formatTag({name: pkg.name, version: pkg.version, format: pkg.config.tagFormat})
-    return 'ok'
+    return 'refetch'
   }
 
   // diverged — anomaly

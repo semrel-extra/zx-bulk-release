@@ -115,7 +115,7 @@ test('preflight: our commit is newer than remote tag — re-resolves version', a
 
   $.memo = new Map()
   const result = await preflight(pkg, ctx)
-  assert.is(result, 'ok')
+  assert.is(result, 'refetch')
   // Version should have been re-resolved past 1.0.1
   assert.ok(pkg.version !== '1.0.1', `expected version to change from 1.0.1, got ${pkg.version}`)
   assert.ok(pkg.tag !== tag, `expected tag to change from ${tag}, got ${pkg.tag}`)
