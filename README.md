@@ -1,5 +1,5 @@
 # zx-bulk-release
-> [zx](https://github.com/google/zx)-based alternative for [multi-semantic-release](https://github.com/dhoulb/multi-semantic-release)
+> A [zx](https://github.com/google/zx)-based tool for [conventional-commits](https://www.conventionalcommits.org/en/v1.0.0/)-driven secure release workflow for monorepos. Inspired by [multi-semantic-release](https://github.com/dhoulb/multi-semantic-release).
 
 [![CI](https://github.com/semrel-extra/zx-bulk-release/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/semrel-extra/zx-bulk-release/actions/workflows/ci.yml)
 [![Maintainability](https://qlty.sh/gh/semrel-extra/projects/zx-bulk-release/maintainability.svg)](https://qlty.sh/gh/semrel-extra/projects/zx-bulk-release)
@@ -18,7 +18,7 @@
 * **Coordinated delivery**: multiple release agents can safely serve the same monorepo concurrently via git-tag-based semaphores.
 
 > [!NOTE]
-> **[Migration guide v2 → v3](./MIGRATION_V2_V3.md)** | **[Delivery specification](./DELIVER_SPEC.md)** | **[Security model](./SECURITY.md)**
+> **[Migration guide v2 → v3](./docs/MIGRATION_V2_V3.md)** | **[Delivery specification](./docs/DELIVER_SPEC.md)** | **[Security model](./docs/SECURITY.md)** | **[Architecture](./docs/ARCHITECTURE.md)**
 
 ## Roadmap
 * [x] Store release metrics to `meta`.
@@ -122,7 +122,7 @@ jobs:
 ```
 
 #### Four phases: receive + pack + verify + deliver
-Maximum supply chain security. Each phase has strict trust boundaries. See [SECURITY.md](./SECURITY.md) for the threat model.
+Maximum supply chain security. Each phase has strict trust boundaries. See [SECURITY.md](./docs/SECURITY.md) for the threat model.
 
 - **receive** — runs *before* `yarn install`, consumes rebuild signals, analyzes, writes trusted context
 - **pack** — runs *after* deps install with zero credentials, builds and packs tars
@@ -405,7 +405,7 @@ parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
 ```
 The `sha7` prefix groups all parcels of one commit. `name` is the sanitized package name (`@scope/pkg` → `scope-pkg`). The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash.
 
-A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels. It contains the complete delivery map: package queue, per-package channel steps, and an authoritative list of parcel filenames. The directive enables coordinated delivery — see [DELIVER_SPEC.md](./DELIVER_SPEC.md).
+A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels. It contains the complete delivery map: package queue, per-package channel steps, and an authoritative list of parcel filenames. The directive enables coordinated delivery — see [DELIVER_SPEC.md](./docs/DELIVER_SPEC.md).
 
 The manifest contains `${{ENV_VAR}}` placeholders that are resolved by the courier at delivery time via `resolveManifest()`. This ensures credentials never touch the build phase.
 
@@ -432,7 +432,7 @@ When multiple zbr processes target the same monorepo concurrently, delivery is c
 4. **Conflict resolution** — if `git-tag` returns `conflict`, all parcels of that package are marked, and a `zbr-rebuild.{sha7}` tag signals CI to rebuild with fresh versions.
 5. **Partial delivery** — skipped parcels (missing credentials) remain valid tarballs. Another process with the right credentials can pick them up later.
 
-See [DELIVER_SPEC.md](./DELIVER_SPEC.md) for the full protocol specification.
+See [DELIVER_SPEC.md](./docs/DELIVER_SPEC.md) for the full protocol specification.
 
 ### Credential flow
 ```
