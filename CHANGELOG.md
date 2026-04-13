@@ -1,3 +1,8 @@
+## [3.1.12](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.11...v3.1.12) (2026-04-13)
+
+### Fixes & improvements
+* refactor: inline queuefy ([dcb3b36](https://github.com/semrel-extra/zx-bulk-release/commit/dcb3b3655a9200a861672be7a8d23e82110465a9))
+
 ## [3.1.11](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.10...v3.1.11) (2026-04-13)
 
 ### Fixes & improvements
