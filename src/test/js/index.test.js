@@ -1,11 +1,9 @@
-import {suite} from 'uvu'
-import * as assert from 'uvu/assert'
+import {describe, test, expect} from 'vitest'
 import {run} from '../../main/js/index.js'
 
-const test = suite('index')
+describe('index', () => {
+  test('index has proper exports', () => {
+    expect(run).toBeInstanceOf(Function)
+  })
 
-test('index has proper exports', () => {
-  assert.instance(run, Function)
 })
-
-test.run()

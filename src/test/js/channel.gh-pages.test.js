@@ -1,13 +1,11 @@
-import {suite} from 'uvu'
-import * as assert from 'uvu/assert'
+import {describe, test, expect} from 'vitest'
 import ghPages from '../../main/js/post/courier/channels/gh-pages.js'
 
-const test = suite('channel.gh-pages')
+describe('channel.gh-pages', () => {
+  test('when checks ghPages config', () => {
+    expect(ghPages.when({config: {ghPages: 'gh-pages docs'}})).toBe(true)
+    expect(ghPages.when({config: {}})).toBe(false)
+    expect(ghPages.name).toBe('gh-pages')
+  })
 
-test('when checks ghPages config', () => {
-  assert.is(ghPages.when({config: {ghPages: 'gh-pages docs'}}), true)
-  assert.is(ghPages.when({config: {}}), false)
-  assert.is(ghPages.name, 'gh-pages')
 })
-
-test.run()

@@ -1,13 +1,10 @@
-import {suite} from 'uvu'
-import * as assert from 'uvu/assert'
+import {describe, test, expect} from 'vitest'
 import changelog from '../../main/js/post/courier/channels/changelog.js'
 
-const test = suite('channel.changelog')
-
-test('when checks changelog config', () => {
-  assert.is(changelog.when({config: {changelog: 'changelog'}}), true)
-  assert.is(changelog.when({config: {}}), false)
-  assert.is(changelog.name, 'changelog')
+describe('channel.changelog', () => {
+  test('when checks changelog config', () => {
+    expect(changelog.when({config: {changelog: 'changelog'}})).toBe(true)
+    expect(changelog.when({config: {}})).toBe(false)
+    expect(changelog.name).toBe('changelog')
+  })
 })
-
-test.run()

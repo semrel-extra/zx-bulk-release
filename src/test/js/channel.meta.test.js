@@ -1,13 +1,11 @@
-import {suite} from 'uvu'
-import * as assert from 'uvu/assert'
+import {describe, test, expect} from 'vitest'
 import meta from '../../main/js/post/courier/channels/meta.js'
 
-const test = suite('channel.meta')
+describe('channel.meta', () => {
+  test('when checks meta.type config', () => {
+    expect(meta.when({config: {meta: {type: 'commit'}}})).toBe(true)
+    expect(meta.when({config: {meta: {type: null}}})).toBe(false)
+    expect(meta.name).toBe('meta')
+  })
 
-test('when checks meta.type config', () => {
-  assert.is(meta.when({config: {meta: {type: 'commit'}}}), true)
-  assert.is(meta.when({config: {meta: {type: null}}}), false)
-  assert.is(meta.name, 'meta')
 })
-
-test.run()

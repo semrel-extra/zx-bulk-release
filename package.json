@@ -19,25 +19,24 @@
   ],
   "scripts": {
     "test": "npm run test:unit",
-    "test:unit": "uvu ./src/test -i fixtures -i utils -i integration",
+    "test:unit": "vitest run --dir src/test/js --exclude '**/integration*' --exclude '**/fixtures/**' --exclude '**/utils/**'",
     "test:it": "node ./src/test/js/integration.test.js",
-    "test:cov": "c8 sh -c 'npx uvu ./src/test -i fixtures -i utils -i integration && node ./src/test/js/integration.test.js' && c8 report -r lcov",
+    "test:cov": "vitest run --coverage --dir src/test/js --exclude '**/fixtures/**' --exclude '**/utils/**'",
     "docs": "mkdir -p docs && cp ./README.md ./docs/README.md",
     "publish:beta": "npm publish --tag beta --no-git-tag-version",
     "build": "esbuild src/main/js/index.js --platform=node --outdir=target --bundle --format=esm --external:typescript"
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.14.1",
-    "cosmiconfig": "^9.0.1",
     "queuefy": "^1.2.1",
     "tar-stream": "^3.1.8",
     "zx-extra": "4.0.20"
   },
   "devDependencies": {
-    "c8": "^11.0.0",
+    "@vitest/coverage-v8": "^4.1.4",
     "esbuild": "^0.28.0",
-    "uvu": "^0.5.6",
-    "verdaccio": "6.5.0"
+    "verdaccio": "6.5.0",
+    "vitest": "^4.1.4"
   },
   "publishConfig": {
     "access": "public"
@@ -47,10 +46,5 @@
     "url": "git+https://github.com/semrel-extra/zx-bulk-release.git"
   },
   "author": "Anton Golub <antongolub@antongolub.com>",
-  "license": "MIT",
-  "c8": {
-    "exclude": [
-      "src/test/**"
-    ]
-  }
+  "license": "MIT"
 }

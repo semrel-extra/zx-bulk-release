@@ -212,8 +212,8 @@ await run({
 ```
 
 ## Config
-### cosmiconfig
-Any [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) compliant format: `.releaserc`, `.release.json`, `.release.yaml`, etc in the package root or in the repo root dir.
+### Config files
+[cosmiconfig](https://github.com/davidtheclark/cosmiconfig)-compatible lookup: `.releaserc`, `.release.json`, `.release.yaml`, `.releaserc.js`, `release.config.js`, or `release` key in `package.json`. Searched from the package root up to the repo root.
 ```json
 {
   "buildCmd": "yarn && yarn build",

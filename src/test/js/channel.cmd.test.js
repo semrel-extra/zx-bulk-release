@@ -1,28 +1,26 @@
-import {suite} from 'uvu'
-import * as assert from 'uvu/assert'
+import {describe, test, expect} from 'vitest'
 import cmd from '../../main/js/post/courier/channels/cmd.js'
 import {makePkg} from './utils/mock.js'
 
-const test = suite('channel.cmd')
+describe('channel.cmd', () => {
+  test('when checks publishCmd', () => {
+    const pkg1 = {config: {publishCmd: 'echo pub'}, ctx: {flags: {}}}
+    const pkg2 = {config: {}, ctx: {flags: {publishCmd: 'echo pub'}}}
+    const pkg3 = {config: {}, ctx: {flags: {}}}
 
-test('when checks publishCmd', () => {
-  const pkg1 = {config: {publishCmd: 'echo pub'}, ctx: {flags: {}}}
-  const pkg2 = {config: {}, ctx: {flags: {publishCmd: 'echo pub'}}}
-  const pkg3 = {config: {}, ctx: {flags: {}}}
+    expect(cmd.when(pkg1)).toBe(true)
+    expect(cmd.when(pkg2)).toBe(true)
+    expect(cmd.when(pkg3)).toBe(false)
+    expect(cmd.name).toBe('cmd')
+    expect(cmd.snapshot).toBe(true)
+  })
 
-  assert.is(cmd.when(pkg1), true)
-  assert.is(cmd.when(pkg2), true)
-  assert.is(cmd.when(pkg3), false)
-  assert.is(cmd.name, 'cmd')
-  assert.is(cmd.snapshot, true)
+  test('run calls exec with publishCmd', async () => {
+    const ran = []
+    const exec = async (pkg, name) => ran.push(name)
+    const pkg = makePkg()
+    await cmd.run(pkg, exec)
+    expect(ran.includes('publishCmd')).toBeTruthy()
+  })
+
 })
-
-test('run calls exec with publishCmd', async () => {
-  const ran = []
-  const exec = async (pkg, name) => ran.push(name)
-  const pkg = makePkg()
-  await cmd.run(pkg, exec)
-  assert.ok(ran.includes('publishCmd'))
-})
-
-test.run()

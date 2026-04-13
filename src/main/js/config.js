@@ -1,4 +1,4 @@
-import { cosmiconfig } from 'cosmiconfig'
+import { fs, path, YAML } from 'zx'
 import { asArray, camelize, memoizeBy } from './util.js'
 import { GH_URL, resolveGhApiUrl } from './post/api/gh.js'
 import { DEFAULT_GIT_COMMITTER_NAME, DEFAULT_GIT_COMMITTER_EMAIL } from './post/api/git.js'
@@ -29,12 +29,41 @@ export const defaultConfig = {
 export const getPkgConfig = async (cwd, env) =>
   normalizePkgConfig((await Promise.all(asArray(cwd).map(readPkgConfig))).find(Boolean) || defaultConfig, env)
 
-export const readPkgConfig = memoizeBy(async (cwd) => cosmiconfig(CONFIG_NAME, {
-  searchPlaces: CONFIG_FILES,
-  searchStrategy: 'global', // https://github.com/cosmiconfig/cosmiconfig/releases/tag/v9.0.0
-})
-  .search(cwd)
-  .then(r => r?.config))
+export const cosmiconfig = (name, {searchPlaces}) => {
+  const load = async (filePath) => {
+    if (filePath.endsWith('.js') || filePath.endsWith('.cjs'))
+      return (await import(filePath)).default
+    const raw = await fs.readFile(filePath, 'utf8')
+    if (filePath.endsWith('.yaml') || filePath.endsWith('.yml'))
+      return YAML.parse(raw)
+    try { return JSON.parse(raw) } catch { return YAML.parse(raw) }
+  }
+
+  const search = async (cwd) => {
+    let dir = path.resolve(cwd)
+    while (true) {
+      for (const file of searchPlaces) {
+        const filePath = path.resolve(dir, file)
+        if (!await fs.pathExists(filePath)) continue
+        if (file === 'package.json') {
+          const pkg = await fs.readJson(filePath)
+          if (pkg[name]) return pkg[name]
+          continue
+        }
+        return load(filePath)
+      }
+      const parent = path.dirname(dir)
+      if (parent === dir) return
+      dir = parent
+    }
+  }
+
+  return {search}
+}
+
+export const readPkgConfig = memoizeBy(async (cwd) =>
+  cosmiconfig(CONFIG_NAME, {searchPlaces: CONFIG_FILES}).search(cwd)
+)
 
 export const normalizePkgConfig = (config, env) => {
   const envConfig = parseEnv(env)
