@@ -49,13 +49,14 @@ export const resolveManifest = (manifest, env = process.env) => {
 
 const MARKERS = new Set(['released', 'skip', 'conflict', 'orphan'])
 
-const openParcel = async (tarPath, env) => {
+const openParcel = async (tarPath, env, {cwd} = {}) => {
   const content = await fs.readFile(tarPath, 'utf8').catch(() => null)
   if (MARKERS.has(content)) return null
 
   const destDir = tempy.temporaryDirectory()
   const {manifest} = await unpackTar(tarPath, destDir)
   const resolved = resolveManifest(manifest, env)
+  if (cwd) resolved.cwd = cwd
   const ch = channels[resolved.channel]
 
   if (!ch) return {warn: `unknown channel '${resolved.channel || '<none>'}'`}
@@ -67,14 +68,14 @@ const openParcel = async (tarPath, env) => {
   return {ch, resolved, destDir, tarPath}
 }
 
-export const inspect = async (tars, env = process.env) => {
+export const inspect = async (tars, env = process.env, {cwd} = {}) => {
   const parcels = []
   const skipped = []
 
   for (const tarPath of tars) {
     const fname = path.basename(tarPath)
     try {
-      const p = await openParcel(tarPath, env)
+      const p = await openParcel(tarPath, env, {cwd})
       if (!p) continue
       if (p.warn) {
         skipped.push({file: fname, reason: p.warn, tarPath: p.tarPath})
@@ -100,8 +101,8 @@ export const inspect = async (tars, env = process.env) => {
 
 // --- Legacy deliver (no directive) ---
 
-const deliverLegacy = async (tars, env, {concurrency, dryRun}) => {
-  const {groups, skipped, total, pending} = await inspect(tars, env)
+const deliverLegacy = async (tars, env, {concurrency, dryRun, cwd}) => {
+  const {groups, skipped, total, pending} = await inspect(tars, env, {cwd})
 
   for (const {file, reason, tarPath} of skipped) {
     log.warn(`skipping ${file}: ${reason}`)
@@ -135,8 +136,8 @@ const deliverLegacy = async (tars, env, {concurrency, dryRun}) => {
 
 // --- Directive-aware deliver ---
 
-const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRun}) => {
-  const p = await openParcel(tarPath, env)
+const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRun, cwd}) => {
+  const p = await openParcel(tarPath, env, {cwd})
   if (!p) return 'already'
   if (p.warn) {
     log.warn(`skipping ${p.warn}`)
@@ -159,7 +160,7 @@ const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRu
   return res === 'duplicate' ? 'duplicate' : 'ok'
 }
 
-const deliverDirective = async (directive, tarMap, env, {dryRun}) => {
+const deliverDirective = async (directive, tarMap, env, {dryRun, cwd}) => {
   const entries = []
   const conflicts = []
   const skipped = []
@@ -178,7 +179,7 @@ const deliverDirective = async (directive, tarMap, env, {dryRun}) => {
         const tarPath = parcelName && tarMap.get(parcelName)
         if (!tarPath) return 'missing'
 
-        return deliverParcel(tarPath, channelName, pkgName, pkg.version, env, {dryRun})
+        return deliverParcel(tarPath, channelName, pkgName, pkg.version, env, {dryRun, cwd})
       }))
 
       for (let i = 0; i < step.length; i++) {
@@ -209,7 +210,7 @@ export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun 
   const dir = tars.length ? path.dirname(tars[0]) : null
   const directives = dir ? await scanDirectives(dir) : []
 
-  if (!directives.length) return deliverLegacy(tars, env, {concurrency, dryRun})
+  if (!directives.length) return deliverLegacy(tars, env, {concurrency, dryRun, cwd})
 
   const tarMap = new Map(tars.map(t => [path.basename(t), t]))
   const allEntries = []
@@ -225,7 +226,7 @@ export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun 
 
     try {
       await invalidateOrphans(dir, directive)
-      const {entries, conflicts, skipped} = await deliverDirective(directive, tarMap, env, {dryRun})
+      const {entries, conflicts, skipped} = await deliverDirective(directive, tarMap, env, {dryRun, cwd: gitRoot})
       allEntries.push(...entries)
       allConflicts.push(...conflicts)
       allSkipped.push(...skipped)

@@ -104,12 +104,12 @@ export const getTags = memoizeBy(
   async (cwd, ref = '*') => `${await getRoot(cwd)}:${ref}`,
 )
 
-export const pushTag = async ({cwd, tag, gitCommitterName, gitCommitterEmail}) => {
+export const pushTag = async ({cwd, tag, sha, gitCommitterName, gitCommitterEmail}) => {
   await setUserConfig(cwd, gitCommitterName, gitCommitterEmail)
 
-  await $({cwd})`
-    git tag -m ${tag} ${tag} &&
-    git push origin ${tag}`
+  const target = sha ? [sha] : []
+  await $({cwd})`git tag -m ${tag} ${tag} ${target}`
+  await $({cwd})`git push origin ${tag}`
 }
 
 // Memoize prevents .git/config lock

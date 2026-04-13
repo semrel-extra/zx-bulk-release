@@ -14,7 +14,7 @@ const entry = {
     manifest: {
       channel: 'git-tag',
       name: pkg.name, version: pkg.version, tag: pkg.tag,
-      cwd: ctx.git.root,
+      cwd: ctx.git.root, sha: ctx.git.sha,
       gitCommitterName: '${{GIT_COMMITTER_NAME}}',
       gitCommitterEmail: '${{GIT_COMMITTER_EMAIL}}',
     },
