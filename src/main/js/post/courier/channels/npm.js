@@ -1,5 +1,5 @@
 import {path} from 'zx-extra'
-import {npmPublish} from '../../api/npm.js'
+import {api} from '../../api/index.js'
 
 export const isNpmPublished = (pkg) =>
   !pkg.manifest.private && pkg.config.npmPublish !== false
@@ -9,7 +9,7 @@ const isDuplicate = (e) =>
 
 const run = async (manifest, dir) => {
   try {
-    await npmPublish({
+    await api.npm.npmPublish({
       name: manifest.name,
       version: manifest.version,
       npmTarball: path.join(dir, 'package.tgz'),

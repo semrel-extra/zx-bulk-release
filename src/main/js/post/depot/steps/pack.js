@@ -1,12 +1,10 @@
 import crypto from 'node:crypto'
 import {$, tempy, fs, path} from 'zx-extra'
 import {memoizeBy, asTuple} from '../../../util.js'
+import {api} from '../../api/index.js'
 import {prepare, getActiveChannels} from '../../courier/index.js'
 import {buildParcels, PARCELS_DIR} from '../../parcel/index.js'
-import {npmPersist} from '../../api/npm.js'
-import {getRepo} from '../../api/git.js'
 import {formatReleaseNotes} from '../generators/notes.js'
-import {ghPrepareAssets} from '../../api/gh.js'
 import {packTar, hashFile} from '../../tar.js'
 
 export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
@@ -15,12 +13,12 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const active = getActiveChannels(pkg, channelNames, snapshot)
 
   await prepare(active, pkg)
-  await npmPersist(pkg)
+  await api.npm.npmPersist(pkg)
 
   const outputDir = flags.pack ? path.resolve(ctx.git.root, typeof flags.pack === 'string' ? flags.pack : PARCELS_DIR) : null
   const stageDir = outputDir || tempy.temporaryDirectory()
   if (outputDir) await fs.ensureDir(outputDir)
-  const {repoName, repoHost, originUrl} = await getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})
+  const {repoName, repoHost, originUrl} = await api.git.getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})
   const artifacts = {repoName, repoHost, originUrl}
 
   if (active.includes('npm')) {
@@ -35,7 +33,7 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
     await fs.copy(path.join(pkg.absPath, from), artifacts.docsDir)
   }
   if (active.includes('gh-release') && pkg.config.ghAssets?.length)
-    artifacts.assetsDir = await ghPrepareAssets(pkg.config.ghAssets, pkg.absPath)
+    artifacts.assetsDir = await api.gh.ghPrepareAssets(pkg.config.ghAssets, pkg.absPath)
 
   const parcels = buildParcels(pkg, ctx, {channels: active, ...artifacts})
 

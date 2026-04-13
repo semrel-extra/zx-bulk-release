@@ -111,6 +111,7 @@ export const makeCtx = (overrides = {}) => ({
   graphs: overrides.graphs ?? {},
   report: overrides.report ?? makeReport(),
   channels: overrides.channels ?? [],
+
   run: overrides.run ?? (async () => {}),
   git: {sha: 'abc1234567890', root: tmpDir, timestamp: '1700000000', ...overrides.git},
 })

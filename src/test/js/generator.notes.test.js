@@ -1,7 +1,7 @@
 import {suite} from 'uvu'
 import * as assert from 'uvu/assert'
 import {$, within} from 'zx-extra'
-import {createMock, defaultResponses} from './utils/mock.js'
+import {createMock, defaultResponses, makeCtx} from './utils/mock.js'
 import {interpolate, DIFF_TAG_URL, DIFF_COMMIT_URL} from '../../main/js/post/depot/generators/notes.js'
 
 const test = suite('generator.notes')
@@ -17,6 +17,7 @@ test('formatReleaseNotes generates markdown', async () => {
 
     const {formatReleaseNotes} = await import(`../../main/js/post/depot/generators/notes.js?t=${Date.now()}`)
 
+    const ctx = makeCtx()
     const pkg = {
       name: 'test-pkg',
       version: '1.0.1',
@@ -27,6 +28,7 @@ test('formatReleaseNotes generates markdown', async () => {
         {group: 'Features', releaseType: 'minor', change: 'feat: new', subj: 'feat: new', short: 'def5678', hash: 'def5678full'},
       ],
       latest: {tag: {ref: 'v1.0.0'}},
+      ctx,
     }
 
     const notes = await formatReleaseNotes(pkg)

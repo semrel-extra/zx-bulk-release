@@ -1,5 +1,6 @@
 import {$, within} from 'zx-extra'
 
+import {api} from '../api/index.js'
 import {log} from '../log.js'
 import {traverseQueue} from '../depot/deps.js'
 import {contextify} from '../depot/steps/contextify.js'
@@ -9,21 +10,18 @@ import {preflight} from '../depot/reconcile.js'
 import {consumeRebuildSignal} from '../courier/semaphore.js'
 import {getActiveChannels} from '../courier/index.js'
 import {writeContext, buildContext} from '../depot/context.js'
-import {getSha} from '../api/git.js'
-import {setOutput, isRebuildTrigger} from '../api/gh.js'
-
 export const runReceive = async ({cwd, env, flags}, ctx) => {
   const {report, packages, queue, prev} = ctx
 
-  const sha = await getSha(cwd)
+  const sha = await api.git.getSha(cwd)
   const sha7 = sha.slice(0, 7)
 
-  if (isRebuildTrigger(env) && !flags.dryRun) {
+  if (api.gh.isRebuildTrigger(env) && !flags.dryRun) {
     const result = await consumeRebuildSignal(cwd, sha)
     if (result?.exitCode !== 0 && result?.stderr?.includes('remote ref does not exist')) {
       log.info(`rebuild signal already consumed by another process`)
       await writeContext(cwd, {status: 'skip', reason: 'rebuild claimed by another process'})
-      setOutput('status', 'skip')
+      api.gh.setOutput('status', 'skip')
       return report.setStatus('success')
     }
     log.info(`consumed rebuild signal for ${sha7}`)
@@ -56,10 +54,10 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
     if (count === 0) {
       log.info('nothing to release')
       await writeContext(cwd, {status: 'skip', reason: 'nothing to release'})
-      setOutput('status', 'skip')
+      api.gh.setOutput('status', 'skip')
     } else {
       log.info(`${count} package(s) to release`)
-      setOutput('status', 'proceed')
+      api.gh.setOutput('status', 'proceed')
     }
   } catch (e) {
     report.error(e, e.stack).setStatus('failure')

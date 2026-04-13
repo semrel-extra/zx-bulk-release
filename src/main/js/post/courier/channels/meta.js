@@ -1,6 +1,6 @@
 import {queuefy} from 'queuefy'
 import {log} from '../../log.js'
-import {pushCommit} from '../../api/git.js'
+import {api} from '../../api/index.js'
 import {getArtifactPath, isAssetMode, prepareMeta} from '../../depot/generators/meta.js'
 import {hasHigherVersion} from '../seniority.js'
 
@@ -18,7 +18,7 @@ const pushMetaBranch = queuefy(async (manifest, dir) => {
   const msg = `chore: release meta ${name} ${version}`
   const files = [{relpath: `${getArtifactPath(tag)}.json`, contents: meta}]
 
-  await pushCommit({
+  await api.git.pushCommit({
     to: '.',
     branch: 'meta',
     msg,

@@ -1,5 +1,5 @@
 import {memoizeBy} from '../../../util.js'
-import {fetchPkg} from '../../api/npm.js'
+import {api} from '../../api/index.js'
 import {traverseDeps} from '../deps.js'
 import {exec} from '../exec.js'
 
@@ -8,7 +8,7 @@ export const build = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   await Promise.all([
     traverseDeps({pkg, packages, cb: ({pkg}) => build(pkg, ctx)}),
     pkg.manifest.private !== true && pkg.changes.length === 0 && pkg.config.npmFetch && flags.npmFetch !== false
-      ? fetchPkg(pkg)
+      ? api.npm.fetchPkg(pkg)
       : Promise.resolve()
   ])
 

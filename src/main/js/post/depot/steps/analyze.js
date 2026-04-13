@@ -1,6 +1,6 @@
 import {semver} from 'zx-extra'
+import {api} from '../../api/index.js'
 import {log} from '../../log.js'
-import {getCommits} from '../../api/git.js'
 import {updateDeps} from '../deps.js'
 import {formatTag} from '../generators/tag.js'
 
@@ -41,7 +41,7 @@ export const semanticRules = [
 ]
 
 export const getSemanticChanges = async (cwd, from, to, rules = semanticRules) => {
-  const commits = await getCommits(cwd, from, to)
+  const commits = await api.git.getCommits(cwd, from, to)
 
   return analyzeCommits(commits, rules)
 }

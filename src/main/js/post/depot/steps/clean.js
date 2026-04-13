@@ -1,7 +1,6 @@
-import {unsetUserConfig} from '../../api/git.js'
-import {npmRestore} from '../../api/npm.js'
+import {api} from '../../api/index.js'
 
 export const clean = async ({cwd, packages}) => {
-  await unsetUserConfig(cwd)
-  await Promise.all(Object.values(packages).filter(p => !p.skipped).map(npmRestore))
+  await api.git.unsetUserConfig(cwd)
+  await Promise.all(Object.values(packages).filter(p => !p.skipped).map(api.npm.npmRestore))
 }

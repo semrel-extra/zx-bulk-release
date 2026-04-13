@@ -1,9 +1,7 @@
 // Meta generator: builds pkg.meta payload and resolves latest-release meta from git tags / gh assets / meta branch.
 
 import {semver, $, fs, path} from 'zx-extra'
-import {fetchRepo, getTags as getGitTags, getRepo, getSha} from '../../api/git.js'
-import {fetchManifest} from '../../api/npm.js'
-import {ghGetAsset} from '../../api/gh.js'
+import {api} from '../../api/index.js'
 import {parseTag} from './tag.js'
 
 export const isAssetMode = (type) => type === 'asset' || type === 'assets'
@@ -16,7 +14,7 @@ export const prepareMeta = async (pkg) => {
   if (type === null) return
 
   const {absPath: cwd} = pkg
-  const hash = await getSha(cwd)
+  const hash = await api.git.getSha(cwd)
   pkg.meta = {
     META_VERSION: '1',
     hash,
@@ -45,7 +43,7 @@ export const getLatest = async (pkg) => {
 }
 
 export const getTags = async (cwd, ref) =>
-  (await getGitTags(cwd, ref))
+  (await api.git.getTags(cwd, ref))
     .map(tag => parseTag(tag.trim()))
     .filter(Boolean)
     .sort((a, b) => semver.rcompare(a.version, b.version))
@@ -61,14 +59,14 @@ export const getArtifactPath = (tag) => tag.toLowerCase().replace(/[^a-z0-9-]/g,
 export const getLatestMeta = async (pkg, tag) => {
   if (tag) {
     const {absPath: cwd, config: {ghBasicAuth: basicAuth, ghUrl}} = pkg
-    const {repoName} = await getRepo(cwd, {basicAuth})
+    const {repoName} = await api.git.getRepo(cwd, {basicAuth})
 
     try {
-      return JSON.parse(await ghGetAsset({repoName, tag, name: 'meta.json', ghUrl}))
+      return JSON.parse(await api.gh.ghGetAsset({repoName, tag, name: 'meta.json', ghUrl}))
     } catch {}
 
     try {
-      const _cwd = await fetchRepo({cwd, branch: 'meta', basicAuth})
+      const _cwd = await api.git.fetchRepo({cwd, branch: 'meta', basicAuth})
       return await Promise.any([
         fs.readJson(path.resolve(_cwd, `${getArtifactPath(tag)}.json`)),
         fs.readJson(path.resolve(_cwd, getArtifactPath(tag), 'meta.json'))
@@ -76,5 +74,5 @@ export const getLatestMeta = async (pkg, tag) => {
     } catch {}
   }
 
-  return fetchManifest(pkg, {nothrow: true})
+  return api.npm.fetchManifest(pkg, {nothrow: true})
 }

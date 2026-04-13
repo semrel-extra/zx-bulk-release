@@ -1,4 +1,4 @@
-import {pushAnnotatedTag, deleteRemoteTag} from '../api/git.js'
+import {api} from '../api/index.js'
 
 const tagName = ({sha}) =>
   `zbr-deliver.${sha.slice(0, 7)}`
@@ -11,7 +11,7 @@ export const tryLock = async (cwd, directive) => {
     packages: directive.queue,
   })
   try {
-    await pushAnnotatedTag(cwd, tag, body)
+    await api.git.pushAnnotatedTag(cwd, tag, body)
     return true
   } catch {
     return false
@@ -19,13 +19,13 @@ export const tryLock = async (cwd, directive) => {
 }
 
 export const unlock = async (cwd, directive) => {
-  await deleteRemoteTag(cwd, tagName(directive))
+  await api.git.deleteRemoteTag(cwd, tagName(directive))
 }
 
 export const signalRebuild = async (cwd, sha) => {
   const tag = `zbr-rebuild.${sha.slice(0, 7)}`
-  try { await pushAnnotatedTag(cwd, tag, 'rebuild') } catch { /* already signaled */ }
+  try { await api.git.pushAnnotatedTag(cwd, tag, 'rebuild') } catch { /* already signaled */ }
 }
 
 export const consumeRebuildSignal = async (cwd, sha) =>
-  deleteRemoteTag(cwd, `zbr-rebuild.${sha.slice(0, 7)}`)
+  api.git.deleteRemoteTag(cwd, `zbr-rebuild.${sha.slice(0, 7)}`)

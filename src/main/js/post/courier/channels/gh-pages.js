@@ -1,7 +1,7 @@
 import {path} from 'zx-extra'
 import {queuefy} from 'queuefy'
 import {log} from '../../log.js'
-import {pushCommit} from '../../api/git.js'
+import {api} from '../../api/index.js'
 import {hasHigherVersion} from '../seniority.js'
 
 const run = queuefy(async (manifest, dir) => {
@@ -15,7 +15,7 @@ const run = queuefy(async (manifest, dir) => {
 
   log.info(`publish docs to ${branch}`)
 
-  await pushCommit({
+  await api.git.pushCommit({
     cwd: docsDir,
     from: '.',
     to,

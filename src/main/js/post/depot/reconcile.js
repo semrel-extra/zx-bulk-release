@@ -1,6 +1,6 @@
 import {$} from 'zx-extra'
+import {api} from '../api/index.js'
 import {log} from '../log.js'
-import {getRemoteTagSha, clearTagsCache} from '../api/git.js'
 import {formatTag} from './generators/tag.js'
 import {resolvePkgVersion} from './steps/analyze.js'
 
@@ -8,7 +8,7 @@ export const preflight = async (pkg, ctx) => {
   if (!pkg.tag) return 'ok'
 
   const cwd = ctx.git.root
-  const remoteSha = await getRemoteTagSha(cwd, pkg.tag)
+  const remoteSha = await api.git.getRemoteTagSha(cwd, pkg.tag)
   if (!remoteSha) return 'ok'
 
   // tag exists on remote
@@ -30,7 +30,7 @@ export const preflight = async (pkg, ctx) => {
   if (isRemoteOlder.exitCode === 0) {
     log.info(`preflight: ${pkg.tag} — we are newer, re-resolving version`)
     await $({cwd})`git fetch origin --tags --force`
-    clearTagsCache()
+    api.git.clearTagsCache()
 
     const pre = ctx.flags.snapshot ? `-snap.${ctx.git.sha.slice(0, 7)}` : undefined
     // re-resolve: the fetched tags will give us a new latest version

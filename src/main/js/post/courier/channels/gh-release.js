@@ -1,6 +1,6 @@
 import {fs, path} from 'zx-extra'
 import {log} from '../../log.js'
-import {ghCreateRelease, ghFetch} from '../../api/gh.js'
+import {api} from '../../api/index.js'
 
 const isDuplicate = (e) =>
   /already_exists|Validation Failed|422/i.test(e?.message || e?.stderr || '')
@@ -14,7 +14,7 @@ const run = async (manifest, dir) => {
 
   let res
   try {
-    res = await ghCreateRelease({ghApiUrl: apiUrl, ghToken: token, repoName, tag, body: releaseNotes})
+    res = await api.gh.ghCreateRelease({ghApiUrl: apiUrl, ghToken: token, repoName, tag, body: releaseNotes})
   } catch (e) {
     if (isDuplicate(e)) return 'duplicate'
     throw e
@@ -27,7 +27,7 @@ const run = async (manifest, dir) => {
       await Promise.all(assets.map(async ({name}) => {
         const url = `${uploadUrl}?name=${name}`
         const body = await fs.readFile(path.join(assetsDir, name))
-        const r = await ghFetch(url, {ghToken: token, method: 'POST', headers: {'Content-Type': 'application/octet-stream'}, body})
+        const r = await api.gh.ghFetch(url, {ghToken: token, method: 'POST', headers: {'Content-Type': 'application/octet-stream'}, body})
         if (!r.ok) throw new Error(`gh asset upload failed for '${name}': ${r.status}`)
       }))
     }
