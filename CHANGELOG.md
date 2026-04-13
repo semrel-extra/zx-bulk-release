@@ -1,3 +1,10 @@
+## [3.1.2](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.1...v3.1.2) (2026-04-13)
+
+### Fixes & improvements
+* perf: append pkg scope to internal zx logs ([08471b9](https://github.com/semrel-extra/zx-bulk-release/commit/08471b9c87d9ef2bf24b30a99977c308cee1feaf))
+* perf: update default zx ctx file name ([9857dcd](https://github.com/semrel-extra/zx-bulk-release/commit/9857dcdcf9d1e5221eb3fc62f4919a8af2b885fc))
+* refactor: enhance cli ([8909ab2](https://github.com/semrel-extra/zx-bulk-release/commit/8909ab2496402102b33fa134275ac415b6d8297a))
+
 ## [3.1.1](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.0...v3.1.1) (2026-04-12)
 
 ### Fixes & improvements
