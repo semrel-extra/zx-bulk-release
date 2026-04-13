@@ -1,3 +1,8 @@
+## [3.1.6](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.5...v3.1.6) (2026-04-13)
+
+### Fixes & improvements
+* fix: pack uses channel list from context instead of re-evaluating ([0fecefa](https://github.com/semrel-extra/zx-bulk-release/commit/0fecefab3549da98e24d42a2e1b4c7bb1b24b4c9))
+
 ## [3.1.5](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.4...v3.1.5) (2026-04-13)
 
 ### Fixes & improvements
