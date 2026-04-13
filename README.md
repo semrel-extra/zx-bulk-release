@@ -437,8 +437,8 @@ See [DELIVER_SPEC.md](./docs/DELIVER_SPEC.md) for the full protocol specificatio
 ### Credential flow
 ```
 depot (build phase)                          courier (deliver phase)
-  manifest: { token: '${{NPM_TOKEN}}' }  →    resolveManifest(manifest, env)
-                                                 → { token: 'actual-secret' }
+  manifest: { token: '${{NPM_TOKEN}}' }  ->   resolveManifest(manifest, env)
+                                                 -> { token: 'actual-secret' }
 ```
 Template credentials (`${{ENV_VAR}}`) are written into manifests at pack time. Courier resolves them from `process.env` at delivery time. This means the build phase never sees real secrets — including git push credentials (`GH_TOKEN`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`) which are now resolved by the `git-tag` channel at delivery time.
 

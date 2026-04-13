@@ -14,13 +14,13 @@ A monorepo release is like sending packages through a post office:
 
 ```
 depot                    parcel                   courier
-  ┌──────────────┐         ┌──────────────┐         ┌─────────────────┐
-  │ analyze      │         │ manifest.json│         │ resolve creds   │
-  │ resolve deps │───tar──▶│ + files      │───env──▶│ validate reqs   │
-  │ build / test │         │ (no secrets) │         │ run channels    │
-  └──────────────┘         └──────────────┘         └─────────────────┘
-        ▲                        ▲                        │
-        │                   directive                     ▼
+  +--------------+         +--------------+         +-----------------+
+  | analyze      |         | manifest.json|         | resolve creds   |
+  | resolve deps |---tar-->| + files      |---env-->| validate reqs   |
+  | build / test |         | (no secrets) |         | run channels    |
+  +--------------+         +--------------+         +-----------------+
+        ^                        ^                        |
+        |                   directive                     v
      context              (shipping list)            npm, git, gh
 ```
 
@@ -33,9 +33,9 @@ Before any work begins, zbr builds a dependency graph of all workspace packages 
 - **Delivery order** — the directive encodes the same topological queue. The courier delivers packages in dependency order so that a consumer is never published before its dependency.
 
 ```
-a ──▶ b ──▶ d
-      ▲
-c ────┘
+a --> b --> d
+      ^
+c ----'
 
 queue: [[a, c], [b], [d]]
          ^^^^ parallel
@@ -243,18 +243,18 @@ The courier reads from the verified directory. `scanDirectives()` finds directiv
 
 ```
 build job                        deliver job
-─────────                        ──────────
-parcels/                    ┌──▶ parcels-unverified/
-  parcel.abc1234.npm...tar  │      (downloaded artifact)
-  parcel.abc1234.git-tag..  │           │
-  parcel.abc1234.directive. │      --verify in:out
-  (untrusted)               │           │
-        │                   │    parcels/
-   upload artifact ─────────┘      parcel.abc1234.npm...tar  ✓
-                                   parcel.abc1234.git-tag..  ✓
-                                   parcel.abc1234.directive.  ✓
-                                   (injected.tar → rejected)
-                                        │
+---------                        ----------
+parcels/                    +--> parcels-unverified/
+  parcel.abc1234.npm...tar  |      (downloaded artifact)
+  parcel.abc1234.git-tag..  |           |
+  parcel.abc1234.directive. |      --verify in:out
+  (untrusted)               |           |
+        |                   |    parcels/
+   upload artifact ---------'      parcel.abc1234.npm...tar  ok
+                                   parcel.abc1234.git-tag..  ok
+                                   parcel.abc1234.directive.  ok
+                                   (injected.tar -> rejected)
+                                        |
                                    --deliver
                                    (credentials resolved, channels run)
 ```

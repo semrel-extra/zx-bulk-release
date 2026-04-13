@@ -28,27 +28,27 @@ Traditional release tools run everything in a single process with full credentia
 The pipeline is split into phases with strict trust boundaries:
 
 ```
-┌───────────────────────────────────────────────────┐
-│  build job (untrusted after yarn install)          │
-│                                                    │
-│  1. checkout                                       │
-│  2. zbr --receive         ← GH_TOKEN (safe,       │
-│  3. upload context           before deps)          │
-│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
-│  4. yarn install          ← TRUST BOUNDARY         │
-│  5. zbr --pack            ← zero creds             │
-│  6. upload parcels        ← untrusted output       │
-└───────────────────────────────────────────────────┘
-                      ↓ artifacts
-┌───────────────────────────────────────────────────┐
-│  deliver job (trusted, clean runner)               │
-│                                                    │
-│  1. download context      ← trusted (pre-deps)    │
-│  2. download parcels      ← untrusted             │
-│  3. zbr --deliver                                  │
-│     verify parcels against trusted context         │
-│     then deliver          ← GH_TOKEN, NPM_TOKEN   │
-└───────────────────────────────────────────────────┘
++-----------------------------------------------------+
+|  build job (untrusted after yarn install)           |
+|                                                     |
+|  1. checkout                                        |
+|  2. zbr --receive         <- GH_TOKEN (safe,        |
+|  3. upload context           before deps)           |
+|  - - - - - - - - - - - - - - - - - - - - - - - -    |
+|  4. yarn install          <- TRUST BOUNDARY         |
+|  5. zbr --pack            <- zero creds             |
+|  6. upload parcels        <- untrusted output       |
++-----------------------------------------------------+
+                       v artifacts
++-----------------------------------------------------+
+|  deliver job (trusted, clean runner)                |
+|                                                     |
+|  1. download context      <- trusted (pre-deps)     |
+|  2. download parcels      <- untrusted              |
+|  3. zbr --deliver                                   |
+|     verify parcels against trusted context          |
+|     then deliver          <- GH_TOKEN, NPM_TOKEN    |
++-----------------------------------------------------+
 ```
 
 ### What each boundary prevents
@@ -168,7 +168,7 @@ jobs:
           path: parcels-unverified/
 
       # Phase 3: verify — validate against trusted context
-      - run: npx zx-bulk-release --verify parcels-unverified/
+      - run: npx zx-bulk-release --verify parcels-unverified/:parcels/
 
       # Phase 4: deliver — only verified parcels
       - run: npx zx-bulk-release --deliver
