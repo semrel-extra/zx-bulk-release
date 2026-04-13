@@ -1,3 +1,8 @@
+## [3.1.10](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.9...v3.1.10) (2026-04-13)
+
+### Fixes & improvements
+* docs: add architecture notes ([8760bb8](https://github.com/semrel-extra/zx-bulk-release/commit/8760bb8b9a73593ae192a0d16eea10b731efd206))
+
 ## [3.1.9](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.8...v3.1.9) (2026-04-13)
 
 ### Fixes & improvements
