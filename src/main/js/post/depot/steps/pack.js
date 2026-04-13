@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import {$, tempy, fs, path} from 'zx-extra'
 import {memoizeBy, asTuple} from '../../../util.js'
 import {prepare, getActiveChannels} from '../../courier/index.js'
@@ -41,7 +42,7 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const tars = []
   for (const {channel, manifest, files} of parcels) {
     // Two-pass: pack to temp, hash, rename to final name.
-    const tmpPath = path.join(stageDir, `_tmp.${channel}.tar`)
+    const tmpPath = path.join(stageDir, `_tmp.${crypto.randomUUID()}.tar`)
     await packTar(tmpPath, manifest, files)
     const hash = await hashFile(tmpPath)
     const sha7 = ctx.git.sha.slice(0, 7)

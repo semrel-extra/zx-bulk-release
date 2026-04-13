@@ -5,6 +5,7 @@ import {pipeline} from 'node:stream/promises'
 import {createWriteStream, createReadStream} from 'node:fs'
 
 export const packTar = async (tarPath, manifest, files = []) => {
+  await fs.ensureDir(path.dirname(tarPath))
   const pack = tar.pack()
   const json = JSON.stringify(manifest, null, 2)
   pack.entry({name: 'manifest.json', size: Buffer.byteLength(json)}, json)
