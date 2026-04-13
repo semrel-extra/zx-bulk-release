@@ -1,7 +1,7 @@
 import os from 'node:os'
 import {createRequire} from 'node:module'
 import {$, within} from 'zx-extra'
-import {queuefy} from 'queuefy'
+import {queuefy} from '../util.js'
 
 import {createReport, log} from './log.js'
 import {topo} from './depot/deps.js'

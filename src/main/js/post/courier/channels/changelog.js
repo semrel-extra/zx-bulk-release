@@ -1,5 +1,5 @@
 import {fs, path} from 'zx-extra'
-import {queuefy} from 'queuefy'
+import {queuefy} from '../../../util.js'
 import {api} from '../../api/index.js'
 import {log} from '../../log.js'
 import {hasHigherVersion} from '../seniority.js'

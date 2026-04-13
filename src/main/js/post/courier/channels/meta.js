@@ -1,4 +1,4 @@
-import {queuefy} from 'queuefy'
+import {queuefy} from '../../../util.js'
 import {log} from '../../log.js'
 import {api} from '../../api/index.js'
 import {getArtifactPath, isAssetMode, prepareMeta} from '../../depot/generators/meta.js'

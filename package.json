@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.14.1",
-    "queuefy": "^1.2.1",
     "tar-stream": "^3.1.8",
     "zx-extra": "4.0.20"
   },
