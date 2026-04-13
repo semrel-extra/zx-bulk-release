@@ -120,7 +120,6 @@ storage
 *.cert
 
 # Bundles
-docs
 target
 
 # yarn
