@@ -160,46 +160,58 @@ const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRu
   return res === 'duplicate' ? 'duplicate' : 'ok'
 }
 
-const deliverDirective = async (directive, tarMap, env, {dryRun, cwd}) => {
+const deliverPkg = async (pkgName, pkg, tarMap, env, {dryRun, cwd}) => {
   const entries = []
   const conflicts = []
   const skipped = []
 
-  for (const pkgName of directive.queue) {
-    const pkg = directive.packages[pkgName]
-    if (!pkg) continue
+  let pkgConflict = false
 
-    let pkgConflict = false
+  for (const step of pkg.deliver) {
+    if (pkgConflict) break
 
-    for (const step of pkg.deliver) {
-      if (pkgConflict) break
+    const results = await Promise.all(step.map(async (channelName) => {
+      const parcelName = (pkg.parcels || []).find(p => p.includes(`.${channelName}.`))
+      const tarPath = parcelName && tarMap.get(parcelName)
+      if (!tarPath) return 'missing'
 
-      const results = await Promise.all(step.map(async (channelName) => {
-        const parcelName = (pkg.parcels || []).find(p => p.includes(`.${channelName}.`))
-        const tarPath = parcelName && tarMap.get(parcelName)
-        if (!tarPath) return 'missing'
+      return deliverParcel(tarPath, channelName, pkgName, pkg.version, env, {dryRun, cwd})
+    }))
 
-        return deliverParcel(tarPath, channelName, pkgName, pkg.version, env, {dryRun, cwd})
-      }))
+    for (let i = 0; i < step.length; i++) {
+      const r = results[i]
+      if (r === 'skip') skipped.push({channelName: step[i], pkg: pkgName})
+      else if (r !== 'missing' && r !== 'already') entries.push({channel: step[i], name: pkgName, version: pkg.version})
+    }
 
-      for (let i = 0; i < step.length; i++) {
-        const r = results[i]
-        if (r === 'skip') skipped.push({channelName: step[i], pkg: pkgName})
-        else if (r !== 'missing' && r !== 'already') entries.push({channel: step[i], name: pkgName, version: pkg.version})
-      }
-
-      if (results.includes('conflict')) {
-        pkgConflict = true
-        conflicts.push(pkgName)
-        for (const p of pkg.parcels || []) {
-          const tp = tarMap.get(p)
-          if (!tp) continue
-          const c = await fs.readFile(tp, 'utf8').catch(() => null)
-          if (c !== 'released') await fs.writeFile(tp, 'conflict')
-        }
+    if (results.includes('conflict')) {
+      pkgConflict = true
+      conflicts.push(pkgName)
+      for (const p of pkg.parcels || []) {
+        const tp = tarMap.get(p)
+        if (!tp) continue
+        const c = await fs.readFile(tp, 'utf8').catch(() => null)
+        if (c !== 'released') await fs.writeFile(tp, 'conflict')
       }
     }
   }
+
+  return {entries, conflicts, skipped}
+}
+
+const deliverDirective = async (directive, tarMap, env, {dryRun, cwd, concurrency = 4}) => {
+  const entries = []
+  const conflicts = []
+  const skipped = []
+
+  const pkgs = directive.queue.map(name => [name, directive.packages[name]]).filter(([, pkg]) => pkg)
+
+  await pool(pkgs, concurrency, async ([pkgName, pkg]) => {
+    const r = await deliverPkg(pkgName, pkg, tarMap, env, {dryRun, cwd})
+    entries.push(...r.entries)
+    conflicts.push(...r.conflicts)
+    skipped.push(...r.skipped)
+  })
 
   return {entries, conflicts, skipped}
 }

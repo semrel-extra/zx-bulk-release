@@ -15,7 +15,7 @@ Modes:
   (no flags)              All-in-one: analyze, build, test, pack, deliver
   --receive               Analyze & preflight, write zbr-context.json. Run BEFORE deps install
   --pack [dir]            Build, test, pack tars to dir                           [default: parcels]
-  --verify [input-dir]    Validate parcels against context, copy valid to parcels/ [default: parcels]
+  --verify [in:out]       Validate parcels against context, copy to out dir         [default: parcels]
   --deliver [dir]         Deliver parcels through channels                        [default: parcels]
 
 Options:
