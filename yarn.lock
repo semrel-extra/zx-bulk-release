@@ -643,10 +643,12 @@
     gunzip-maybe "1.4.2"
     tar-stream "3.1.7"
 
-"@verdaccio/ui-theme@9.0.0-next-9.10":
-  version "9.0.0-next-9.10"
-  resolved "https://registry.npmjs.org/@verdaccio/ui-theme/-/ui-theme-9.0.0-next-9.10.tgz"
-  integrity sha512-sJRuAGKHklQU8bLdcXjvzfajXk9VqyBcFUKHAAyWXAeIKs04/lTgCHB6nFcEm0WDzlXk8CMAQuo/kcjNkg7qyw==
+"@verdaccio/ui-theme@9.0.0-next-9.14":
+  version "9.0.0-next-9.14"
+  resolved "https://registry.yarnpkg.com/@verdaccio/ui-theme/-/ui-theme-9.0.0-next-9.14.tgz#419894be0372073cfc89271a5389a0c9ffba7845"
+  integrity sha512-0PQW6PV+sHsQdV3gnHQqAcDcVGfT75vHq1TfIeEN2QY5KuEkvli8e5vut+sTe89p+GOTahHKgTMOcL0O3BvsgA==
+  dependencies:
+    debug "4.4.3"
 
 "@verdaccio/url@13.0.0-next-8.37":
   version "13.0.0-next-8.37"
@@ -3220,10 +3222,10 @@ verdaccio-htpasswd@13.0.0-next-8.37:
     http-errors "2.0.1"
     unix-crypt-td-js "1.1.4"
 
-verdaccio@6.5.0:
-  version "6.5.0"
-  resolved "https://registry.npmjs.org/verdaccio/-/verdaccio-6.5.0.tgz"
-  integrity sha512-PFsGVvSyS47ZAt58MiL+5hX0jexgv20rrhEL2qEF5wGV9OLP9Cbm67aN5+PJT3pdQyghGk2Yq4/SVNwCmB/oHA==
+verdaccio@6.5.2:
+  version "6.5.2"
+  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.5.2.tgz#70f0863b8315410ae2dea47269ab0febab57b38b"
+  integrity sha512-zFzUz/2b5z4svs7/wkX0JDSvOE3ViWdNcIs8qwnmUg2hKBbWeVoA5Kt/JWHRkUrCuwiIfAoEWobiKZmrAFqHqw==
   dependencies:
     "@cypress/request" "3.0.10"
     "@verdaccio/auth" "8.0.0-next-8.37"
@@ -3239,7 +3241,7 @@ verdaccio@6.5.0:
     "@verdaccio/signature" "8.0.0-next-8.29"
     "@verdaccio/streams" "10.2.1"
     "@verdaccio/tarball" "13.0.0-next-8.37"
-    "@verdaccio/ui-theme" "9.0.0-next-9.10"
+    "@verdaccio/ui-theme" "9.0.0-next-9.14"
     "@verdaccio/url" "13.0.0-next-8.37"
     "@verdaccio/utils" "8.1.0-next-8.37"
     JSONStream "1.3.5"
