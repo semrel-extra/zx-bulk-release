@@ -12,7 +12,7 @@ jobs:
   test_push:
     if: github.event_name == 'push'
     name: Test on push
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -50,13 +50,35 @@ jobs:
 
   test_pr:
     if: github.event_name == 'pull_request'
-    name: Test PR (Node v${{ matrix.node-version }}, OS ${{ matrix.os }})
-    strategy:
-      matrix:
-        os: [ ubuntu-22.04 ]
-        node-version: [ 18, 24 ]
+    name: Test PR (Node v24, OS ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
-    runs-on: ${{ matrix.os }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install deps
+        run: yarn install
+
+      - name: Run tests
+        timeout-minutes: 2
+        run: yarn test
+
+  smoke_node:
+    if: github.event_name == 'pull_request'
+    name: Smoke (Node v${{ matrix.node-version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [ 16, 18, 20, 22, 24 ]
+
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -68,21 +90,46 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install deps
-        run: yarn install
-        env:
-          YARN_IGNORE_ENGINES: true
+      - name: Install prod deps only
+        run: yarn install --production --ignore-scripts --ignore-engines
 
-      - name: Run tests
+      - name: Run smoke tests
         timeout-minutes: 2
-        run: yarn test
+        run: yarn test:smoke
+
+  smoke_os:
+    if: github.event_name == 'pull_request'
+    name: Smoke (OS ${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-14, windows-2022 ]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install prod deps only
+        run: yarn install --production --ignore-scripts
+
+      - name: Run smoke tests
+        timeout-minutes: 2
+        run: yarn test:smoke
 
   release:
     name: Release
     # https://github.community/t/trigger-job-on-tag-push-only/18076
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: test_push
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       checks: read
       statuses: write
