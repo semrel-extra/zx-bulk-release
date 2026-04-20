@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { fs, path, YAML } from 'zx'
 import { asArray, camelize, memoizeBy } from './util.js'
 import { GH_URL, resolveGhApiUrl } from './post/api/gh.js'
@@ -32,7 +33,7 @@ export const getPkgConfig = async (cwd, env) =>
 export const cosmiconfig = (name, {searchPlaces}) => {
   const load = async (filePath) => {
     if (filePath.endsWith('.js') || filePath.endsWith('.cjs'))
-      return (await import(filePath)).default
+      return (await import(pathToFileURL(filePath).href)).default
     const raw = await fs.readFile(filePath, 'utf8')
     if (filePath.endsWith('.yaml') || filePath.endsWith('.yml'))
       return YAML.parse(raw)
