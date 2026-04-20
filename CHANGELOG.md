@@ -1,3 +1,8 @@
+## [3.1.13](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.12...v3.1.13) (2026-04-20)
+
+### Fixes & improvements
+* fix(config): force using file urls for dynamic import (win issue) ([78d32e6](https://github.com/semrel-extra/zx-bulk-release/commit/78d32e6b5ac8b8dbbe359e829e1b498ef193c2e6))
+
 ## [3.1.12](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.11...v3.1.12) (2026-04-13)
 
 ### Fixes & improvements
