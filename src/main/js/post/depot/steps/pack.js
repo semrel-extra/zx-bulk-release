@@ -7,6 +7,39 @@ import {sanitizePkgName} from '../../parcel/build.js'
 import {formatReleaseNotes} from '../generators/notes.js'
 import {packTar, hashFile} from '../../tar.js'
 
+// Strip inherited `npm_*` / `npm_config_*` env vars. When zbr is invoked via `npx`
+// or `npm run`, the parent npm pollutes the env and the child packer (npm/yarn/pnpm)
+// can misinterpret it — on npm 11+ this surfaces as "Exit prior to config file resolving".
+const cleanPackerEnv = () => Object.fromEntries(
+  Object.entries(process.env).filter(([k]) => !/^npm_/i.test(k))
+)
+
+// pack via selected package manager. All three produce an npm-compatible tarball,
+// honoring `files`/`.npmignore`, bin/man normalization, and prepack hooks.
+const packers = {
+  async npm(pkg, destDir) {
+    const out = await $({cwd: pkg.absPath, env: cleanPackerEnv()})`npm pack --pack-destination ${destDir}`
+    return path.join(destDir, out.toString().trim().split('\n').pop())
+  },
+  async pnpm(pkg, destDir) {
+    const out = await $({cwd: pkg.absPath, env: cleanPackerEnv()})`pnpm pack --pack-destination ${destDir}`
+    return path.join(destDir, out.toString().trim().split('\n').pop())
+  },
+  async yarn(pkg, destDir) {
+    // yarn berry: `yarn pack -o <path>`. Name is under our control — no stdout parsing.
+    const target = path.join(destDir, `${sanitizePkgName(pkg.name)}-${pkg.version}.tgz`)
+    await $({cwd: pkg.absPath, env: cleanPackerEnv()})`yarn pack -o ${target}`
+    return target
+  },
+}
+
+const packNpmTarball = async (pkg, destDir) => {
+  const packer = pkg.config.npmPacker || 'npm'
+  const fn = packers[packer]
+  if (!fn) throw new Error(`unknown npmPacker: ${packer}`)
+  return fn(pkg, destDir)
+}
+
 export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const {channels: channelNames = [], flags} = ctx
   const snapshot = !!flags.snapshot
@@ -23,8 +56,7 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const artifacts = {repoName, repoHost, originUrl}
 
   if (active.includes('npm')) {
-    const out = await $({cwd: pkg.absPath})`npm pack --pack-destination ${stageDir}`
-    artifacts.npmTarball = path.join(stageDir, out.toString().trim())
+    artifacts.npmTarball = await packNpmTarball(pkg, stageDir)
   }
   if (active.includes('gh-release') || active.includes('changelog'))
     artifacts.releaseNotes = await formatReleaseNotes(pkg)

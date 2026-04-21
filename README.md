@@ -219,6 +219,7 @@ await run({
   "buildCmd": "yarn && yarn build",
   "testCmd": "yarn test",
   "npmFetch": true,
+  "npmPacker": "npm",
   "changelog": "changelog",
   "ghPages": "gh-pages",
   "diffTagUrl": "${repoPublicUrl}/compare/${prevTag}...${newTag}",
@@ -236,6 +237,18 @@ await run({
 }
 ```
 Available variables include: `name`, `version`, `absPath`, `relPath`, and anything from `pkg.ctx` (e.g. `git.sha`, `git.root`, `flags.*`).
+
+#### npm packer
+
+Controls the tool used to build the npm tarball. Defaults to `npm`, which covers bin/man normalization, `.npmignore` handling, and `prepack`/`prepare` lifecycle hooks. Override when the repo is yarn- or pnpm-native:
+
+```json
+{ "npmPacker": "yarn" }   // yarn berry: `yarn pack -o <...>.tgz`
+{ "npmPacker": "pnpm" }   // pnpm: `pnpm pack --pack-destination <dir>`
+{ "npmPacker": "npm" }    // default: `npm pack --pack-destination <dir>`
+```
+
+zbr invokes the packer with a clean env (strips inherited `npm_*` / `npm_config_*` vars) to avoid npm 11's "Exit prior to config file resolving" when zbr itself runs under `npx`/`npm run`.
 
 #### Changelog diff URLs
 By default, changelog entries link to GitHub compare/commit pages. Override `diffTagUrl` and `diffCommitUrl` to customize for other platforms (e.g. Gerrit):

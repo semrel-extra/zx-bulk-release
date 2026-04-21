@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest'
 import {fs, path, tempy} from 'zx-extra'
-import {parseEnv, normalizeMetaConfig, cosmiconfig} from '../../main/js/config.js'
+import {parseEnv, normalizeMetaConfig, normalizeNpmPacker, cosmiconfig} from '../../main/js/config.js'
 import {GH_URL} from '../../main/js/post/api/gh.js'
 
 describe('config', () => {
@@ -61,6 +61,23 @@ describe('config', () => {
 
   test('normalizeMetaConfig("asset") sets asset type', () => {
     expect(normalizeMetaConfig('asset').type).toBe('asset')
+  })
+
+  test('normalizeNpmPacker() defaults to npm', () => {
+    expect(normalizeNpmPacker()).toBe('npm')
+    expect(normalizeNpmPacker(undefined)).toBe('npm')
+    expect(normalizeNpmPacker('')).toBe('npm')
+  })
+
+  test('normalizeNpmPacker() accepts npm/yarn/pnpm', () => {
+    expect(normalizeNpmPacker('npm')).toBe('npm')
+    expect(normalizeNpmPacker('yarn')).toBe('yarn')
+    expect(normalizeNpmPacker('pnpm')).toBe('pnpm')
+  })
+
+  test('normalizeNpmPacker() throws on unknown value', () => {
+    expect(() => normalizeNpmPacker('bun')).toThrow(/unknown npmPacker/)
+    expect(() => normalizeNpmPacker('deno')).toThrow(/unknown npmPacker/)
   })
 
   test('GH_URL defaults to https://github.com', () => {

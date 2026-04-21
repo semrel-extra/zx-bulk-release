@@ -73,12 +73,20 @@ export const normalizePkgConfig = (config, env) => {
     ...config,
     releaseRules: config.releaseRules || config.semanticRules,
     npmFetch:     config.npmFetch || config.fetch || config.fetchPkg,
+    npmPacker:    normalizeNpmPacker(config.npmPacker),
     buildCmd:     config.buildCmd || config.cmd,
     get ghBasicAuth() {
       return this.ghUser && this.ghToken ? `${this.ghUser}:${this.ghToken}` : false
     },
     meta: normalizeMetaConfig(config.meta || envConfig.ghMeta)
   }
+}
+
+const NPM_PACKERS = new Set(['npm', 'yarn', 'pnpm'])
+export const normalizeNpmPacker = (v) => {
+  if (!v) return 'npm'
+  if (!NPM_PACKERS.has(v)) throw new Error(`unknown npmPacker: ${v} (expected one of: ${[...NPM_PACKERS].join(', ')})`)
+  return v
 }
 
 export const normalizeMetaConfig = (meta) =>
