@@ -1,3 +1,8 @@
+## [3.2.0](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.13...v3.2.0) (2026-04-21)
+
+### Features
+* feat: provide configurable packer ([df527f2](https://github.com/semrel-extra/zx-bulk-release/commit/df527f2bf2ae93dc56039fa8abf0ec7be9e9a8c0))
+
 ## [3.1.13](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.12...v3.1.13) (2026-04-20)
 
 ### Fixes & improvements
