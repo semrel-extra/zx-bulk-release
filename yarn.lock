@@ -3286,10 +3286,10 @@ verdaccio-htpasswd@13.0.1:
     http-errors "2.0.1"
     unix-crypt-td-js "1.1.4"
 
-verdaccio@6.6.0:
-  version "6.6.0"
-  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.6.0.tgz#d1e4a04ebab58dcdc6d91576b21abb02f7eaac5e"
-  integrity sha512-wAa8i8O1PwbQZVCDu4V9BVQ8Q+NRoReKRzN6QyH9MCFA09wlHrpWhAGLYY56hYzB9sx+LUCO8783XG9vlwtJcw==
+verdaccio@6.6.2:
+  version "6.6.2"
+  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.6.2.tgz#3c19dd44a1366dc7250253e6c41351f7856d8320"
+  integrity sha512-nIBqeeyf96ShVOu/2AYUYvFgXDfTumnFbJt7cMXpQ6UqLNXtl/PzBNNkpCVYK5EMcgiDe58XLn8cZ6gLlfWJkQ==
   dependencies:
     "@cypress/request" "3.0.10"
     "@verdaccio/auth" "8.0.1"
