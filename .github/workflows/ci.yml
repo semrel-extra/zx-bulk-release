@@ -12,19 +12,19 @@ jobs:
   test_push:
     if: github.event_name == 'push'
     name: Test on push
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Install deps
         run: yarn install
@@ -33,35 +33,30 @@ jobs:
         timeout-minutes: 5
         run: yarn test:cov
 
-      - name: Push coverage
+      - name: Save coverage
         if: github.ref == 'refs/heads/master'
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          npx ggcp lcov.info "https://${GH_TOKEN}@github.com/${{ github.repository }}.git/coverage/${{ github.sha }}" --cwd=${{ github.workspace }}/coverage --message='chore: push coverage'
-
-      - name: Upload coverage to Qlty
-        if: github.ref == 'refs/heads/master'
-        uses: qltysh/qlty-action/coverage@c9b09987143d1e4ac955f4803c7bea742102feb5 # v2.4.0
+        uses: actions/upload-artifact@v7
         with:
-          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
-          files: coverage/lcov.info
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 1
 
 
   test_pr:
     if: github.event_name == 'pull_request'
-    name: Test PR (Node v24, OS ubuntu-24.04)
-    runs-on: ubuntu-24.04
+    name: Test PR (Node v26, OS ubuntu-26.04)
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Install deps
         run: yarn install
@@ -76,17 +71,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [ 16, 18, 20, 22, 24 ]
+        node-version: [ 16, 18, 20, 22, 24, 26 ]
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -103,19 +98,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-14, windows-2022 ]
+        os: [ macos-26, windows-2025 ]
 
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
 
       - name: Install prod deps only
         run: yarn install --production --ignore-scripts
@@ -124,12 +119,35 @@ jobs:
         timeout-minutes: 2
         run: yarn test:smoke
 
+  docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    name: Docs
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Build docs
+        run: yarn docs
+
+      - name: Save docs
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs
+          path: docs
+          if-no-files-found: error
+          retention-days: 1
+
   release:
     name: Release
     # https://github.community/t/trigger-job-on-tag-push-only/18076
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    needs: test_push
-    runs-on: ubuntu-24.04
+    needs: [test_push, docs]
+    runs-on: ubuntu-26.04
     permissions:
       checks: read
       statuses: write
@@ -138,26 +156,21 @@ jobs:
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: master
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
 
-      - name: Install deps
-        run: yarn install
-
-      - name: Run tests
-        timeout-minutes: 2
-        run: yarn test
-
-      - name: Docs
-        run: yarn docs
+      - name: Load docs
+        uses: actions/download-artifact@v8
+        with:
+          name: docs
+          path: docs
 
       - name: Release
         env:
@@ -170,3 +183,21 @@ jobs:
           GIT_COMMITTER_NAME: ${{ secrets.GIT_COMMITTER_NAME }}
           GIT_COMMITTER_EMAIL: ${{ secrets.GIT_COMMITTER_EMAIL }}
         run: npm_config_yes=true npx zx-semrel
+
+      - name: Load coverage
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage
+          path: ${{ runner.temp }}/coverage
+
+      - name: Push coverage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx ggcp lcov.info "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git/coverage/${{ github.sha }}" --cwd=${{ runner.temp }}/coverage --message='chore: push coverage'
+
+      - name: Upload coverage to Qlty
+        uses: qltysh/qlty-action/coverage@c9b09987143d1e4ac955f4803c7bea742102feb5 # v2.4.0
+        with:
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: ${{ runner.temp }}/coverage/lcov.info
