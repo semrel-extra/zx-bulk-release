@@ -29,14 +29,15 @@
   },
   "dependencies": {
     "@semrel-extra/topo": "^1.14.1",
-    "tar-stream": "^3.1.8",
+    "tar-stream": "^3.2.1",
     "zx-extra": "4.0.20"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.4",
-    "esbuild": "^0.28.0",
+    "@vitest/coverage-v8": "^5.0.3",
+    "esbuild": "^0.28.2",
     "verdaccio": "6.10.4",
-    "vitest": "^4.1.4"
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   },
   "publishConfig": {
     "access": "public"
