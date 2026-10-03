@@ -269,6 +269,41 @@ Set `ghUrl` to point to your GHE instance. API URL (`ghApiUrl`) is derived autom
 ```
 Or via env: `GH_URL=https://ghe.corp.com` / `GITHUB_URL=https://ghe.corp.com`.
 
+#### Populate rules
+Parcel manifests carry `${{VAR}}` templates that the courier resolves from env at delivery time. `populate` sets what the resolved fields must look like. Pack embeds the rules into every manifest, so a parcel stays self-contained:
+- before delivery starts, the courier resolves every parcel it is about to deliver and checks it against its rules. A parcel that breaks them is not delivered and is left intact. In `--deliver` mode the rest goes on in topological order and the run fails at the end; in all-in-one mode the run stops at the package with the violation;
+- `--verify` makes sure pack kept the rules: the `populate` of every manifest must match the trusted context. Without `--verify` the rules come from the build itself, so they guard against mistakes, not against a compromised build.
+
+Errors name the field, never the value.
+```json
+{
+  "populate": {
+    "schemas": {
+      "secret":   {"type": "secret"},
+      "registry": {"enum": ["", "https://registry.npmjs.org", "https://registry.npmjs.org/"]},
+      "repo":     {"const": "org/repo"},
+      "repoUrl":  {"type": "url", "protocol": "https:", "hostname": "github.com", "pathname": {"pattern": "/org/repo(\\.git)?"}, "username": {}, "password": {}},
+      "ghApi":    {"const": "https://api.github.com"}
+    },
+    "channels": {
+      "*":          {"repoName": {"schema": "repo"}, "repoAuthedUrl": {"schema": "repoUrl"}},
+      "npm":        {"registry": {"schema": "registry"}},
+      "gh-release": {"token": {"schema": "secret"}, "apiUrl": {"schema": "ghApi"}}
+    }
+  }
+}
+```
+Here git pushes (`repoAuthedUrl` — the courier derives it from `repoHost`/`repoName` and the token, or falls back to `originUrl`) may only go to `github.com/org/repo`, releases only to its API at `api.github.com`, npm publishes only to npmjs (`""` stands for an unset `NPM_REGISTRY`, which means the default registry), and a GitHub release needs a token. Rules apply to the fields a manifest has, so pin the value that is actually used (`repoAuthedUrl`) rather than its inputs.
+- `schema` — a named schema the resolved field must match (`'*'` — any). Any env var may be substituted, only the result is checked. A placeholder of an unset var resolves to `""`, and that value is checked too.
+- The schema of a field is picked by best match: `channel.field` → `channel.*` → `*.field` → `*.*`. Fields the courier derives at delivery time (`repoAuthedUrl`, `ghBasicAuth`) are checked as well.
+- The default is `{"schemas": {"*": {}}, "channels": {"*": {"*": {"schema": "*"}}}}` — everything is accepted, as before. A malformed `populate` (a rule that isn't `{"schema": name}`, an unknown schema name) fails the release instead of falling back to the default.
+
+Schemas:
+- `{}` — any value.
+- `{"type": "string"}` with optional `const`, `enum`, `pattern` (the pattern must match the whole value).
+- `{"type": "secret"}` — a non-empty string.
+- `{"type": "url", ...parts}` — an absolute URL. `protocol`, `username`, `password`, `hostname`, `port`, `pathname`, `search` and `hash` are matched by a string (exact), an array (one of) or a nested schema. Parts that are not described must be empty; `protocol` and `hostname` are checked only when described.
+
 ### env vars
 ```js
 export const parseEnv = (env = process.env) => {

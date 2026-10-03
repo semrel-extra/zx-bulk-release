@@ -1,3 +1,8 @@
+## [3.3.0](https://github.com/semrel-extra/zx-bulk-release/compare/v3.2.0...v3.3.0) (2026-10-03)
+
+### Features
+* feat: add `populate` rules to check parcel manifests after env substitution (#125) ([03fd4ac](https://github.com/semrel-extra/zx-bulk-release/commit/03fd4acd761702c0ac25667c7eed8f3992a1c620))
+
 ## [3.2.0](https://github.com/semrel-extra/zx-bulk-release/compare/v3.1.13...v3.2.0) (2026-04-21)
 
 ### Features
