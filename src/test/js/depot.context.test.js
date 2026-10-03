@@ -85,6 +85,26 @@ describe('depot.context', () => {
     expect(result.packages.a.channels).toEqual(['npm', 'git-tag'])
   })
 
+  test('buildContext uses getPopulate when provided', async () => {
+    const {buildContext} = await import(/* @vite-ignore */ `../../main/js/post/depot/context.js?t=${Date.now()}`)
+
+    const packages = {
+      a: {name: 'a', version: '1.0.1', tag: 'v1.0.1', releaseType: 'patch', skipped: false},
+    }
+    const populate = {schemas: {'*': {}, secret: {type: 'secret'}}, channels: {'*': {'*': {schema: '*'}}, npm: {token: {schema: 'secret'}}}}
+
+    expect(buildContext(packages, ['a'], 'deadbeef1234567').packages.a.populate).toBeUndefined()
+    expect(buildContext(packages, ['a'], 'deadbeef1234567', {getPopulate: () => populate}).packages.a.populate).toEqual(populate)
+  })
+
+  test('buildContext keeps the commit time when provided', async () => {
+    const {buildContext} = await import(/* @vite-ignore */ `../../main/js/post/depot/context.js?t=${Date.now()}`)
+    const packages = {a: {name: 'a', version: '1.0.1', tag: 'v1.0.1', releaseType: 'patch', skipped: false}}
+
+    expect(buildContext(packages, ['a'], 'deadbeef1234567').timestamp).toBeUndefined()
+    expect(buildContext(packages, ['a'], 'deadbeef1234567', {timestamp: 1700000000}).timestamp).toBe(1700000000)
+  })
+
   test('readContext throws on missing file', async () => {
     const {readContext} = await import(/* @vite-ignore */ `../../main/js/post/depot/context.js?t=${Date.now()}`)
     const fakePath = path.join(tempy.temporaryDirectory(), 'nonexistent.json')

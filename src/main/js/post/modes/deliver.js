@@ -19,9 +19,15 @@ export const runDeliver = async ({env, flags}) => {
 
   report.setStatus('delivering').log(`parcels: ${tars.length}`)
   const result = await deliver(tars, env, {dryRun: flags.dryRun, cwd})
-  report.set('delivery', result).setStatus('success')
+  report.set('delivery', result)
 
   log.info(`done: ${result.delivered} delivered, ${result.skipped} skipped`)
+
+  if (result.invalid.length) {
+    report.setStatus('failure')
+    throw new Error(`populate rules: ${result.invalid.length} parcel(s) not delivered`)
+  }
+  report.setStatus('success')
 }
 
 const ensureGitRepo = async (env) => {

@@ -1,6 +1,6 @@
 import {glob, path, fs} from 'zx-extra'
 import {log} from '../log.js'
-import {PARCELS_DIR, verifyParcels} from '../parcel/index.js'
+import {PARCELS_DIR, verifyParcels, verifyManifests} from '../parcel/index.js'
 import {CONTEXT_FILE, readContext} from '../depot/context.js'
 
 export const runVerify = async ({cwd, flags}) => {
@@ -23,6 +23,7 @@ export const runVerify = async ({cwd, flags}) => {
   }
 
   const {verified, errors} = verifyParcels(tars, context)
+  errors.push(...await verifyManifests(verified, context))
 
   if (errors.length) {
     for (const e of errors) log.error(`verify: ${e}`)

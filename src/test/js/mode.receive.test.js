@@ -33,6 +33,7 @@ describe('modes.receive', () => {
     await within(async () => {
       const cwd = tempy.temporaryDirectory()
       const mock = createSpawnMock([
+        ['git log -1 --format=%ct', '1700000000'],
         ...responses(),
         ['git ls-remote', ''],
       ])
@@ -65,6 +66,8 @@ describe('modes.receive', () => {
       const context = await fs.readJson(contextFile)
       expect(context.status).toBe('proceed')
       expect(context.packages.a).toBeTruthy()
+      expect(context.packages.a.populate.channels['*']['*']).toEqual({schema: '*'})
+      expect(context.timestamp).toBe(1700000000)
     })
   })
 

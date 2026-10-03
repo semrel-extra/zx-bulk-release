@@ -4,7 +4,8 @@ import {createSpawnMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from '
 import {createGhServer} from './utils/gh-server.js'
 import {channels, deliver, resolveManifest} from '../../main/js/post/courier/index.js'
 import {buildParcels} from '../../main/js/post/parcel/build.js'
-import {packTar, unpackTar} from '../../main/js/post/tar.js'
+import {mergePopulate} from '../../main/js/post/parcel/populate.js'
+import {packTar, unpackTar, readManifest} from '../../main/js/post/tar.js'
 
 describe('courier.deliver', () => {
   let gh
@@ -469,6 +470,107 @@ describe('courier.deliver', () => {
     })
   })
 
+  test('deliver checks the resolved manifest against its populate rules', async () => {
+    await within(async () => {
+      await setup()
+      const warnings = []
+      $.report = {log() {}, warn(...args) { warnings.push(args.join(' ')) }}
+
+      const populate = mergePopulate({
+        schemas:  {npmjs: {type: 'url', protocol: 'https:', hostname: 'registry.npmjs.org'}},
+        channels: {npm: {registry: {schema: 'npmjs'}}},
+      })
+      const pack = async () => {
+        const tarPath = path.join(tempy.temporaryDirectory(), 'test.npm.tar')
+        await packTar(tarPath, {channel: 'npm', name: 'pkg', version: '1.0.0', registry: '${{NPM_REGISTRY}}', token: '${{NPM_TOKEN}}', populate},
+          [{name: 'package.tgz', source: await writeTmpFile('fake')}])
+        return tarPath
+      }
+
+      const ran = []
+      const origRun = channels.npm.run
+      channels.npm.run = async (manifest) => ran.push(manifest.registry)
+
+      const bad = await pack()
+      const result = await deliver([bad], {NPM_TOKEN: 'npm_secret', NPM_REGISTRY: 'https://evil.example/', PATH: process.env.PATH})
+      await deliver([await pack()], {NPM_TOKEN: 'npm_secret', NPM_REGISTRY: 'https://registry.npmjs.org/', PATH: process.env.PATH})
+
+      channels.npm.run = origRun
+      expect(ran).toEqual(['https://registry.npmjs.org/'])
+      expect(result.invalid).toEqual([{file: 'test.npm.tar', errors: ['registry.hostname: expected "registry.npmjs.org"']}])
+      expect((await readManifest(bad)).channel).toBe('npm') // left intact, no marker
+      expect(warnings.some(w => w.includes('populate rules') && w.includes('registry.hostname'))).toBeTruthy()
+      expect(warnings.join('\n')).not.toMatch(/npm_secret|evil\.example/)
+    })
+  })
+
+  test('resolveManifest keeps a __proto__ key as a plain field', () => {
+    const resolved = resolveManifest(JSON.parse('{"channel": "npm", "__proto__": {"registry": "http://evil.example"}}'), {})
+    expect(Object.getPrototypeOf(resolved)).toBe(Object.prototype)
+    expect(resolved.registry).toBeUndefined()
+  })
+
+  test('resolveManifest derives repoAuthedUrl and ghBasicAuth itself, never takes them from the parcel', () => {
+    const forged = {channel: 'changelog', repoAuthedUrl: 'https://x:${{GH_TOKEN}}@other.example/r.git', ghBasicAuth: 'x:${{GH_TOKEN}}'}
+    const resolved = resolveManifest(forged, {GH_TOKEN: 'ghp_secret'})
+    expect(resolved.repoAuthedUrl).toBeUndefined()
+    expect(resolved.ghBasicAuth).toBeUndefined()
+    expect(resolveManifest({...forged, repoHost: 'github.com', repoName: 'org/repo'}, {GH_TOKEN: 'ghp_secret'}).repoAuthedUrl)
+      .toBe('https://x-access-token:ghp_secret@github.com/org/repo.git')
+  })
+
+  test('deliver reports populate violations even if a channel fails later', async () => {
+    await within(async () => {
+      await setup()
+      const warnings = []
+      $.report = {log() {}, warn(...args) { warnings.push(args.join(' ')) }}
+      const dir = tempy.temporaryDirectory()
+      const tgz = [{name: 'package.tgz', source: await writeTmpFile('fake')}]
+      await packTar(path.join(dir, 'a.npm.tar'), {channel: 'npm', name: 'a', version: '1.0.0', token: '${{NPM_TOKEN}}', registry: 'https://evil.example/', populate: mergePopulate({
+        schemas:  {npmjs: {type: 'url', protocol: 'https:', hostname: 'registry.npmjs.org'}},
+        channels: {npm: {registry: {schema: 'npmjs'}}},
+      })}, tgz)
+      await packTar(path.join(dir, 'b.npm.tar'), {channel: 'npm', name: 'b', version: '1.0.0', token: '${{NPM_TOKEN}}'}, tgz)
+
+      const origRun = channels.npm.run
+      channels.npm.run = async () => { throw new Error('registry is down') }
+      await expect(deliver([path.join(dir, 'a.npm.tar'), path.join(dir, 'b.npm.tar')], {NPM_TOKEN: 'npm_secret', PATH: process.env.PATH}))
+        .rejects.toThrow('registry is down')
+      channels.npm.run = origRun
+
+      expect(warnings.some(w => w.includes('a.npm.tar') && w.includes('populate rules'))).toBeTruthy()
+    })
+  })
+
+  test('deliver checks manifests the way it delivers them', async () => {
+    await within(async () => {
+      await setup()
+      const populate = mergePopulate({
+        schemas:  {npmjs: {type: 'url', protocol: 'https:', hostname: 'registry.npmjs.org'}},
+        channels: {npm: {registry: {schema: 'npmjs'}}},
+      })
+      const dir = tempy.temporaryDirectory()
+      const proto = path.join(dir, 'proto.npm.tar')
+      const placeholder = path.join(dir, 'placeholder.npm.tar')
+      const tgz = [{name: 'package.tgz', source: await writeTmpFile('fake')}]
+      await fs.writeFile(path.join(dir, 'manifest.json'), `{"channel": "npm", "name": "pkg", "version": "1.0.0", "token": "\${{NPM_TOKEN}}", "__proto__": {"registry": "http://evil.example"}}`)
+      await packTar(proto, JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8')), tgz)
+      await packTar(placeholder, {channel: 'np${{UNSET}}m', name: 'pkg', version: '1.0.0', token: '${{NPM_TOKEN}}', registry: 'https://evil.example/', populate}, tgz)
+
+      const ran = []
+      const origRun = channels.npm.run
+      channels.npm.run = async () => ran.push('npm')
+      const result = await deliver([proto, placeholder], {NPM_TOKEN: 'npm_secret', PATH: process.env.PATH})
+      channels.npm.run = origRun
+
+      expect(ran).toEqual([])
+      expect(result.invalid).toEqual([
+        {file: 'proto.npm.tar', errors: ['__proto__: is not allowed']},
+        {file: 'placeholder.npm.tar', errors: ['registry.hostname: expected "registry.npmjs.org"']},
+      ])
+    })
+  })
+
   test('deliver warns for each skipped parcel with missing credentials', async () => {
     await within(async () => {
       await setup()
@@ -516,7 +618,7 @@ describe('courier.deliver', () => {
 
   // --- directive-aware deliver ---
 
-  const makeDirectiveTars = async (dir, {sha = 'abc1234567890', timestamp = 1700000000, queue, packages, parcels, prev = {}}) => {
+  const makeDirectiveTars = async (dir, {sha = 'abc1234567890', timestamp = 1700000000, queue, packages, parcels, prev = {}, populate}) => {
     const sha7 = sha.slice(0, 7)
     const directiveTarName = `parcel.${sha7}.directive.${timestamp}.tar`
     const directiveTarPath = path.join(dir, directiveTarName)
@@ -552,12 +654,74 @@ describe('courier.deliver', () => {
         originUrl: 'https://github.com/org/repo.git',
         gitCommitterEmail: 'b@b.com',
         gitCommitterName: 'Bot',
+        ...populate && {populate},
       }, files)
       allTars.push(tarPath)
     }
 
     return allTars
   }
+
+  test('deliver with directive: parcels it won\'t deliver are not checked', async () => {
+    await within(async () => {
+      await setup()
+      const dir = tempy.temporaryDirectory()
+      const npmParcel = 'parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'
+      const allTars = await makeDirectiveTars(dir, {
+        queue: ['pkg-a'],
+        packages: {'pkg-a': {version: '1.0.1', tag: 'v1.0.1-pkg-a', deliver: [['npm']], parcels: [npmParcel]}},
+        parcels: [npmParcel],
+      })
+      // a stale copy from an earlier build of the same commit, with rules it breaks
+      const orphan = path.join(dir, 'parcel.abc1234.npm.pkg-a.1.0.1.bbb222.tar')
+      await packTar(orphan, {channel: 'npm', name: 'pkg-a', version: '1.0.1', token: '${{NPM_TOKEN}}', registry: 'https://evil.example/', populate: mergePopulate({
+        schemas:  {npmjs: {type: 'url', protocol: 'https:', hostname: 'registry.npmjs.org'}},
+        channels: {npm: {registry: {schema: 'npmjs'}}},
+      })}, [{name: 'package.tgz', source: await writeTmpFile('fake')}])
+
+      const origRun = channels.npm.run
+      channels.npm.run = async () => 'ok'
+      const result = await deliver([...allTars, orphan], {GH_TOKEN: 'ghp_test', NPM_TOKEN: 'npm_test', NPM_REGISTRY: 'https://r.com', PATH: process.env.PATH})
+      channels.npm.run = origRun
+
+      expect(result.invalid).toEqual([])
+      expect(await fs.readFile(orphan, 'utf8')).toBe('orphan')
+    })
+  })
+
+  test('deliver with directive: a parcel that breaks populate rules stays intact, the rest goes on', async () => {
+    await within(async () => {
+      await setup()
+      const dir = tempy.temporaryDirectory()
+      const tagParcel = 'parcel.abc1234.git-tag.pkg-a.1.0.1.aaa111.tar'
+      const npmParcel = 'parcel.abc1234.npm.pkg-a.1.0.1.bbb222.tar'
+      const allTars = await makeDirectiveTars(dir, {
+        queue: ['pkg-a'],
+        packages: {'pkg-a': {version: '1.0.1', tag: 'v1.0.1-pkg-a', deliver: [['git-tag'], ['npm']], parcels: [tagParcel, npmParcel]}},
+        parcels: [tagParcel, npmParcel],
+        populate: mergePopulate({
+          schemas:  {npmjs: {type: 'url', protocol: 'https:', hostname: 'registry.npmjs.org'}},
+          channels: {npm: {registry: {schema: 'npmjs'}}},
+        }),
+      })
+
+      const ran = []
+      const orig = {tag: channels['git-tag'].run, npm: channels.npm.run}
+      channels['git-tag'].run = async () => { ran.push('git-tag'); return 'ok' }
+      channels.npm.run = async () => { ran.push('npm'); return 'ok' }
+
+      const result = await deliver(allTars, {GH_TOKEN: 'ghp_test', NPM_REGISTRY: 'https://evil.example/', PATH: process.env.PATH})
+
+      channels['git-tag'].run = orig.tag
+      channels.npm.run = orig.npm
+
+      expect(ran).toEqual(['git-tag'])
+      expect(result.invalid.map(i => i.file)).toEqual([npmParcel])
+      expect(await fs.readFile(path.join(dir, tagParcel), 'utf8')).toBe('released')
+      expect((await readManifest(path.join(dir, npmParcel))).channel).toBe('npm')
+      expect(await fs.readFile(allTars[0], 'utf8')).not.toBe('released')
+    })
+  })
 
   test('deliver with directive: delivers parcels through channels', async () => {
     await within(async () => {

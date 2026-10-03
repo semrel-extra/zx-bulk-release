@@ -61,7 +61,7 @@ Build and deliver run on separate CI runners. They share nothing except explicit
 
 **Trust boundary 3: verification.**
 The deliver job receives two artifacts from different trust levels:
-- **Context** (trusted) — uploaded before deps, contains expected packages, versions, tags, channels.
+- **Context** (trusted) — uploaded before deps, contains the commit time and expected packages, versions, tags, channels and `populate` rules.
 - **Parcels** (untrusted) — produced in compromised environment.
 
 `zbr --verify parcels-unverified/` validates untrusted parcels against the trusted context and copies only verified parcels to `parcels/`. Deliver then reads only from `parcels/`. Verification checks:
@@ -70,16 +70,22 @@ The deliver job receives two artifacts from different trust levels:
 - Each parcel's tag belongs to a known package
 - No injected parcels (files not matching any expected package are rejected)
 - Directive sha matches the context
+- Each manifest's `channel` matches the parcel name
+- Each manifest keeps the `populate` rules and the release `tag` from the context
+- The directive keeps the commit time from the context (deliveries are ordered by it)
+
+Verification needs no credentials. The courier checks the resolved manifests against their `populate` rules right before delivery (see [Populate rules](../README.md#populate-rules)).
 
 ### Credential flow
 
 ```
 receive (pre-deps):    GH_TOKEN → consume signal, read remote tags
 pack (post-deps):      zero credentials — manifests use ${{ENV_VAR}} templates
-deliver (clean job):   GH_TOKEN + NPM_TOKEN → resolve templates, push tags, publish
+verify (clean job):    zero credentials — check parcels against the trusted context
+deliver (clean job):   GH_TOKEN + NPM_TOKEN → resolve templates, check populate rules, push tags, publish
 ```
 
-Credentials never coexist with third-party code. The build phase cannot leak tokens because it never has them. Template placeholders (`${{NPM_TOKEN}}`) are inert strings until resolved by the courier on a clean runner.
+Credentials never coexist with third-party code. The build phase cannot leak tokens because it never has them. Template placeholders (`${{NPM_TOKEN}}`) are inert strings until resolved by the courier on a clean runner. The courier resolves placeholders in any manifest field, so a placeholder smuggled into data (e.g. a commit message that ends up in release notes) is resolved too. `populate` schemas constrain what resolved fields may look like — where credentials go and what endpoints they are sent to — but a free-text field such as release notes can't tell a substituted secret from ordinary text.
 
 ### What this does NOT protect against
 

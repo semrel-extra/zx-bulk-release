@@ -11,6 +11,7 @@ import {consumeRebuildSignal} from '../courier/semaphore.js'
 import {getActiveChannels} from '../courier/index.js'
 import {writeContext, buildContext} from '../depot/context.js'
 import {getLatest} from '../depot/generators/meta.js'
+import {mergePopulate} from '../parcel/populate.js'
 
 export const runReceive = async ({cwd, env, flags}, ctx) => {
   const {report, packages, queue, prev} = ctx
@@ -74,6 +75,8 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
     const snapshot = !!flags.snapshot
     const context = buildContext(packages, queue, sha, {
       getChannels: (pkg) => getActiveChannels(pkg, ctx.channels, snapshot),
+      getPopulate: (pkg) => mergePopulate(pkg.config.populate),
+      timestamp:   Number(await api.git.getCommitTimestamp(cwd)),
     })
     await writeContext(cwd, context)
 
