@@ -1,4 +1,5 @@
 import {asTuple, msgJoin} from '../../util.js'
+import {mergePopulate} from './populate.js'
 
 export const sanitizePkgName = (name) => name.replace(/[^a-z0-9-]/ig, '-').replace(/^-+|-+$/g, '')
 
@@ -88,5 +89,10 @@ export const buildParcels = (pkg, ctx, {
   repoName, repoHost, originUrl,
 } = {}) => {
   const a = {npmTarball, releaseNotes, docsDir, assetsDir, repoName, repoHost, originUrl}
-  return channelNames.map(n => (entry[n] || defaultEntry(n))(pkg, ctx, a))
+  // The courier checks the resolved manifest against these rules right before delivery.
+  const populate = mergePopulate(pkg.config?.populate)
+  return channelNames.map(n => {
+    const parcel = (entry[n] || defaultEntry(n))(pkg, ctx, a)
+    return {...parcel, manifest: {...parcel.manifest, populate}}
+  })
 }

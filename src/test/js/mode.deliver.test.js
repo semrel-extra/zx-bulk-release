@@ -1,7 +1,8 @@
 import {describe, test, expect} from 'vitest'
 import {$, within, fs, path, tempy} from 'zx-extra'
 import {createSpawnMock, defaultResponses, has} from './utils/mock.js'
-import {packTar} from '../../main/js/post/tar.js'
+import {packTar, readManifest} from '../../main/js/post/tar.js'
+import {mergePopulate} from '../../main/js/post/parcel/populate.js'
 
 describe('modes.deliver', () => {
   const writeTmpFile = async (content) => {
@@ -34,6 +35,34 @@ describe('modes.deliver', () => {
       } finally {
         channels.npm.run = origRun
       }
+    })
+  })
+
+  test('fails after delivering the rest when a parcel breaks populate rules', async () => {
+    await within(async () => {
+      const mock = createSpawnMock(defaultResponses())
+      $.spawn = mock.spawn
+      $.quiet = true
+      $.verbose = false
+
+      const {runDeliver} = await import(/* @vite-ignore */ `../../main/js/post/modes/deliver.js?t=${Date.now()}`)
+
+      const dir = tempy.temporaryDirectory()
+      const tarOf = (name) => path.join(dir, `parcel.abc1234.npm.${name}.1.0.0.aaa111.tar`)
+      const pack = async (name, extra) => packTar(tarOf(name), {
+        channel: 'npm', name, version: '1.0.0', token: '${{NPM_TOKEN}}', registry: '${{NPM_REGISTRY}}', ...extra,
+      }, [{name: 'package.tgz', source: await writeTmpFile('fake')}])
+
+      await pack('a')
+      await pack('b', {populate: mergePopulate({
+        schemas:  {npmjs: {type: 'url', protocol: 'https:', hostname: 'registry.npmjs.org'}},
+        channels: {npm: {registry: {schema: 'npmjs'}}},
+      })})
+
+      await expect(runDeliver({env: {NPM_TOKEN: 'tok', NPM_REGISTRY: 'https://r.com', PATH: process.env.PATH}, flags: {deliver: dir}}))
+        .rejects.toThrow('populate rules: 1 parcel(s) not delivered')
+      expect(await fs.readFile(tarOf('a'), 'utf8')).toBe('released')
+      expect((await readManifest(tarOf('b'))).name).toBe('b')
     })
   })
 

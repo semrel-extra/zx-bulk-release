@@ -91,7 +91,7 @@ A **directive** is a special meta-parcel — the shipping list for a commit:
 
 The directive enables coordinated delivery: the courier processes parcels in the right order, handles conflicts per-package, and marks orphaned parcels from stale builds.
 
-**verify** validates parcels against the trusted context — checks sha, package names, versions, and channel assignments.
+**verify** validates parcels against the trusted context — checks sha, package names, versions and channel assignments, and that pack kept the release tags, the `populate` rules and the commit time.
 
 ## Courier
 
@@ -189,17 +189,19 @@ Two kinds of context flow through the pipeline:
   "status": "proceed",
   "sha": "abc1234...",
   "sha7": "abc1234",
+  "timestamp": 1718000000,
   "packages": {
     "@scope/pkg": {
       "version": "2.1.0",
       "tag": "@scope/pkg-v2.1.0",
-      "channels": ["npm", "git-tag", "gh-release"]
+      "channels": ["npm", "git-tag", "gh-release"],
+      "populate": {"schemas": {"*": {}}, "channels": {"*": {"*": {"schema": "*"}}}}
     }
   }
 }
 ```
 
-Only versions, tags, and channel lists — no paths, no manifests, no secrets. This is the minimum needed to verify that parcels produced later are legitimate.
+Versions, tags, channel lists, `populate` rules and the commit time — no paths, no manifests, no secrets. This is the minimum needed to verify that parcels produced later are legitimate.
 
 **Flow between modes:**
 
@@ -230,6 +232,8 @@ All tars live in `parcels/` and are uploaded as a single CI artifact.
 2. Channel must be in the package's expected channel list
 3. Package name and version must match a context entry
 4. No extra parcels — files that don't match any expected package are rejected
+5. Each manifest's channel matches its file name, and its release tag and `populate` rules match the context
+6. The directive's commit time (body and file name) matches the context — directives are delivered oldest first
 
 Only verified tars are copied to `output/`. Rejected parcels produce hard errors — the pipeline stops. If input and output are the same directory, verification happens in place.
 

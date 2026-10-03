@@ -71,3 +71,22 @@ export const unpackTar = async (tarPath, destDir) => {
   await done
   return {manifest, dir: destDir}
 }
+
+// Reads manifest.json only, other entries are skipped without touching the disk.
+export const readManifest = async (tarPath) => {
+  const extract = tar.extract()
+  let raw = null
+
+  extract.on('entry', (header, stream, cb) => {
+    const chunks = []
+    stream.on('data', d => header.name === 'manifest.json' && chunks.push(d))
+    stream.on('end', () => {
+      if (header.name === 'manifest.json') raw = Buffer.concat(chunks).toString('utf8')
+      cb()
+    })
+    stream.resume()
+  })
+
+  await pipeline(fs.createReadStream(tarPath), extract)
+  return raw === null ? null : JSON.parse(raw)
+}

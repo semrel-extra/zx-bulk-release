@@ -25,7 +25,7 @@ export const readContext = async (filePath) => {
   return data
 }
 
-export const buildContext = (packages, queue, sha, {getChannels} = {}) => {
+export const buildContext = (packages, queue, sha, {getChannels, getPopulate, timestamp} = {}) => {
   const pkgs = {}
   for (const name of queue) {
     const pkg = packages[name]
@@ -34,6 +34,7 @@ export const buildContext = (packages, queue, sha, {getChannels} = {}) => {
       version:  pkg.version,
       tag:      pkg.tag,
       channels: getChannels ? getChannels(pkg) : [],
+      populate: getPopulate ? getPopulate(pkg) : undefined,
     }
   }
 
@@ -41,6 +42,7 @@ export const buildContext = (packages, queue, sha, {getChannels} = {}) => {
     status: 'proceed',
     sha,
     sha7: sha.slice(0, 7),
+    timestamp,  // commit time: directives are delivered oldest first
     packages: pkgs,
   }
 }

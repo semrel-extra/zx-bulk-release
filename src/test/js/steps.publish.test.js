@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest'
-import {$, within, fs} from 'zx-extra'
+import {$, within, fs, tempy} from 'zx-extra'
 import {createSpawnMock, defaultResponses, makePkg, makeCtx, has, tmpDir} from './utils/mock.js'
 import {channels} from '../../main/js/post/courier/index.js'
 
@@ -36,6 +36,28 @@ describe('steps.publish', () => {
       } catch (e) {
         expect(e.message.includes('version not synced')).toBeTruthy()
       }
+    })
+  })
+
+  test('publish throws when a parcel breaks its populate rules', async () => {
+    await within(async () => {
+      await setup()
+      const {publish} = await import(/* @vite-ignore */ `../../main/js/post/depot/steps/publish.js?t=${Date.now()}`)
+      const {packTar} = await import('../../main/js/post/tar.js')
+      const {mergePopulate} = await import('../../main/js/post/parcel/populate.js')
+
+      const tarPath = `${tempy.temporaryDirectory()}/parcel.abc1234.npm.test-pkg.1.0.1.aaa111.tar`
+      await packTar(tarPath, {channel: 'npm', name: 'test-pkg', version: '1.0.1', token: '${{NPM_TOKEN}}', registry: '${{NPM_REGISTRY}}', populate: mergePopulate({
+        schemas:  {npmjs: {type: 'url', protocol: 'https:', hostname: 'registry.npmjs.org'}},
+        channels: {npm: {registry: {schema: 'npmjs'}}},
+      })})
+
+      const pkg = makePkg()
+      const ctx = makeCtx({env: {NPM_REGISTRY: 'https://evil.example/'}})
+      pkg.ctx = ctx
+      pkg.tars = [tarPath]
+
+      await expect(publish(pkg, ctx)).rejects.toThrow('populate rules: 1 parcel(s) of test-pkg not delivered')
     })
   })
 

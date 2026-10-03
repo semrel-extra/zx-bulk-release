@@ -1,4 +1,5 @@
 export {buildParcels, sanitizePkgName} from './build.js'
 export {buildDirective, parseDirective, scanDirectives, invalidateOrphans, parcelChannel} from './directive.js'
-export {verifyParcels} from './verify.js'
+export {verifyParcels, verifyManifests} from './verify.js'
+export {DEFAULT_POPULATE, mergePopulate, matchSchema, validateValue, checkManifest} from './populate.js'
 export const PARCELS_DIR = 'parcels'

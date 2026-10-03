@@ -9,7 +9,8 @@ export const publish = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const {run = exec, channels: channelNames = [], flags} = ctx
   const {tars = []} = pkg
 
-  await deliver(tars, ctx.env)
+  const {invalid} = await deliver(tars, ctx.env)
+  if (invalid.length) throw new Error(`populate rules: ${invalid.length} parcel(s) of ${pkg.name} not delivered`)
 
   const cmd = channels.cmd
   if (channelNames.includes('cmd') && cmd?.when(pkg) && (!flags.snapshot || cmd.snapshot))

@@ -167,6 +167,8 @@ deliver(parcelsDir, env):
   tarMap = Map(basename → fullPath)              // all tars in dir
 
   for directive of directives:
+    invalid = parcels of the directive this env would deliver, whose resolved
+              manifest breaks their populate rules   // checked before the lock
     locked = tryLock(zbr-deliver.{sha7})
     if !locked → continue                        // another process is working
 
@@ -208,6 +210,7 @@ deliverParcel(tarMap, pkg, channelName, env):
   parcelName = pkg.parcels.find(includes channelName)
   tarPath = tarMap.get(parcelName)
   if !tarPath → return 'missing'
+  if tarPath in invalid → return 'skip'          // breaks its populate rules, parcel untouched
 
   content = read(tarPath)
   if content in {released, skip, conflict, orphan} → return 'already'
