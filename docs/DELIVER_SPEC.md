@@ -137,7 +137,7 @@ The holder makes every lock tag object unique: two runners creating identical ta
 
 ### Zombie lock
 
-Process crashed or was killed without releasing the lock. zbr doesn't break locks: remove the tag by hand (or add a cleanup step to the workflow). Until then every delivery of that commit skips it as locked.
+Process crashed or was killed without releasing the lock. zbr doesn't break locks: remove the tag by hand (or add a cleanup step to the workflow). Until then every delivery of that commit skips it, with a warning naming the tag.
 
 ### Rebuild signal
 
@@ -394,7 +394,8 @@ preflight(pkg):
   git fetch origin --deepen=100                  // history for merge-base
 
   if ours is ancestor of remote → skip (we are older)
-  if remote is ancestor of ours → re-resolve: new version, new tag
+  if remote is ancestor of ours → analyze again from the fetched tags:
+                                    a new version and tag, or skip if nothing changed since
   if diverged → skip (anomaly)
 ```
 

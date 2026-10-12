@@ -1,6 +1,7 @@
 import {path, fs} from 'zx-extra'
 import {log} from '../log.js'
 import {api} from '../api/index.js'
+import {throwAll} from '../../util.js'
 import {scanDirectives, invalidateOrphans, parcelChannel} from '../parcel/directive.js'
 import {tryLock, unlock, signalRebuild} from './semaphore.js'
 import {channels, defaultOrder} from './channels/index.js'
@@ -47,7 +48,7 @@ export const deliver = async (tars, env = process.env, {dryRun = false, cwd} = {
 
 const deliverDirective = async (directive, ctx) => {
   if (ctx.dryRun) return rehearse(await planDirective(directive, ctx), ctx)
-  if (!await tryLock(ctx.gitRoot, directive)) return log.info(`directive ${directive.sha.slice(0, 7)} locked, skipping`)
+  if (!await tryLock(ctx.gitRoot, directive)) return warnLocked(directive.sha.slice(0, 7))
 
   const {plan, errors} = await underLock(directive, ctx)
   const result = resultOf(plan)
@@ -58,6 +59,10 @@ const deliverDirective = async (directive, ctx) => {
   if (marker) await fs.writeFile(directive.tarPath, marker)
   return settled(result, errors)
 }
+
+// Another delivery runs, or a dead one left its lock: zbr can't tell, and doesn't break locks.
+const warnLocked = (sha7) =>
+  log.warn(`skipping directive ${sha7}: zbr-deliver.${sha7} is on the remote. If no delivery is running, delete that tag`)
 
 // Everything settles before the lock goes.
 const underLock = async (directive, ctx) => {
@@ -144,9 +149,7 @@ const summary = (total, results) => ({
   invalid:   results.flatMap(r => r.invalid),
 })
 
-// One error goes out as is, exit code included; several as one AggregateError.
 const settled = (result, errors) => {
-  if (errors.length > 1) throw new AggregateError(errors, `${errors.length} deliveries failed`)
-  if (errors.length) throw errors[0]
+  throwAll(errors, 'deliveries')
   return result
 }

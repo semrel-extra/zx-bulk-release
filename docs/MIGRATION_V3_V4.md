@@ -15,7 +15,14 @@ These were green in v3 while something was wrong. v4 fails the run instead:
 - **Errors raced ahead.** On the first error the lock was released while other packages were still being delivered, and every later error was lost. Now everything in flight finishes, the lock goes, and all errors are reported.
 - **`--dry-run`** pushed and deleted the lock tag, wrote orphan markers and marked the directive `released`, so the next real run delivered without it. Now it plans only.
 - **Docs seniority** never worked: the check ran outside the repo and always found no newer version. Now `meta`, `changelog` and `gh-pages` skip a version older than one already released, as documented.
+- **A failing package in all-in-one or `--receive`** stopped the run at once: packages still being delivered were cut halfway (a tag pushed, npm not yet published). Now the running ones finish, none starts after the error, and all errors are reported.
+- **A zombie lock** made every delivery of its commit skip with an info line and a green job. The skip is a warning now, naming the tag to delete.
 - **Verify** accepted parcels that a compromised pack could abuse: a claim at another commit, a snapshot published as `latest`, an npm tarball with a second `package.json` that npm would publish instead, a directive dropping a dependency or a package's claim. See [SECURITY.md](./SECURITY.md).
+
+## Fixed
+
+- **`NPM_TOKEN` without `NPM_REGISTRY`** wrote the token under a key npm never reads, so the courier published without auth. An unset registry now means npm's default one, as documented.
+- **Preflight** re-resolved the version from the tags it had before fetching, so a concurrent release of the same version led to the same version again. It now analyzes the package from the fetched tags — and skips it when nothing changed since.
 
 ## Behaviour that changed on purpose
 

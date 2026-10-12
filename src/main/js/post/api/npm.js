@@ -8,6 +8,7 @@ import {$, semver, fs, INI, fetch, tempy} from 'zx-extra'
 import {log} from '../log.js'
 import {attempt2, memoizeBy} from '../../util.js'
 
+export const DEFAULT_NPM_REGISTRY = 'https://registry.npmjs.org'
 const FETCH_TIMEOUT_MS = 15_000
 const NPM_OIDC_VER = '11.5.0'
 const NPM_VER = (await $`npm --version`).toString().trim()
@@ -117,11 +118,13 @@ const registryFlags = async ({npmRegistry, npmToken, npmConfig, npmOidc}) => [
   !npmOidc && `--userconfig=${await getNpmrc({npmConfig, npmToken, npmRegistry})}`,
 ].filter(Boolean)
 
+// npm looks a token up by registry (`//host/path/:_authToken`): an unset registry means npm's default one.
 export const getNpmrc = memoizeBy(async ({npmConfig, npmToken, npmRegistry}) => {
   if (npmConfig) return npmConfig
 
   const npmrc = tempy.temporaryFile({name: '.npmrc'})
-  await fs.writeFile(npmrc, `${npmRegistry.replace(/^https?:\/\//, '//')}/:_authToken=${npmToken}`, {encoding: 'utf8'})
+  const registry = (npmRegistry || DEFAULT_NPM_REGISTRY).replace(/^https?:\/\//, '//').replace(/\/?$/, '/')
+  await fs.writeFile(npmrc, `${registry}:_authToken=${npmToken}`, {encoding: 'utf8'})
 
   return npmrc
 }, ({npmConfig, npmToken, npmRegistry}) => `${npmConfig}:${npmToken}:${npmRegistry}`)

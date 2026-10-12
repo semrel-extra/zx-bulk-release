@@ -3,6 +3,7 @@ import { fs, path, YAML } from 'zx'
 import { asArray, camelize, memoizeBy } from './util.js'
 import { GH_URL, resolveGhApiUrl } from './post/api/gh.js'
 import { DEFAULT_GIT_COMMITTER_NAME, DEFAULT_GIT_COMMITTER_EMAIL } from './post/api/git.js'
+import { DEFAULT_NPM_REGISTRY } from './post/api/npm.js'
 
 const CONFIG_NAME = 'release'
 const CONFIG_FILES = [
@@ -110,7 +111,7 @@ export const parseEnv = ({GH_USER, GH_USERNAME, GH_META, GH_URL: _GH_URL, GITHUB
     npmToken:           NPM_TOKEN,
     npmProvenance:      NPM_PROVENANCE,
     npmOidc:            NPM_OIDC || (!NPM_TOKEN && ACTIONS_ID_TOKEN_REQUEST_URL),
-    npmRegistry:        NPM_REGISTRY || 'https://registry.npmjs.org',
+    npmRegistry:        NPM_REGISTRY || DEFAULT_NPM_REGISTRY,
     gitCommitterName:   GIT_COMMITTER_NAME || DEFAULT_GIT_COMMITTER_NAME,
     gitCommitterEmail:  GIT_COMMITTER_EMAIL || DEFAULT_GIT_COMMITTER_EMAIL,
   }

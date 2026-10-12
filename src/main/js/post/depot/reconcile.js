@@ -1,7 +1,7 @@
 import {api} from '../api/index.js'
 import {log} from '../log.js'
-import {formatTag} from './generators/tag.js'
-import {resolvePkgVersion} from './steps/analyze.js'
+import {getLatestTag} from './generators/meta.js'
+import {analyze} from './steps/analyze.js'
 
 export const preflight = async (pkg, ctx) => {
   if (!pkg.tag) return 'ok'
@@ -25,15 +25,12 @@ export const preflight = async (pkg, ctx) => {
     return 'skip'
   }
 
+  // The release behind that tag is ours to build on: analyze again from it. No changes since — nothing to release.
   if (await api.git.isAncestor(cwd, commit, ctx.git.sha)) {
-    log.info(`preflight: ${pkg.tag} — we are newer, re-resolving version`)
-    const pre = ctx.flags.snapshot ? `-snap.${ctx.git.sha.slice(0, 7)}` : undefined
-    // re-resolve: the fetched tags will give us a new latest version
-    const latestVersion = pkg.latest.tag?.version || pkg.manifest.version
-    pkg.version = resolvePkgVersion(pkg.releaseType, latestVersion, pkg.manifest.version, pre)
-    pkg.manifest.version = pkg.version
-    pkg.tag = formatTag({name: pkg.name, version: pkg.version, format: pkg.config.tagFormat})
-    return 'refetch'
+    log.info(`preflight: ${pkg.tag} — we are newer, analyzing from the fetched tags`)
+    pkg.latest = {...pkg.latest, tag: await getLatestTag(pkg.absPath, pkg.name)}
+    await analyze(pkg, ctx)
+    return pkg.releaseType ? 'refetch' : 'skip'
   }
 
   // diverged — anomaly

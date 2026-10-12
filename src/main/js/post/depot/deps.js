@@ -1,7 +1,19 @@
 import {semver} from 'zx-extra'
-import {topo as _topo, traverseDeps} from '@semrel-extra/topo'
+import {topo as _topo, traverseDeps, traverseQueue} from '@semrel-extra/topo'
+import {throwAll} from '../../util.js'
 
 export {traverseQueue, traverseDeps} from '@semrel-extra/topo'
+
+// traverseQueue that settles: after the first error no package starts, the running ones finish,
+// and the errors come out together — nothing is cut halfway by the exit that follows.
+export const settleQueue = async ({queue, prev, cb}) => {
+  const errors = []
+  await traverseQueue({queue, prev, cb: async (name) => {
+    if (errors.length) return
+    try { await cb(name) } catch (e) { errors.push(e) }
+  }})
+  throwAll(errors, 'packages')
+}
 
 export const updateDeps = async (pkg) => {
   const changes = []

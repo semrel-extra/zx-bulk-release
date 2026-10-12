@@ -93,6 +93,12 @@ export const queuefy = (fn, concurrency = 1) => {
   })
 }
 
+// Settled work reports its errors together: one as is (its exit code too), several as one AggregateError.
+export const throwAll = (errors, what) => {
+  if (errors.length > 1) throw new AggregateError(errors, `${errors.length} ${what} failed`)
+  if (errors.length) throw errors[0]
+}
+
 // Keys ordered so that each comes after what it depends on (only keys among `keys` count); throws on a cycle.
 export const topoOrder = (keys, deps) => {
   const order = []
