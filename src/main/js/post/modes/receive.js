@@ -90,7 +90,7 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
       api.gh.setOutput('status', 'proceed')
     }
   } catch (e) {
-    report.error(e, e.stack).setStatus('failure')
+    report.error(e).setStatus('failure')
     throw e
   } finally {
     await clean(ctx)

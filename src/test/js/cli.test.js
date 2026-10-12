@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest'
-import {$} from 'zx-extra'
+import {$, fs, path, tempy} from 'zx-extra'
 import {createRequire} from 'node:module'
 
 describe('cli', () => {
@@ -18,6 +18,16 @@ describe('cli', () => {
     expect(help.includes('--verify')).toBeTruthy()
     expect(help.includes('--deliver')).toBeTruthy()
     expect(help.includes('--dry-run')).toBeTruthy()
+  })
+
+  test('a failed command is printed once and its exit code is kept', async () => {
+    const require = createRequire(import.meta.url)
+    const cwd = tempy.temporaryDirectory()
+    await fs.writeJson(path.join(cwd, 'package.json'), {name: 'not-a-repo', version: '1.0.0'})
+
+    const res = await $({cwd, nothrow: true})`node ${require.resolve('../../main/js/cli.js')} --receive`
+    expect(res.exitCode).toBe(128)
+    expect(res.stderr.match(/not a git repository/gi)?.length).toBe(1)
   })
 
 })

@@ -10,24 +10,26 @@ export const runDeliver = async ({env, flags}) => {
   $.memo = new Map()
   $.report = report
 
-  report.setStatus('inspecting')
+  try {
+    report.setStatus('inspecting')
 
-  const tars = await glob(path.join(dir, 'parcel.*.tar'))
-  if (!tars.length) return report.setStatus('success').log(`no parcels in ${dir}`)
+    const tars = await glob(path.join(dir, 'parcel.*.tar'))
+    if (!tars.length) return report.setStatus('success').log(`no parcels in ${dir}`)
 
-  const cwd = await ensureGitRepo(env)
+    const cwd = await ensureGitRepo(env)
 
-  report.setStatus('delivering').log(`parcels: ${tars.length}`)
-  const result = await deliver(tars, env, {dryRun: flags.dryRun, cwd})
-  report.set('delivery', result)
+    report.setStatus('delivering').log(`parcels: ${tars.length}`)
+    const result = await deliver(tars, env, {dryRun: flags.dryRun, cwd})
+    report.set('delivery', result)
 
-  log.info(`done: ${result.delivered} delivered, ${result.skipped} skipped`)
+    log.info(`done: ${result.delivered} delivered, ${result.skipped} skipped`)
 
-  if (result.invalid.length) {
-    report.setStatus('failure')
-    throw new Error(`populate rules: ${result.invalid.length} parcel(s) not delivered`)
+    if (result.invalid.length) throw new Error(`populate rules: ${result.invalid.length} parcel(s) not delivered`)
+    report.setStatus('success')
+  } catch (e) {
+    report.error(e).setStatus('failure')
+    throw e
   }
-  report.setStatus('success')
 }
 
 const ensureGitRepo = async (env) => {

@@ -3,6 +3,7 @@
 import {argv} from 'zx-extra'
 import {run, version} from './index.js'
 import {normalizeFlags} from './config.js'
+import {log, wasPrinted} from './post/log.js'
 
 const flags = normalizeFlags(argv)
 
@@ -45,7 +46,6 @@ try {
   await run({flags})
   process.exit(0)
 } catch (e) {
-  if (e?.exitCode !== undefined) process.exit(e.exitCode)
-  console.error(e)
-  process.exit(1)
+  if (!wasPrinted(e)) log.error(e)
+  process.exit(e?.exitCode || 1)
 }

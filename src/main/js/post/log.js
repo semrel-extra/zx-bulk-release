@@ -10,8 +10,17 @@ export const redact = (v) => {
   return v
 }
 
+// Errors are logged as redacted stacks (with every inner error of an aggregate) and remembered,
+// so the CLI prints only failures nobody has reported yet.
+const printed = new WeakSet()
+export const wasPrinted = (e) => printed.has(e)
+
+const describe = (e) => [e, ...(e instanceof AggregateError ? e.errors : [])]
+  .map(err => { if (err instanceof Error) printed.add(err); return redact(String(err?.stack || err)) })
+  .join('\n')
+
 // Module-level logger. Delegates to $.report when inside a release run, falls back to console.
-const sanitize = (args) => args.map(a => typeof a === 'string' ? redact(a) : a)
+const sanitize = (args) => args.map(a => typeof a === 'string' ? redact(a) : a instanceof Error ? describe(a) : a)
 const r = () => $.report || console
 
 export const log = Object.assign(

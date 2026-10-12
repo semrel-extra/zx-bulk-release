@@ -1,3 +1,4 @@
+import {AsyncResource} from 'node:async_hooks'
 import {$} from 'zx-extra'
 
 export const tpl = (str, context) =>
@@ -79,14 +80,15 @@ export const queuefy = (fn, concurrency = 1) => {
   const next = () => {
     if (active >= concurrency || queue.length === 0) return
     active++
-    const {args, resolve, reject} = queue.shift()
-    Promise.resolve().then(() => fn(...args)).then(
+    const {task, resolve, reject} = queue.shift()
+    Promise.resolve().then(task).then(
       v => { active--; resolve(v); next() },
       e => { active--; reject(e); next() }
     )
   }
+  // A call runs in its caller's async context (zx `within`, `$.scope`), not in the one that freed the slot.
   return (...args) => new Promise((resolve, reject) => {
-    queue.push({args, resolve, reject})
+    queue.push({task: AsyncResource.bind(() => fn(...args)), resolve, reject})
     next()
   })
 }
