@@ -2,7 +2,7 @@ import {fs, path} from 'zx-extra'
 import {parcelChannel} from './directive.js'
 import {sanitizePkgName} from './build.js'
 import {mergePopulate} from './populate.js'
-import {readManifest} from '../tar.js'
+import {readManifest, readNpmManifest} from '../tar.js'
 
 const MARKERS = new Set(['released', 'skip', 'conflict', 'orphan'])
 
@@ -11,9 +11,11 @@ const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key)
 const isMarker = async (tarPath) =>
   (await fs.stat(tarPath)).size <= 16 && MARKERS.has(await fs.readFile(tarPath, 'utf8'))
 
-const findPackage = (name, expected) => Object.entries(expected).find(([pkgName, pkg]) =>
-  name.includes(`.${sanitizePkgName(pkgName)}.${pkg.version}.`)
-)
+// parcel.{sha7}.{channel}.{name}.{version}.{hash}.tar — read by position; names are encoded injectively.
+const findPackage = (name, sha7, channel, expected) => Object.entries(expected).find(([pkgName, pkg]) => {
+  const prefix = `parcel.${sha7}.${channel}.${sanitizePkgName(pkgName)}.${pkg.version}.`
+  return name.startsWith(prefix) && /^[0-9a-f]+\.tar$/.test(name.slice(prefix.length))
+})
 
 export const verifyParcels = (tars, context) => {
   const {sha7, packages: expected} = context
@@ -39,7 +41,7 @@ export const verifyParcels = (tars, context) => {
       continue
     }
 
-    const belongsTo = findPackage(name, expected)
+    const belongsTo = findPackage(name, sha7, channel, expected)
     if (!belongsTo) {
       errors.push(`unexpected parcel (no matching package): ${name}`)
       continue
@@ -57,9 +59,9 @@ export const verifyParcels = (tars, context) => {
   return {verified, errors}
 }
 
-// Checks that pack kept what the context fixed: the channel, the release tag and the populate
-// rules of every manifest, and the commit time the directives are ordered by. No env, no schemas:
-// the courier checks the resolved manifests against the rules right before delivery.
+// Checks that pack kept what the context fixed: the channel, package, version, release tag and
+// populate rules of every manifest (and of the npm tarball), and the commit time the directives
+// are ordered by. No env, no schemas: the courier checks the resolved manifests right before delivery.
 export const verifyManifests = async (tars, context) => {
   const errors = []
 
@@ -89,11 +91,22 @@ export const verifyManifests = async (tars, context) => {
       continue
     }
 
-    const [, pkg] = findPackage(name, context.packages)
+    const [pkgName, pkg] = findPackage(name, context.sha7, channel, context.packages)
+    if (raw.name !== pkgName || raw.version !== pkg.version)
+      errors.push(`manifest name or version differs from the parcel name: ${name}`)
     if (own(raw, 'tag') && raw.tag !== pkg.tag)
       errors.push(`manifest tag differs from the context: ${name}`)
     if (JSON.stringify(raw.populate || mergePopulate()) !== JSON.stringify(pkg.populate || mergePopulate()))
       errors.push(`populate rules differ from the context: ${name}`)
+
+    // npm publishes the tarball under the name and version from its own package.json
+    if (channel === 'npm') {
+      const tarball = await readNpmManifest(tarPath).catch(() => null)
+      if (!tarball)
+        errors.push(`npm parcel has no readable package.tgz: ${name}`)
+      else if (tarball.name !== pkgName || tarball.version !== pkg.version)
+        errors.push(`npm tarball ${JSON.stringify(`${tarball.name}@${tarball.version}`)} differs from the parcel name: ${name}`)
+    }
   }
 
   return errors

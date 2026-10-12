@@ -1,5 +1,6 @@
 import tar from 'tar-stream'
 import crypto from 'node:crypto'
+import zlib from 'node:zlib'
 import {pipeline} from 'node:stream/promises'
 import {fs, path} from 'zx-extra'
 
@@ -89,4 +90,36 @@ export const readManifest = async (tarPath) => {
 
   await pipeline(fs.createReadStream(tarPath), extract)
   return raw === null ? null : JSON.parse(raw)
+}
+
+// Reads package.json from the npm tarball (package.tgz) inside a parcel — npm publishes
+// under the name and version found there. Null if there is no tarball or it is ambiguous.
+export const readNpmManifest = async (tarPath) => {
+  const outer = tar.extract()
+  const found = []
+
+  outer.on('entry', (header, stream, next) => {
+    if (header.name !== 'package.tgz') {
+      stream.on('end', next)
+      return stream.resume()
+    }
+
+    const inner = tar.extract()
+    inner.on('entry', (h, s, n) => {
+      // npm takes package.json one level deep, whatever the top dir is called
+      const match = /^(\.\/)?[^/]+\/package\.json$/.test(h.name)
+      const chunks = []
+      s.on('data', d => match && chunks.push(d))
+      s.on('end', () => {
+        if (match) found.push(Buffer.concat(chunks).toString('utf8'))
+        n()
+      })
+      s.resume()
+    })
+    pipeline(stream, zlib.createGunzip(), inner).then(() => next(), next)
+  })
+
+  await pipeline(fs.createReadStream(tarPath), outer)
+  if (found.length !== 1) return null
+  try { return JSON.parse(found[0]) } catch { return null }
 }

@@ -1,7 +1,10 @@
 import {describe, test, expect} from 'vitest'
 import {fs, path, tempy, glob} from 'zx-extra'
-import {packTar} from '../../main/js/post/tar.js'
-import {mergePopulate, verifyManifests} from '../../main/js/post/parcel/index.js'
+import tar from 'tar-stream'
+import zlib from 'node:zlib'
+import {pipeline} from 'node:stream/promises'
+import {packTar, readNpmManifest} from '../../main/js/post/tar.js'
+import {mergePopulate, verifyManifests, verifyParcels, sanitizePkgName} from '../../main/js/post/parcel/index.js'
 
 describe('modes.verify', () => {
   const makeContext = (sha, packages) => ({
@@ -14,6 +17,16 @@ describe('modes.verify', () => {
   const sha = 'abc1234567890abcdef'
   const sha7 = sha.slice(0, 7)
 
+  // an npm tarball as `npm pack` lays it out: package/package.json
+  const npmTgz = async (packages = [{name: 'pkg', version: '1.0.1'}], dir = 'package') => {
+    const pack = tar.pack()
+    packages.forEach((json, i) => pack.entry({name: `${i ? `${dir}${i}` : dir}/package.json`}, JSON.stringify(json)))
+    pack.finalize()
+    const file = path.join(tempy.temporaryDirectory(), 'package.tgz')
+    await pipeline(pack, zlib.createGzip(), fs.createWriteStream(file))
+    return [{name: 'package.tgz', source: file}]
+  }
+
   test('copies verified parcels to output dir', async () => {
     const {runVerify} = await import(/* @vite-ignore */ `../../main/js/post/modes/verify.js?t=${Date.now()}`)
 
@@ -23,8 +36,8 @@ describe('modes.verify', () => {
     await fs.writeJson(path.join(dir, 'ctx.json'), makeContext(sha, {
       pkg: {version: '1.0.1', channels: ['npm', 'git-tag']},
     }))
-    await packTar(path.join(dir, `parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`), {channel: 'npm'})
-    await packTar(path.join(dir, `parcel.${sha7}.git-tag.pkg.1.0.1.bbb222.tar`), {channel: 'git-tag'})
+    await packTar(path.join(dir, `parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`), {channel: 'npm', name: 'pkg', version: '1.0.1'}, await npmTgz())
+    await packTar(path.join(dir, `parcel.${sha7}.git-tag.pkg.1.0.1.bbb222.tar`), {channel: 'git-tag', name: 'pkg', version: '1.0.1'})
 
     await runVerify({cwd: outDir, flags: {verify: dir, context: path.join(dir, 'ctx.json')}})
 
@@ -42,7 +55,7 @@ describe('modes.verify', () => {
     await fs.writeJson(path.join(dir, 'ctx.json'), makeContext(sha, {
       pkg: {version: '1.0.1', channels: ['npm']},
     }))
-    await packTar(path.join(parcelsDir, `parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`), {channel: 'npm'})
+    await packTar(path.join(parcelsDir, `parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`), {channel: 'npm', name: 'pkg', version: '1.0.1'}, await npmTgz())
 
     await runVerify({cwd: dir, flags: {verify: parcelsDir, context: path.join(dir, 'ctx.json')}})
 
@@ -79,7 +92,7 @@ describe('modes.verify', () => {
   })
 
   // `embedded` — the rules pack put into the manifest, `populate` — the rules in the context
-  const verifyWith = async ({populate, embedded = populate, manifest, channel = manifest.channel, tag, timestamp, directive}) => {
+  const verifyWith = async ({populate, embedded = populate, manifest, channel = manifest.channel, tag, timestamp, directive, files}) => {
     const {runVerify} = await import(/* @vite-ignore */ `../../main/js/post/modes/verify.js?t=${Date.now()}`)
     const dir = tempy.temporaryDirectory()
     const outDir = tempy.temporaryDirectory()
@@ -88,7 +101,8 @@ describe('modes.verify', () => {
       ...makeContext(sha, {pkg: {version: '1.0.1', channels: [channel], ...tag && {tag}, ...populate && {populate}}}),
       ...timestamp && {timestamp},
     })
-    await packTar(path.join(dir, `parcel.${sha7}.${channel}.pkg.1.0.1.aaa111.tar`), {...manifest, ...embedded && {populate: embedded}})
+    await packTar(path.join(dir, `parcel.${sha7}.${channel}.pkg.1.0.1.aaa111.tar`), {...manifest, ...embedded && {populate: embedded}},
+      files || (manifest.channel === 'npm' ? await npmTgz() : []))
     if (directive) await packTar(path.join(dir, `parcel.${sha7}.directive.${directive.fileTs}.tar`), {channel: 'directive', sha, timestamp: directive.timestamp})
     await runVerify({cwd: outDir, flags: {verify: dir, context: path.join(dir, 'ctx.json')}})
 
@@ -137,6 +151,55 @@ describe('modes.verify', () => {
   test('rejects a manifest with a __proto__ key', async () => {
     await expect(verifyWith({manifest: JSON.parse('{"channel": "git-tag", "name": "pkg", "version": "1.0.1", "__proto__": {"tag": "v6.6.6"}}'), tag: 'v1.0.1'}))
       .rejects.toThrow('verification failed')
+  })
+
+  test('rejects a manifest whose package or version differs from the parcel name', async () => {
+    await expect(verifyWith({manifest: {...tagManifest, name: 'other'}, tag: 'v1.0.1'})).rejects.toThrow('verification failed')
+    await expect(verifyWith({manifest: {...tagManifest, version: '9.9.9'}, tag: 'v1.0.1'})).rejects.toThrow('verification failed')
+  })
+
+  test('rejects an npm parcel whose tarball holds another package or version', async () => {
+    await expect(verifyWith({manifest: npmManifest, files: await npmTgz([{name: 'depseek', version: '0.4.7'}])})).rejects.toThrow('verification failed')
+    await expect(verifyWith({manifest: npmManifest, files: await npmTgz([{name: 'pkg', version: '0.0.1'}])})).rejects.toThrow('verification failed')
+    expect((await verifyWith({manifest: npmManifest, files: await npmTgz([{name: 'pkg', version: '1.0.1'}], 'any-dir')})).length).toBe(1)
+  })
+
+  test('rejects an npm parcel without a readable, unambiguous tarball', async () => {
+    await expect(verifyWith({manifest: npmManifest, files: []})).rejects.toThrow('verification failed')
+    await expect(verifyWith({manifest: npmManifest, files: await npmTgz([{name: 'pkg', version: '1.0.1'}, {name: 'depseek', version: '0.4.7'}])}))
+      .rejects.toThrow('verification failed')
+  })
+
+  test('tells apart packages whose names used to collide', async () => {
+    const dir = tempy.temporaryDirectory()
+    const context = makeContext(sha, {
+      '@scope/pkg': {version: '1.0.0', channels: ['npm']},
+      'scope-pkg':  {version: '1.0.0', channels: ['npm']},
+    })
+    const parcel = async (name, hash, tarball = name) => {
+      const tarPath = path.join(dir, `parcel.${sha7}.npm.${sanitizePkgName(name)}.1.0.0.${hash}.tar`)
+      await packTar(tarPath, {channel: 'npm', name, version: '1.0.0'}, await npmTgz([{name: tarball, version: '1.0.0'}]))
+      return tarPath
+    }
+
+    const honest = [await parcel('@scope/pkg', 'aaa111'), await parcel('scope-pkg', 'bbb222')]
+    expect(verifyParcels(honest, context).errors).toEqual([])
+    expect(await verifyManifests(honest, context)).toEqual([])
+
+    const swapped = await parcel('scope-pkg', 'ccc333', '@scope/pkg')
+    expect(honest.map(t => path.basename(t))).toEqual([`parcel.${sha7}.npm.scope__pkg.1.0.0.aaa111.tar`, `parcel.${sha7}.npm.scope-pkg.1.0.0.bbb222.tar`])
+    expect(await verifyManifests([swapped], context)).toEqual([
+      `npm tarball "@scope/pkg@1.0.0" differs from the parcel name: parcel.${sha7}.npm.scope-pkg.1.0.0.ccc333.tar`,
+    ])
+  })
+
+  test('readNpmManifest reads package.json from the tarball inside a parcel', async () => {
+    const tarPath = path.join(tempy.temporaryDirectory(), 'parcel.tar')
+    await packTar(tarPath, {channel: 'npm'}, await npmTgz([{name: 'depseek', version: '0.4.7'}]))
+    expect(await readNpmManifest(tarPath)).toEqual({name: 'depseek', version: '0.4.7'})
+
+    await packTar(tarPath, {channel: 'npm'})
+    expect(await readNpmManifest(tarPath)).toBe(null)
   })
 
   test('verifyManifests names the parcel and the problem', async () => {

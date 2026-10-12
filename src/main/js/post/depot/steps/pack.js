@@ -54,15 +54,17 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   if (outputDir) await fs.ensureDir(outputDir)
   const {repoName, repoHost, originUrl} = await api.git.getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})
   const artifacts = {repoName, repoHost, originUrl}
+  // Packages are packed in parallel, and packers name tarballs on their own: keep each package's files apart.
+  const workDir = tempy.temporaryDirectory()
 
   if (active.includes('npm')) {
-    artifacts.npmTarball = await packNpmTarball(pkg, stageDir)
+    artifacts.npmTarball = await packNpmTarball(pkg, workDir)
   }
   if (active.includes('gh-release') || active.includes('changelog'))
     artifacts.releaseNotes = await formatReleaseNotes(pkg)
   if (active.includes('gh-pages')) {
     const [, from = 'docs'] = asTuple(pkg.config.ghPages, ['branch', 'from'])
-    artifacts.docsDir = path.join(stageDir, 'docs')
+    artifacts.docsDir = path.join(workDir, 'docs')
     await fs.copy(path.join(pkg.absPath, from), artifacts.docsDir)
   }
   if (active.includes('gh-release') && pkg.config.ghAssets?.length)

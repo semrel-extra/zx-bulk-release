@@ -29,7 +29,7 @@ parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
 
 - `sha7` — first 7 characters of the commit SHA
 - `channel` — delivery channel (`git-tag`, `npm`, `gh-release`, ...)
-- `name` — sanitized package name (`@scope/pkg` → `scope-pkg`)
+- `name` — package name encoded injectively: `[a-z0-9-]` as is, `@scope/pkg` → `scope__pkg`, other chars → `_xx` (UTF-8 bytes)
 - `version` — semver version
 - `hash6` — 6-character SHA-1 of tar contents (content-addressable dedup)
 
