@@ -294,7 +294,8 @@ describe('modes.pack', () => {
       const exec = await getExec()
       const flags = {pack: true, build: true, test: true}
       const pkg = await preparePkg('a')
-      pkg.ctx = makeCtx({cwd, flags, run: exec})
+      const root = tempy.temporaryDirectory() // the repo root, above the monorepo dir zbr runs in
+      pkg.ctx = makeCtx({cwd, flags, run: exec, git: {root}})
 
       const report = makeReport()
       const ctx = makeCtx({
@@ -309,9 +310,10 @@ describe('modes.pack', () => {
 
       await runPack({cwd, env: ctx.env, flags: ctx.flags}, ctx)
 
-      const files = await fs.readdir(outputDir)
-      const directive = files.find(f => f.includes('directive'))
-      expect(directive).toBeTruthy()
+      const files = await fs.readdir(path.resolve(root, 'parcels'))
+      expect(files.find(f => f.includes('.directive.'))).toBeTruthy()
+      expect(files.find(f => f.includes('.git-tag.'))).toBeTruthy()
+      expect(fs.existsSync(outputDir)).toBe(false)
     })
   })
 

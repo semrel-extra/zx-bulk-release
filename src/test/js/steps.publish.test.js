@@ -57,7 +57,7 @@ describe('steps.publish', () => {
       pkg.ctx = ctx
       pkg.tars = [tarPath]
 
-      await expect(publish(pkg, ctx)).rejects.toThrow('populate rules: 1 parcel(s) of test-pkg not delivered')
+      await expect(publish(pkg, ctx)).rejects.toThrow('1 invalid parcel(s) of test-pkg not delivered')
     })
   })
 

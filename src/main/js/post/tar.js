@@ -113,12 +113,11 @@ export const readNpmManifest = async (tarPath) => {
 
     const inner = tar.extract()
     inner.on('entry', (h, s, n) => {
-      // npm takes package.json one level deep, whatever the top dir is called
-      const match = /^(\.\/)?[^/]+\/package\.json$/.test(h.name)
+      const match = isNpmManifest(h.name)
       const chunks = []
       s.on('data', d => match && chunks.push(d))
       s.on('end', () => {
-        if (match) found.push(Buffer.concat(chunks).toString('utf8'))
+        if (match) found.push({type: h.type, json: Buffer.concat(chunks).toString('utf8')})
         n()
       })
       s.resume()
@@ -127,6 +126,11 @@ export const readNpmManifest = async (tarPath) => {
   })
 
   await pipeline(fs.createReadStream(tarPath), outer)
-  if (found.length !== 1) return null
-  try { return JSON.parse(found[0]) } catch { return null }
+  if (found.length !== 1 || found[0].type !== 'file') return null
+  try { return JSON.parse(found[0].json) } catch { return null }
 }
+
+// npm drops the first path segment as it is, whatever it is called, then normalizes the rest and takes
+// package.json from the top: every entry that lands there counts, so a second spelling can't hide behind the first.
+const isNpmManifest = (name) =>
+  path.posix.normalize(name.split('/').slice(1).join('/')).replace(/^\/+/, '') === 'package.json'

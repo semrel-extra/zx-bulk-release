@@ -22,7 +22,7 @@ export const runDeliver = async ({env, flags}) => {
 
     log.info(`done: ${result.delivered} delivered, ${result.skipped} skipped`)
 
-    if (result.invalid.length) throw new Error(`populate rules: ${result.invalid.length} parcel(s) not delivered`)
+    if (result.invalid.length) throw new Error(`${result.invalid.length} invalid parcel(s) not delivered, see the warnings above`)
     report.setStatus('success')
   } catch (e) {
     report.error(e).setStatus('failure')

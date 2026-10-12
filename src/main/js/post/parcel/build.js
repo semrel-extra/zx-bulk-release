@@ -10,6 +10,13 @@ export const sanitizePkgName = (name) => {
   return scope === undefined ? escapeName(name) : `${escapeName(scope)}__${escapeName(local)}`
 }
 
+// The package among `expected` a parcel name belongs to: parcel.{sha7}.{channel}.{name}.{version}.{hash}.tar,
+// read by position, so no package whose name or version contains another's can be taken for it.
+export const findPackage = (name, sha7, channel, expected) => Object.entries(expected).find(([pkgName, pkg]) => {
+  const prefix = `parcel.${sha7}.${channel}.${sanitizePkgName(pkgName)}.${pkg.version}.`
+  return name.startsWith(prefix) && /^[0-9a-f]+\.tar$/.test(name.slice(prefix.length))
+})
+
 
 const gitFields = (a, pkg) => ({
   repoHost: a.repoHost,

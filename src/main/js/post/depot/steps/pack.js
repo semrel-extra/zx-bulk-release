@@ -2,7 +2,7 @@ import {$, tempy, fs, path} from 'zx-extra'
 import {memoizeBy, asTuple} from '../../../util.js'
 import {api} from '../../api/index.js'
 import {prepare, getActiveChannels} from '../../courier/index.js'
-import {buildParcels, PARCELS_DIR} from '../../parcel/index.js'
+import {buildParcels, parcelsDir} from '../../parcel/index.js'
 import {sanitizePkgName} from '../../parcel/build.js'
 import {formatReleaseNotes} from '../generators/notes.js'
 import {packTar, hashFile} from '../../tar.js'
@@ -49,7 +49,7 @@ export const pack = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   await prepare(active, pkg)
   await api.npm.npmPersist(pkg)
 
-  const outputDir = flags.pack ? path.resolve(ctx.git.root, typeof flags.pack === 'string' ? flags.pack : PARCELS_DIR) : null
+  const outputDir = flags.pack ? parcelsDir(ctx.git.root, flags) : null
   const stageDir = outputDir || tempy.temporaryDirectory()
   if (outputDir) await fs.ensureDir(outputDir)
   const {repoName, repoHost, originUrl} = await api.git.getRepo(pkg.absPath, {basicAuth: pkg.config.ghBasicAuth})

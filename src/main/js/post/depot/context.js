@@ -25,7 +25,8 @@ export const readContext = async (filePath) => {
   return data
 }
 
-export const buildContext = (packages, queue, sha, {getChannels, getPopulate, timestamp} = {}) => {
+// prev: what each package waits on, as in the directive; snapshot: whether npm publishes under the snapshot tag.
+export const buildContext = (packages, queue, sha, {getChannels, getPopulate, timestamp, prev, snapshot} = {}) => {
   const pkgs = {}
   for (const name of queue) {
     const pkg = packages[name]
@@ -43,6 +44,16 @@ export const buildContext = (packages, queue, sha, {getChannels, getPopulate, ti
     sha,
     sha7: sha.slice(0, 7),
     timestamp,  // commit time: directives are delivered oldest first
+    snapshot,
+    prev: prev && prevOf(prev, Object.keys(pkgs)),
     packages: pkgs,
   }
+}
+
+// The dependencies among the given packages only, the way the directive keeps them.
+export const prevOf = (prev, names) => {
+  const listed = new Set(names)
+  return Object.fromEntries(names
+    .map(name => [name, (prev.get(name) || []).filter(d => listed.has(d))])
+    .filter(([, deps]) => deps.length))
 }

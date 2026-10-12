@@ -77,6 +77,8 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
       getChannels: (pkg) => getActiveChannels(pkg, ctx.channels, snapshot),
       getPopulate: (pkg) => mergePopulate(pkg.config.populate),
       timestamp:   Number(await api.git.getCommitTimestamp(cwd)),
+      prev,
+      snapshot,
     })
     await writeContext(cwd, context)
 

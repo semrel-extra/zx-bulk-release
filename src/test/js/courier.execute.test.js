@@ -220,21 +220,47 @@ describe('courier.execute', () => {
     expect(await markers(ctx.dir, packages.a.parcels)).toEqual(['released', 'released', 'released']) // 1.0.1
   })
 
-  test('a broken or lost claim holds its package, however the claim parcel is broken', async () => {
+  test('a broken claim holds its package; a marker on a claim counts for what the remote says', async () => {
     const ctx = await setup()
-    const {tars, packages} = await pack(ctx, [{name: 'a'}, {name: 'b'}, {name: 'c'}])
+    const {tars, packages} = await pack(ctx, [{name: 'a'}, {name: 'b'}, {name: 'c'}, {name: 'd'}, {name: 'e'}])
     await fs.writeFile(path.join(ctx.dir, packages.a.parcels[0]), 'not a tar at all, rather long')
-    await fs.writeFile(path.join(ctx.dir, packages.b.parcels[0]), 'conflict')
+    for (const name of ['b', 'c', 'd']) await fs.writeFile(path.join(ctx.dir, packages[name].parcels[0]), name === 'b' ? 'released' : 'conflict')
+    await $({cwd: ctx.work})`git tag c@1.0.0 ${ctx.next}` // c lost its claim for real; b's and d's markers lie
+    await $({cwd: ctx.work})`git push origin c@1.0.0`
 
     const log = []
     const result = await withRuns(recorder(log), () => deliver(tars, env, {cwd: ctx.cwd}))
 
-    expect(log.sort()).toEqual(['claim c@1.0.0', 'meta c@1.0.0', 'npm c@1.0.0'])
-    expect(result.invalid.map(i => i.file)).toEqual([packages.a.parcels[0]])
-    expect(result.conflicts).toEqual(['b'])
-    expect(await markers(ctx.dir, packages.a.parcels)).toEqual([null, null, null])
-    expect(await markers(ctx.dir, packages.b.parcels)).toEqual(['conflict', 'conflict', 'conflict'])
+    expect(log.sort()).toEqual(['claim e@1.0.0', 'meta e@1.0.0', 'npm e@1.0.0'])
+    expect(result.invalid.map(i => i.file).sort()).toEqual([packages.a.parcels[0], packages.b.parcels[0], packages.d.parcels[0]].sort())
+    expect(result.conflicts).toEqual(['c'])
+    expect(await markers(ctx.dir, packages.c.parcels)).toEqual(['conflict', 'conflict', 'conflict'])
+    expect(await markers(ctx.dir, packages.d.parcels)).toEqual(['conflict', null, null]) // no rebuild loop for a lie
     expect(await api.git.getRemoteTagCommit(ctx.cwd, `zbr-rebuild.${ctx.sha.slice(0, 7)}`)).toBe(ctx.sha)
+  })
+
+  test('the order follows the dependencies, wherever the directive puts a package', async () => {
+    const ctx = await setup()
+    const {tars} = await pack(ctx, [{name: 'b', deps: ['a']}, {name: 'a'}]) // b listed before what it waits on
+    await $({cwd: ctx.work})`git tag a@1.0.0 ${ctx.next}`
+    await $({cwd: ctx.work})`git push origin a@1.0.0`
+
+    const log = []
+    const result = await withRuns(recorder(log), () => deliver(tars, env, {cwd: ctx.cwd}))
+    expect(result.conflicts.sort()).toEqual(['a', 'b'])
+    expect(log).toEqual(['claim a@1.0.0'])
+  })
+
+  test('parcels of a directive marked done or lost never go out loose', async () => {
+    const ctx = await setup()
+    const {tars, packages} = await pack(ctx, [{name: 'a'}])
+    await fs.writeFile(directiveOf(ctx.dir, ctx.sha), 'released')
+
+    const log = []
+    const result = await withRuns(recorder(log), () => deliver(tars, env, {cwd: ctx.cwd}))
+    expect(log).toEqual([])
+    expect(result.delivered).toBe(0)
+    expect(await markers(ctx.dir, packages.a.parcels)).toEqual([null, null, null])
   })
 
   test('a failed rebuild signal adds to the errors, it does not replace them', async () => {

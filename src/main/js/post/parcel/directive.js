@@ -2,6 +2,7 @@ import {fs, path, glob} from 'zx-extra'
 import {packTar, readManifest, readMarker} from '../tar.js'
 import {log} from '../log.js'
 import {stepsOf} from '../courier/channels/index.js'
+import {prevOf} from '../depot/context.js'
 
 // parcel.{sha7}.{channel}.{...}.tar — channel is the 3rd dot-segment
 export const parcelChannel = (name) => name.replace(/\.tar$/, '').split('.')[2]
@@ -24,13 +25,7 @@ export const buildDirective = async (ctx, packedPkgs, outputDir) => {
   }
 
   // Store dependency graph for parallel delivery in topo order
-  const prev = {}
-  if (ctx.prev) {
-    for (const name of packedNames) {
-      const deps = (ctx.prev.get(name) || []).filter(d => packedNames.has(d))
-      if (deps.length) prev[name] = deps
-    }
-  }
+  const prev = ctx.prev ? prevOf(ctx.prev, [...packedNames]) : {}
 
   const sha7 = sha.slice(0, 7)
   const manifest = {
@@ -63,9 +58,10 @@ export const scanDirectives = async (dir) => {
   return result.sort((a, b) => a.timestamp - b.timestamp)
 }
 
+// Owned are the parcels the directive's packages list, the same ones the courier delivers.
 export const invalidateOrphans = async (dir, directive) => {
   const sha7 = directive.sha.slice(0, 7)
-  const owned = new Set(directive.parcels || [])
+  const owned = new Set(Object.values(directive.packages || {}).flatMap(p => p.parcels || []))
   const all = await glob(path.join(dir, `parcel.${sha7}.*.tar`))
   let count = 0
 
