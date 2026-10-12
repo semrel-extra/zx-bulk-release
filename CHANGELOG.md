@@ -1,3 +1,14 @@
+## [3.3.1](https://github.com/semrel-extra/zx-bulk-release/compare/v3.3.0...v3.3.1) (2026-10-12)
+
+### Fixes & improvements
+* fix: settle before exiting in every mode; preflight analyzes from fetched tags ([049647c](https://github.com/semrel-extra/zx-bulk-release/commit/049647ce3acc5e43f7ff6cbb0ef364cc375b4cff))
+* fix(verify): bind the directive and every parcel to the trusted context ([167f70a](https://github.com/semrel-extra/zx-bulk-release/commit/167f70ad34d407b65a0e43cb1d8aa7260b1e285b))
+* fix(courier): one executor — claim before act, settle before deciding ([ca12cf1](https://github.com/semrel-extra/zx-bulk-release/commit/ca12cf180f7f601f7bd1090c4989e8acf39df597))
+* fix(courier): claim tags at the release commit, decide by the remote state ([95d9746](https://github.com/semrel-extra/zx-bulk-release/commit/95d974638b9045fbfce947fc41290abc9f5d5a6c))
+* fix(git): one writer per repo, identity via env, retries from the remote tip ([164b356](https://github.com/semrel-extra/zx-bulk-release/commit/164b356bafac7db2c43c70f3fe2b873a52dc1979))
+* fix: print every failure once, redacted, and keep queued calls in their caller context ([3c2d0cf](https://github.com/semrel-extra/zx-bulk-release/commit/3c2d0cfaa0c4125d1393d1c190f716eabcbb4433))
+* fix(verify): check package identity of parcels ([18a83a2](https://github.com/semrel-extra/zx-bulk-release/commit/18a83a24dd2248b423f475923bc48c40be563b97))
+
 ## [3.3.0](https://github.com/semrel-extra/zx-bulk-release/compare/v3.2.0...v3.3.0) (2026-10-03)
 
 ### Features
