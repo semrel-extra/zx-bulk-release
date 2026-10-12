@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest'
-import {fetchManifest, fetchPkg, getNpmrc, npmPublished} from '../../main/js/post/api/npm.js'
-import {$, within, tempy, fs} from 'zx-extra'
+import {fetchManifest, fetchPkg, getNpmrc, npmPublished, npmPersist, npmRestore} from '../../main/js/post/api/npm.js'
+import {$, within, tempy, fs, path} from 'zx-extra'
 import {createSpawnMock} from './utils/mock.js'
 import {parseEnv} from '../../main/js/config.js'
 
@@ -97,4 +97,51 @@ describe('api.npm', () => {
     expect(views[0]).toContain(`npm view --registry=https://r.example --userconfig=${npmrc} -- @scope/pkg@1.0.0 version`)
     expect(views[1]).toContain('npm view --registry=https://r.example -- @scope/pkg@1.0.1 version')
   }))
+
+  // npm in a sibling package reads this manifest meanwhile: it must never see it truncated.
+  describe('npmPersist() / npmRestore() replace the manifest whole', () => {
+    const raw = '{"name":"a","version":"1.0.0"}'
+    const setup = async () => {
+      const dir = tempy.temporaryDirectory()
+      const file = path.join(dir, 'package.json')
+      await fs.writeFile(file, raw)
+      await fs.chmod(file, 0o640)
+      return {dir, file, pkg: {name: 'a', version: '1.0.1', manifest: {name: 'a', version: '1.0.1'}, manifestRaw: raw, manifestAbsPath: file}}
+    }
+
+    test('a new file takes the place of the old one, which stays intact for its readers', async () => {
+      const {dir, file, pkg} = await setup()
+      const reader = await fs.promises.open(file, 'r')
+
+      await npmPersist(pkg)
+      expect(await reader.readFile('utf8')).toBe(raw)
+      await reader.close()
+      expect(await fs.readFile(file, 'utf8')).toBe('{\n  "name": "a",\n  "version": "1.0.1"\n}\n')
+      expect((await fs.stat(file)).mode & 0o777).toBe(0o640)
+
+      await npmRestore(pkg)
+      expect(await fs.readFile(file, 'utf8')).toBe(raw)
+      expect(await fs.readdir(dir)).toEqual(['package.json'])
+    })
+
+    test('a symlinked manifest stays a symlink', async () => {
+      const {dir, file, pkg} = await setup()
+      const real = path.join(dir, 'real.json')
+      await fs.move(file, real)
+      await fs.symlink('real.json', file)
+
+      await npmPersist(pkg)
+      expect((await fs.lstat(file)).isSymbolicLink()).toBe(true)
+      expect((await fs.readJson(real)).version).toBe('1.0.1')
+    })
+
+    test('a failed replace leaves no temp file behind', async () => {
+      const {dir, pkg} = await setup()
+      const file = path.join(dir, 'pkg.json')
+      await fs.outputFile(path.join(file, 'x'), '')
+
+      await expect(npmPersist({...pkg, manifestAbsPath: file})).rejects.toThrow()
+      expect(await fs.readdir(dir)).toEqual(['package.json', 'pkg.json'])
+    })
+  })
 })

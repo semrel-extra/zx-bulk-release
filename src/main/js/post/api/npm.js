@@ -1,4 +1,5 @@
 import zlib from 'node:zlib'
+import {randomUUID} from 'node:crypto'
 import _fs from 'node:fs/promises'
 import _path from 'node:path'
 import tar from 'tar-stream'
@@ -69,13 +70,29 @@ export const fetchManifest = async (pkg, {nothrow} = {}) => {
 export const npmPersist = async (pkg) => {
   const {name, version, manifest, manifestAbsPath} = pkg
   log.info(`updating ${manifestAbsPath} inners: ${name} ${version}`)
-  await fs.writeJson(manifestAbsPath, manifest, {spaces: 2})
+  await replaceFile(manifestAbsPath, JSON.stringify(manifest, null, 2) + '\n')
 }
 
 export const npmRestore = async (pkg) => {
   const {manifestRaw, manifestAbsPath} = pkg
   log.info(`rolling back ${manifestAbsPath} inners to manifestRaw`)
-  await fs.writeFile(manifestAbsPath, manifestRaw, {encoding: 'utf8'})
+  await replaceFile(manifestAbsPath, manifestRaw)
+}
+
+// Packages go in parallel, and npm (yarn, pnpm) in any of them reads every manifest of the workspace:
+// a reader sees the old file or the new one, never a torn one. A symlinked manifest stays a symlink.
+const replaceFile = async (file, data) => {
+  const target = await fs.realpath(file)
+  const {mode} = await fs.stat(target)
+  const tmp = `${target}.${randomUUID()}.tmp`
+  try {
+    await fs.writeFile(tmp, data, 'utf8')
+    await fs.chmod(tmp, mode & 0o7777)
+    await fs.rename(tmp, target)
+  } catch (e) {
+    await fs.rm(tmp, {force: true})
+    throw e
+  }
 }
 
 export const npmPublish = async (pkg) => {
