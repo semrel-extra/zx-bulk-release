@@ -22,13 +22,13 @@ try {
   assert.equal(env.ghToken, 't')
   assert.equal(env.npmToken, 'n')
 
-  const {tpl, get, set, queuefy, pool} = await import('../../main/js/util.js')
+  const {tpl, get, set, queuefy, keyedQueue} = await import('../../main/js/util.js')
   assert.equal(tpl('${{name}}', {name: 'x'}), 'x')
   const obj = {}
   set(obj, 'a.b', 1)
   assert.equal(get(obj, 'a.b'), 1)
   assert.equal(typeof queuefy, 'function')
-  assert.equal(typeof pool, 'function')
+  assert.equal(typeof keyedQueue, 'function')
 
   console.log('smoke/api: ok')
   process.exit(0)

@@ -71,7 +71,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [ 16, 18, 20, 22, 24, 26 ]
+        node-version: [ 16, 26, 27-nightly ]
 
     runs-on: ubuntu-26.04
     steps:
