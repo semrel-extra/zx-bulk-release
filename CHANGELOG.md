@@ -1,3 +1,8 @@
+## [4.0.1](https://github.com/semrel-extra/zx-bulk-release/compare/v4.0.0...v4.0.1) (2026-10-12)
+
+### Fixes & improvements
+* fix(pack): replace manifests atomically, siblings never read a torn package.json ([01f9784](https://github.com/semrel-extra/zx-bulk-release/commit/01f9784fc702b167e941840d99d1ee5e243a3986))
+
 ## [4.0.0](https://github.com/semrel-extra/zx-bulk-release/compare/v3.3.0...v4.0.0) (2026-10-12)
 
 ### Features
