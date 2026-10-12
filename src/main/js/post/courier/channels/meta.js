@@ -32,6 +32,7 @@ const pushMetaBranch = async (manifest, dir, {gitRoot}) => {
 
 export default {
   name: 'meta',
+  stage: 'announce',
   requires: ['repoAuthedUrl'],
   when:    (pkg) => pkg.config.meta.type !== null,
   prepare: prepareMeta,

@@ -1,17 +1,10 @@
 import {fs, path, glob} from 'zx-extra'
-import {packTar, unpackTar} from '../tar.js'
+import {packTar, readManifest, readMarker} from '../tar.js'
 import {log} from '../log.js'
-
-const GIT_CHANNELS = new Set(['git-tag', 'gh-release', 'changelog', 'gh-pages', 'meta'])
+import {stepsOf} from '../courier/channels/index.js'
 
 // parcel.{sha7}.{channel}.{...}.tar — channel is the 3rd dot-segment
 export const parcelChannel = (name) => name.replace(/\.tar$/, '').split('.')[2]
-
-const splitSteps = (channelNames) => {
-  const git = channelNames.filter(n => GIT_CHANNELS.has(n))
-  const ext = channelNames.filter(n => !GIT_CHANNELS.has(n))
-  return [git, ext].filter(s => s.length)
-}
 
 export const buildDirective = async (ctx, packedPkgs, outputDir) => {
   const {sha, timestamp} = packedPkgs[0].ctx.git
@@ -24,7 +17,7 @@ export const buildDirective = async (ctx, packedPkgs, outputDir) => {
     packages[pkg.name] = {
       version:  pkg.version,
       tag:      pkg.tag,
-      deliver:  splitSteps(pkg.activeTransport || []),
+      deliver:  stepsOf(pkg.activeTransport || []), // read by 3.x couriers only: order is courier policy now
       parcels:  pkgParcels,
     }
     parcels.push(...pkgParcels)
@@ -53,12 +46,9 @@ export const buildDirective = async (ctx, packedPkgs, outputDir) => {
 }
 
 export const parseDirective = async (tarPath) => {
-  const content = await fs.readFile(tarPath, 'utf8').catch(() => null)
-  if (content === 'released' || content === 'conflict') return null
-
-  const {manifest} = await unpackTar(tarPath, tarPath + '.d')
-  if (manifest.channel !== 'directive') return null
-  return manifest
+  if (await readMarker(tarPath)) return null
+  const manifest = await readManifest(tarPath)
+  return manifest?.channel === 'directive' ? manifest : null
 }
 
 export const scanDirectives = async (dir) => {

@@ -8,6 +8,7 @@ const run = async ({tag, sha, gitCommitterName, gitCommitterEmail}, dir, {gitRoo
 
 export default {
   name: 'git-tag',
+  stage: 'claim',
   requires: ['tag', 'sha'],
   when: (pkg) => !pkg.ctx?.flags?.snapshot,
   run,

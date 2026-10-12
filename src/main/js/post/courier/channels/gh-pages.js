@@ -30,6 +30,7 @@ const run = async (manifest, dir, {gitRoot}) => {
 
 export default {
   name: 'gh-pages',
+  stage: 'announce',
   requires: ['repoAuthedUrl'],
   when: (pkg) => !!pkg.config.ghPages,
   run,

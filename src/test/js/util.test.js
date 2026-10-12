@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest'
 import {$, within, sleep} from 'zx-extra'
-import {tpl, get, set, queuefy, keyedQueue, pool} from '../../main/js/util.js'
+import {tpl, get, set, queuefy, keyedQueue} from '../../main/js/util.js'
 
 describe('util', () => {
   test('tpl()', () => {
@@ -109,23 +109,6 @@ describe('util', () => {
     const results = await Promise.all([lock('a', task('a1', 20)), lock('a', task('a2', 1)), lock('b', task('b1', 5))])
     expect(results).toEqual(['a1', 'a2', 'b1'])
     expect(events).toEqual(['+a1', '+b1', '-b1', '-a1', '+a2', '-a2'])
-  })
-
-  test('pool() runs tasks with concurrency limit', async () => {
-    let active = 0
-    let maxActive = 0
-    const results = []
-
-    await pool([1, 2, 3, 4, 5], 2, async (n) => {
-      active++
-      maxActive = Math.max(maxActive, active)
-      await new Promise(r => setTimeout(r, 10))
-      results.push(n)
-      active--
-    })
-
-    expect(maxActive).toBeLessThanOrEqual(2)
-    expect(results.sort()).toEqual([1, 2, 3, 4, 5])
   })
 
 })

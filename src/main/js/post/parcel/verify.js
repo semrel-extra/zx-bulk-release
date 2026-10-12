@@ -1,15 +1,10 @@
-import {fs, path} from 'zx-extra'
+import {path} from 'zx-extra'
 import {parcelChannel} from './directive.js'
 import {sanitizePkgName} from './build.js'
 import {mergePopulate} from './populate.js'
-import {readManifest, readNpmManifest} from '../tar.js'
-
-const MARKERS = new Set(['released', 'skip', 'conflict', 'orphan'])
+import {readManifest, readNpmManifest, readMarker} from '../tar.js'
 
 const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key)
-
-const isMarker = async (tarPath) =>
-  (await fs.stat(tarPath)).size <= 16 && MARKERS.has(await fs.readFile(tarPath, 'utf8'))
 
 // parcel.{sha7}.{channel}.{name}.{version}.{hash}.tar — read by position; names are encoded injectively.
 const findPackage = (name, sha7, channel, expected) => Object.entries(expected).find(([pkgName, pkg]) => {
@@ -68,7 +63,7 @@ export const verifyManifests = async (tars, context) => {
   for (const tarPath of tars) {
     const name = path.basename(tarPath)
     const channel = parcelChannel(name)
-    if (await isMarker(tarPath)) continue
+    if (await readMarker(tarPath)) continue
 
     let raw
     try { raw = await readManifest(tarPath) } catch {

@@ -4,6 +4,15 @@ import zlib from 'node:zlib'
 import {pipeline} from 'node:stream/promises'
 import {fs, path} from 'zx-extra'
 
+// A handled parcel is replaced by a marker: released, conflict, skip (3.x, held for credentials) or orphan.
+const MARKERS = new Set(['released', 'skip', 'conflict', 'orphan'])
+
+export const readMarker = async (tarPath) => {
+  if ((await fs.stat(tarPath)).size > 16) return null
+  const content = await fs.readFile(tarPath, 'utf8')
+  return MARKERS.has(content) ? content : null
+}
+
 export const packTar = async (tarPath, manifest, files = []) => {
   await fs.ensureDir(path.dirname(tarPath))
   const pack = tar.pack()
@@ -42,34 +51,32 @@ const addDir = async (pack, prefix, dirPath) => {
   }
 }
 
+// Parcels come from an untrusted phase: only plain files are taken, and only inside destDir.
+// A bad entry fails the unpacking, it never escapes as an unhandled rejection.
 export const unpackTar = async (tarPath, destDir) => {
-  await fs.ensureDir(destDir)
+  const root = path.resolve(destDir)
   const extract = tar.extract()
   let manifest = null
 
-  const done = new Promise((resolve, reject) => {
-    extract.on('entry', (header, stream, cb) => {
-      const chunks = []
-      stream.on('data', d => chunks.push(d))
-      stream.on('end', async () => {
-        const buf = Buffer.concat(chunks)
-        if (header.name === 'manifest.json') {
-          manifest = JSON.parse(buf.toString('utf8'))
-        } else {
-          const dest = path.join(destDir, header.name)
-          await fs.ensureDir(path.dirname(dest))
-          await fs.writeFile(dest, buf)
-        }
-        cb()
-      })
-      stream.resume()
-    })
-    extract.on('finish', resolve)
-    extract.on('error', reject)
+  const take = async ({name, type}, buf) => {
+    if (name === 'manifest.json') {
+      manifest = JSON.parse(buf.toString('utf8'))
+      return
+    }
+    const dest = path.resolve(root, name)
+    if (type !== 'file' || !dest.startsWith(root + path.sep)) throw new Error(`unsafe entry in ${path.basename(tarPath)}: ${name}`)
+    await fs.outputFile(dest, buf)
+  }
+
+  extract.on('entry', (header, stream, cb) => {
+    const chunks = []
+    stream.on('data', d => chunks.push(d))
+    stream.on('end', () => take(header, Buffer.concat(chunks)).then(() => cb(), cb))
+    stream.resume()
   })
 
+  await fs.ensureDir(root)
   await pipeline(fs.createReadStream(tarPath), extract)
-  await done
   return {manifest, dir: destDir}
 }
 
