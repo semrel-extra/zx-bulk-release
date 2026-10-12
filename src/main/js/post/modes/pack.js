@@ -78,7 +78,7 @@ export const runPack = async ({cwd, env, flags}, ctx) => {
       await buildDirective(ctx, packed, outputDir)
     }
   } catch (e) {
-    report.error(e, e.stack).set('error', e).setStatus('failure')
+    report.error(e).set('error', e).setStatus('failure')
     throw e
   } finally {
     await clean(ctx)

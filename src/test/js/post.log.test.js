@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest'
 import {$, within} from 'zx-extra'
-import {redact, log, createReport} from '../../main/js/post/log.js'
+import {redact, log, createReport, wasPrinted} from '../../main/js/post/log.js'
 
 describe('post.log', () => {
   test('redact masks registered secrets', () => {
@@ -85,6 +85,27 @@ describe('post.log', () => {
       expect(events[2].level).toBe('error')
 
       $.report = undefined
+    })
+  })
+
+  test('errors are logged as redacted stacks, aggregates with every inner error', async () => {
+    await within(async () => {
+      log.secret('s3cr3t-token')
+      const lines = []
+      $.report = {error: (...args) => lines.push(args.join(' '))}
+
+      const inner = Object.assign(new Error('push failed: https://x:s3cr3t-token@github.com'), {exitCode: 128})
+      const aggregate = new AggregateError([inner, new Error('second')], 'delivery failed')
+      log.error(aggregate)
+      $.report = undefined
+
+      expect(lines.length).toBe(1)
+      expect(lines[0]).toContain('delivery failed')
+      expect(lines[0]).toContain('push failed: https://x:***@github.com')
+      expect(lines[0]).toContain('second')
+      expect(lines[0]).not.toContain('s3cr3t-token')
+      expect(wasPrinted(aggregate) && wasPrinted(inner)).toBe(true)
+      expect(wasPrinted(new Error('never logged'))).toBe(false)
     })
   })
 

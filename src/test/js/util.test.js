@@ -1,4 +1,5 @@
 import {describe, test, expect} from 'vitest'
+import {$, within, sleep} from 'zx-extra'
 import {tpl, get, set, queuefy, pool} from '../../main/js/util.js'
 
 describe('util', () => {
@@ -79,6 +80,20 @@ describe('util', () => {
     expect(results[0]).toEqual({status: 'fulfilled', value: 'ok'})
     expect(results[1].status).toBe('rejected')
     expect(results[2]).toEqual({status: 'fulfilled', value: 'after'})
+  })
+
+  test('queuefy() runs each call in its caller async context', async () => {
+    const seen = []
+    const fn = queuefy(async (name) => {
+      await sleep(5)
+      seen.push(`${name}:${$.scope}`)
+    })
+
+    await Promise.all(['a', 'b', 'c'].map(name => within(() => {
+      $.scope = name
+      return fn(name)
+    })))
+    expect(seen).toEqual(['a:a', 'b:b', 'c:c'])
   })
 
   test('pool() runs tasks with concurrency limit', async () => {
