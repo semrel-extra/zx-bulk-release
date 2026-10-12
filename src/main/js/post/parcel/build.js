@@ -1,7 +1,15 @@
 import {asTuple, msgJoin} from '../../util.js'
 import {mergePopulate} from './populate.js'
 
-export const sanitizePkgName = (name) => name.replace(/[^a-z0-9-]/ig, '-').replace(/^-+|-+$/g, '')
+const escapeName = (s) => s.replace(/[^a-z0-9-]/g, (c) => [...Buffer.from(c)].map(b => `_${b.toString(16).padStart(2, '0')}`).join(''))
+
+// Package name as a parcel name segment. Injective, so different packages never share a parcel name:
+// [a-z0-9-] stay as is, `@scope/name` becomes `scope__name`, any other char is escaped as `_xx` (utf-8 bytes).
+export const sanitizePkgName = (name) => {
+  const [, scope, local] = /^@([^/]+)\/(.+)$/.exec(name) || []
+  return scope === undefined ? escapeName(name) : `${escapeName(scope)}__${escapeName(local)}`
+}
+
 
 const gitFields = (a, pkg) => ({
   repoHost: a.repoHost,

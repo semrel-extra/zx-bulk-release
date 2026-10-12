@@ -71,7 +71,8 @@ The deliver job receives two artifacts from different trust levels:
 - No injected parcels (files not matching any expected package are rejected)
 - Directive sha matches the context
 - Each manifest's `channel` matches the parcel name
-- Each manifest keeps the `populate` rules and the release `tag` from the context
+- Each manifest keeps the package name and version of its parcel, and the `populate` rules and the release `tag` from the context
+- The npm tarball inside a parcel (`package.tgz`) is the package the parcel is named for: npm publishes under the name and version from its `package.json`, so they must match too
 - The directive keeps the commit time from the context (deliveries are ordered by it)
 
 Verification needs no credentials. The courier checks the resolved manifests against their `populate` rules right before delivery (see [Populate rules](../README.md#populate-rules)).
@@ -89,7 +90,7 @@ Credentials never coexist with third-party code. The build phase cannot leak tok
 
 ### What this does NOT protect against
 
-- **Tarball content tampering.** A hostile dep can modify the compiled output inside an npm tarball. Detecting this requires reproducible builds, which is outside zbr's scope.
+- **Tarball content tampering.** A hostile dep can modify the compiled output inside an npm tarball. Verify makes sure the tarball is the expected package and version, but detecting changed contents requires reproducible builds, which is outside zbr's scope.
 - **Source code manipulation.** If the checkout itself is compromised (e.g., a malicious PR merged), the entire pipeline runs attacker code. This is a git/review-process concern.
 - **CI platform compromise.** If GitHub Actions itself is compromised, all bets are off.
 - **zbr binary tampering.** `npx zx-bulk-release` fetches zbr from npm. If zbr itself is compromised, the pipeline is compromised. Pinning versions and using lockfiles mitigates this.

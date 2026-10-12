@@ -451,7 +451,7 @@ parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
   assets/          — (gh-release channel) release assets
   docs/            — (gh-pages channel) documentation files
 ```
-The `sha7` prefix groups all parcels of one commit. `name` is the sanitized package name (`@scope/pkg` → `scope-pkg`). The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash.
+The `sha7` prefix groups all parcels of one commit. `name` is the package name encoded for a file name: `[a-z0-9-]` stay as is, `@scope/pkg` becomes `scope__pkg`, any other character is escaped as `_xx` (UTF-8 bytes) — different packages never share a parcel name. The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash. Like the rest of the parcel format, names assume that all phases of a pipeline run the same zbr version.
 
 A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels. It contains the complete delivery map: package queue, per-package channel steps, and an authoritative list of parcel filenames. The directive enables coordinated delivery — see [DELIVER_SPEC.md](./docs/DELIVER_SPEC.md).
 

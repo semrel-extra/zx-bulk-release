@@ -91,7 +91,7 @@ A **directive** is a special meta-parcel — the shipping list for a commit:
 
 The directive enables coordinated delivery: the courier processes parcels in the right order, handles conflicts per-package, and marks orphaned parcels from stale builds.
 
-**verify** validates parcels against the trusted context — checks sha, package names, versions and channel assignments, and that pack kept the release tags, the `populate` rules and the commit time.
+**verify** validates parcels against the trusted context — checks sha, package names, versions and channel assignments (including the package inside the npm tarball), and that pack kept the release tags, the `populate` rules and the commit time.
 
 ## Courier
 
@@ -232,8 +232,9 @@ All tars live in `parcels/` and are uploaded as a single CI artifact.
 2. Channel must be in the package's expected channel list
 3. Package name and version must match a context entry
 4. No extra parcels — files that don't match any expected package are rejected
-5. Each manifest's channel matches its file name, and its release tag and `populate` rules match the context
-6. The directive's commit time (body and file name) matches the context — directives are delivered oldest first
+5. Each manifest's channel, package and version match its file name, and its release tag and `populate` rules match the context
+6. The npm tarball's `package.json` names the same package and version — npm publishes under those
+7. The directive's commit time (body and file name) matches the context — directives are delivered oldest first
 
 Only verified tars are copied to `output/`. Rejected parcels produce hard errors — the pipeline stops. If input and output are the same directory, verification happens in place.
 

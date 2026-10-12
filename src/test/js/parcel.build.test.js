@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest'
-import {buildParcels} from '../../main/js/post/parcel/index.js'
+import {buildParcels, sanitizePkgName} from '../../main/js/post/parcel/index.js'
 
 describe('parcel.build', () => {
   const makePkg = (overrides = {}) => ({
@@ -135,4 +135,23 @@ describe('parcel.build', () => {
     expect(parcels).toEqual([])
   })
 
+
+  test('sanitizePkgName keeps common names readable', () => {
+    expect(sanitizePkgName('pkg')).toBe('pkg')
+    expect(sanitizePkgName('my-pkg-2')).toBe('my-pkg-2')
+    expect(sanitizePkgName('@scope/pkg')).toBe('scope__pkg')
+    expect(sanitizePkgName('foo.bar')).toBe('foo_2ebar')
+  })
+
+  test('sanitizePkgName never maps two names onto one parcel name', () => {
+    const names = [
+      '@scope/pkg', 'scope-pkg', 'scope__pkg', '@scope__pkg', 'scope_pkg', '@scope/pkg/x', '@scope/pkg_2fx',
+      '@a/b-c', '@a-b/c', 'a__b-c', 'foo.bar', 'foo_bar', 'foo-bar', 'foo~bar', 'Foo', 'foo', 'FOO',
+      '@foo', 'naïve', 'nai_c3_afve', 'ž', '_c5_be',
+    ]
+    const encoded = names.map(sanitizePkgName)
+    expect(new Set(encoded).size).toBe(names.length)
+    for (const e of encoded) expect(e).toMatch(/^[a-z0-9_-]+$/)
+
+  })
 })

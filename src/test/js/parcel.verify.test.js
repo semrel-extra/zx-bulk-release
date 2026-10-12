@@ -75,11 +75,22 @@ describe('parcel.verify', () => {
     const ctx = makeContext(sha, {
       '@scope/my-pkg': {version: '1.0.1', channels: ['npm']},
     })
-    // @scope/my-pkg → scope-my-pkg
-    const tars = [`/dir/parcel.${sha7}.npm.scope-my-pkg.1.0.1.aaa111.tar`]
+    // @scope/my-pkg → scope__my-pkg
+    const tars = [`/dir/parcel.${sha7}.npm.scope__my-pkg.1.0.1.aaa111.tar`]
 
     const {verified, errors} = verifyParcels(tars, ctx)
     expect(errors.length).toBe(0)
+    expect(verified.length).toBe(1)
+  })
+
+  test('reads the parcel name by position, not by substring', () => {
+    const context = {sha7, packages: {
+      a: {version: '1.0.0', channels: ['git-tag']},
+      x: {version: '1.0.0-y.a.1.0.0', channels: ['npm']},
+    }}
+    // contains `.a.1.0.0.`, yet it is x's npm parcel
+    const {verified, errors} = verifyParcels([`/dir/parcel.${sha7}.npm.x.1.0.0-y.a.1.0.0.abc123.tar`], context)
+    expect(errors).toEqual([])
     expect(verified.length).toBe(1)
   })
 

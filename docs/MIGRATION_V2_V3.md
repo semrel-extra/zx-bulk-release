@@ -136,7 +136,7 @@ parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
   docs/            — (gh-pages) documentation
 ```
 
-The `sha7` prefix groups all parcels of one commit. `name` is the sanitized package name (`@scope/pkg` → `scope-pkg`). The `hash6` suffix is a content hash for deduplication.
+The `sha7` prefix groups all parcels of one commit. `name` is the package name encoded for a file name: `[a-z0-9-]` stay as is, `@scope/pkg` becomes `scope__pkg`, any other character is escaped as `_xx` (UTF-8 bytes) — different packages never share a parcel name. The `hash6` suffix is a content hash for deduplication.
 
 A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels, containing the complete delivery map for coordinated delivery.
 
