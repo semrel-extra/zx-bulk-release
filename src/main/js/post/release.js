@@ -4,6 +4,7 @@ import {$, within} from 'zx-extra'
 import {queuefy} from '../util.js'
 
 import {createReport, log} from './log.js'
+import {api} from './api/index.js'
 import {topo} from './depot/deps.js'
 import {exec} from './depot/exec.js'
 import {defaultOrder as channels} from './courier/index.js'
@@ -38,10 +39,6 @@ export const run = async ({cwd = process.cwd(), env: _env, flags = {}} = {}) => 
 })
 
 export const createContext = async ({flags, env, cwd}) => {
-  // Ensure remote tags are up-to-date before analysis to avoid
-  // inconsistencies between receive (context) and pack (parcels).
-  try { await $({cwd, quiet: true})`git fetch origin --tags --force` } catch { /* offline / bare */ }
-
   const {packages, queue, root, prev, graphs} = await topo({cwd, flags})
   const report = createReport({packages, queue, flags})
 
@@ -50,6 +47,10 @@ export const createContext = async ({flags, env, cwd}) => {
   $.verbose = !!(flags.debug || env.DEBUG) || $.verbose
   $.quiet   = !$.verbose
   $.memo    = new Map()
+
+  // Ensure remote tags are up-to-date before analysis to avoid
+  // inconsistencies between receive (context) and pack (parcels).
+  try { await api.git.fetchTags(cwd) } catch { /* offline / bare */ }
 
   return {cwd, env, flags, root, packages, queue, prev, graphs, report, channels,
     run: queuefy(exec, flags.concurrency || os.cpus().length)}

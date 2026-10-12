@@ -1,10 +1,9 @@
-import {queuefy} from '../../../util.js'
 import {log} from '../../log.js'
 import {api} from '../../api/index.js'
 import {getArtifactPath, isAssetMode, prepareMeta} from '../../depot/generators/meta.js'
 import {hasHigherVersion} from '../seniority.js'
 
-const pushMetaBranch = queuefy(async (manifest, dir) => {
+const pushMetaBranch = async (manifest, dir) => {
   const {name, version, tag, type, data: meta, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
   if (type === null || isAssetMode(type)) return 'ok'
 
@@ -29,7 +28,7 @@ const pushMetaBranch = queuefy(async (manifest, dir) => {
     basicAuth: ghBasicAuth,
   })
   return 'ok'
-})
+}
 
 export default {
   name: 'meta',

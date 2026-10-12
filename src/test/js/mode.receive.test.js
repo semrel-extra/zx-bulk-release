@@ -3,6 +3,7 @@ import {PassThrough} from 'node:stream'
 import {EventEmitter} from 'node:events'
 import {$, within, fs, path, tempy} from 'zx-extra'
 import {createSpawnMock, defaultResponses, has, makePkg, makeCtx, makeReport} from './utils/mock.js'
+import {formatTag} from '../../main/js/post/depot/generators/tag.js'
 
 describe('modes.receive', () => {
   const gitLog = '+++fix: test commit__body__abc1__abc1full'
@@ -318,7 +319,7 @@ describe('modes.receive', () => {
       // Then re-analyze runs for 'b'.
 
       const remoteSha = 'def7890123456'
-      const pkgATag = '2026.1.1-a.1.0.2-f0'
+      const pkgATag = formatTag({name: 'a', version: '1.0.1'})
 
       const mock = createSpawnMock([
         ['git rev-parse --show-toplevel', cwd],
@@ -327,8 +328,6 @@ describe('modes.receive', () => {
         ['git tag -l', ''],
         // git log for pkg a returns a commit, for pkg b returns nothing
         [/git log .+--format/, gitLog],
-        ['git config user.name', ''],
-        ['git config user.email', ''],
         [/git tag -m/, ''],
         ['git push', ''],
         ['git fetch', ''],
@@ -338,14 +337,10 @@ describe('modes.receive', () => {
         [/echo/, ''],
         // preflight: ls-remote returns remote sha for a's tag
         ['git ls-remote', `${remoteSha}\trefs/tags/${pkgATag}`],
-        // fetch --deepen for merge-base
-        [/git fetch --deepen/, ''],
         // merge-base --is-ancestor ctx.sha remoteSha => exit 1 (ours not ancestor)
         [/git merge-base --is-ancestor abc1234567890/, '', 1],
         // merge-base --is-ancestor remoteSha ctx.sha => exit 0 (remote is ancestor = we are newer)
         [/git merge-base --is-ancestor def7890123456/, '', 0],
-        // fetch tags force
-        [/git fetch origin --tags --force/, ''],
       ])
       $.spawn = mock.spawn
       $.quiet = true
@@ -362,6 +357,7 @@ describe('modes.receive', () => {
       pkgB.ctx = makeCtx({cwd, flags})
 
       const report = makeReport()
+      $.report = report
       const ctx = makeCtx({
         cwd,
         packages: {a: pkgA, b: pkgB},
@@ -377,7 +373,7 @@ describe('modes.receive', () => {
       const reAnalyzeEvents = report.events.filter(ev =>
         ev.level === 'info' && JSON.stringify(ev.msg).includes('tags fetched during preflight')
       )
-      expect(reAnalyzeEvents.length > 0 || has(mock.calls, 'git fetch origin --tags --force')).toBeTruthy()
+      expect(reAnalyzeEvents.length).toBeGreaterThan(0)
 
       const contextFile = path.resolve(cwd, 'zbr-context.json')
       expect(await fs.pathExists(contextFile)).toBeTruthy()

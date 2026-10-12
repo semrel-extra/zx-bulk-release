@@ -93,5 +93,14 @@ export const queuefy = (fn, concurrency = 1) => {
   })
 }
 
+// Runs tasks one at a time per key: lock(key, task).
+export const keyedQueue = () => {
+  const queues = new Map()
+  return (key, task) => {
+    if (!queues.has(key)) queues.set(key, queuefy(task => task()))
+    return queues.get(key)(task)
+  }
+}
+
 export const pool = async (tasks, concurrency, fn) =>
   Promise.all(tasks.map(queuefy(fn, concurrency)))

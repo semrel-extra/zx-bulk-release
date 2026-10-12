@@ -63,7 +63,7 @@ The depot processes each package in topological order through a step pipeline:
 | test        | Run `testCmd` |
 | pack        | Seal artifacts into parcels — one tar per active channel |
 | publish     | Hand parcels to courier, run optional `publishCmd` |
-| clean       | Reset git config, restore npmrc |
+| clean       | Restore package manifests |
 
 Supporting modules:
 
