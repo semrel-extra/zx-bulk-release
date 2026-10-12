@@ -42,8 +42,6 @@ export const gitResponses = (overrides = {}) => [
   ['git config --get remote.origin.url', overrides.origin ?? 'https://github.com/test-org/test-repo.git'],
   ['git tag -l', overrides.tags ?? ''],
   [/git log .+--format/, overrides.log ?? ''],
-  ['git config user.name', ''],
-  ['git config user.email', ''],
   [/git tag -m/, ''],
   ['git push', ''],
   ['git fetch', ''],
@@ -52,7 +50,6 @@ export const gitResponses = (overrides = {}) => [
   ['git add', ''],
   ['git commit', ''],
   [/git remote/, ''],
-  [/git config --unset/, ''],
 ]
 
 export const npmResponses = (overrides = {}) => [

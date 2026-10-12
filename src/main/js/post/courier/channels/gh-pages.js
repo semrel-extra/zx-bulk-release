@@ -1,10 +1,9 @@
 import {path} from 'zx-extra'
-import {queuefy} from '../../../util.js'
 import {log} from '../../log.js'
 import {api} from '../../api/index.js'
 import {hasHigherVersion} from '../seniority.js'
 
-const run = queuefy(async (manifest, dir) => {
+const run = async (manifest, dir) => {
   const {name, version, branch, to, msg, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
   const docsDir = path.join(dir, 'docs')
 
@@ -27,7 +26,7 @@ const run = queuefy(async (manifest, dir) => {
     basicAuth: ghBasicAuth,
   })
   return 'ok'
-})
+}
 
 export default {
   name: 'gh-pages',

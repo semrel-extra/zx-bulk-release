@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest'
 import {$, within, sleep} from 'zx-extra'
-import {tpl, get, set, queuefy, pool} from '../../main/js/util.js'
+import {tpl, get, set, queuefy, keyedQueue, pool} from '../../main/js/util.js'
 
 describe('util', () => {
   test('tpl()', () => {
@@ -94,6 +94,21 @@ describe('util', () => {
       return fn(name)
     })))
     expect(seen).toEqual(['a:a', 'b:b', 'c:c'])
+  })
+
+  test('keyedQueue() runs tasks one at a time per key', async () => {
+    const lock = keyedQueue()
+    const events = []
+    const task = (id, ms) => async () => {
+      events.push(`+${id}`)
+      await sleep(ms)
+      events.push(`-${id}`)
+      return id
+    }
+
+    const results = await Promise.all([lock('a', task('a1', 20)), lock('a', task('a2', 1)), lock('b', task('b1', 5))])
+    expect(results).toEqual(['a1', 'a2', 'b1'])
+    expect(events).toEqual(['+a1', '+b1', '-b1', '-a1', '+a2', '-a2'])
   })
 
   test('pool() runs tasks with concurrency limit', async () => {

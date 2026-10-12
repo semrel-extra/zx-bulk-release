@@ -17,8 +17,6 @@ describe('channel.git-tag', () => {
     await within(async () => {
       const mock = createSpawnMock([
         ['git cat-file -e', '', 0],
-        ['git config user.name', ''],
-        ['git config user.email', ''],
         [/git tag -m/, ''],
         ['git push origin', ''],
       ])
@@ -93,8 +91,6 @@ describe('channel.git-tag', () => {
       const mock = createSpawnMock([
         ['git cat-file -e', '', 1],  // sha not found locally
         ['git fetch origin --depth 1', ''],
-        ['git config user.name', ''],
-        ['git config user.email', ''],
         [/git tag -m/, ''],
         ['git push origin', ''],
       ])
@@ -114,8 +110,6 @@ describe('channel.git-tag', () => {
   test('ensureSha skips fetch when no sha provided', async () => {
     await within(async () => {
       const mock = createSpawnMock([
-        ['git config user.name', ''],
-        ['git config user.email', ''],
         [/git tag -m/, ''],
         ['git push origin', ''],
       ])

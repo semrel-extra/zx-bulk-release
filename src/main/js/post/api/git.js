@@ -1,9 +1,21 @@
 import {$, fs, path, tempy, copy} from 'zx-extra'
 import {log} from '../log.js'
-import {attempt2, attempt3, memoizeBy} from '../../util.js'
+import {attempt3, keyedQueue, memoizeBy} from '../../util.js'
 
 export const DEFAULT_GIT_COMMITTER_NAME  = 'Semrel Extra Bot'
 export const DEFAULT_GIT_COMMITTER_EMAIL = 'semrel-extra-bot@hotmail.com'
+
+// One writer per local repo: commands that write .git run one at a time per repo root.
+// Locked operations never call each other.
+const lock = keyedQueue()
+const exclusive = async (cwd, fn) => lock(await getRoot(cwd), fn)
+
+// Identity goes with each command, so zbr never writes repo config.
+const identity = (_name, _email) => {
+  const name  = _name  || $.env.GIT_COMMITTER_NAME  || DEFAULT_GIT_COMMITTER_NAME
+  const email = _email || $.env.GIT_COMMITTER_EMAIL || DEFAULT_GIT_COMMITTER_EMAIL
+  return {...$.env, GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email, GIT_COMMITTER_NAME: name, GIT_COMMITTER_EMAIL: email}
+}
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => {
   if (!_origin && !_cwd) throw new Error('fetchRepo requires either origin or cwd')
@@ -21,33 +33,39 @@ export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, b
   return cwd
 }, async ({cwd, branch, origin}) => origin ? `${origin}:${branch}` : `${await getRoot(cwd)}:${branch}`)
 
-export const pushCommit = async ({cwd, from, to, branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => {
+// Each attempt is a fresh read-modify-write on top of the remote tip, so a failed one leaves nothing behind.
+// files[].contents: string | object (as JSON) | (prev: string) => string
+export const pushCommit = async ({cwd, from, to = '.', branch, origin, msg, ignoreFiles, files = [], basicAuth, gitCommitterEmail, gitCommitterName}) => {
   const _cwd = await fetchRepo({cwd, branch, origin, basicAuth})
-  const _$ = $({cwd: _cwd})
+  const _$ = $({cwd: _cwd, env: identity(gitCommitterName, gitCommitterEmail)})
 
-  for (let {relpath, contents} of files) {
-    const _contents = typeof contents === 'string' ? contents : JSON.stringify(contents, null, 2)
-    await fs.outputFile(path.resolve(_cwd, to, relpath), _contents)
-  }
-  if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
-
-  try {
-    await setUserConfig(_cwd, gitCommitterName, gitCommitterEmail)
-    await _$`git add . &&
-            git commit -m ${msg}`
-  } catch {
-    log.warn(`no changes to commit to ${branch}`)
-    return
-  }
-
-  return attempt3(
-    () => _$`git push origin HEAD:refs/heads/${branch}`,
-    (e) => {
-      log.warn('git push failed, rebasing', 'branch', branch, e)
-      return attempt2(() => _$`git fetch origin ${branch} &&
-              git rebase origin/${branch}`)
+  return exclusive(_cwd, () => attempt3(async () => {
+    await resetBranch(_cwd, branch)
+    for (const {relpath, contents} of files) {
+      const file = path.resolve(_cwd, to, relpath)
+      const value = typeof contents === 'function' ? contents(await fs.readFile(file, 'utf8').catch(() => '')) : contents
+      await fs.outputFile(file, typeof value === 'string' ? value : JSON.stringify(value, null, 2))
     }
-  )
+    if (from) await copy({baseFrom: cwd, from, baseTo: _cwd, to, ignoreFiles, cwd})
+
+    await _$`git add .`
+    if ((await $({cwd: _cwd, nothrow: true})`git diff --cached --quiet`).exitCode === 0) {
+      log.warn(`no changes to commit to ${branch}`)
+      return 'unchanged'
+    }
+    await _$`git commit -m ${msg}`
+    await _$`git push origin HEAD:refs/heads/${branch}`
+    return 'ok'
+  }, (e) => log.warn('git push failed, retrying', 'branch', branch, e)))
+}
+
+// The remote tip of the branch, or an empty unborn one if there is none yet. Pushes are never forced,
+// so taking a failed fetch for a new branch can only lead to a rejected push.
+const resetBranch = async (cwd, branch) => {
+  const _$ = $({cwd})
+  const fetched = (await $({cwd, nothrow: true})`git fetch --depth 1 origin ${branch}`).exitCode === 0
+  await (fetched ? _$`git reset -q --hard FETCH_HEAD` : _$`git update-ref -d HEAD && git read-tree --empty`)
+  await _$`git clean -fdqx`
 }
 
 export const getRoot = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse --show-toplevel`).toString().trim())
@@ -104,35 +122,45 @@ export const getTags = memoizeBy(
   async (cwd, ref = '*') => `${await getRoot(cwd)}:${ref}`,
 )
 
-export const pushTag = async ({cwd, tag, sha, gitCommitterName, gitCommitterEmail}) => {
-  await setUserConfig(cwd, gitCommitterName, gitCommitterEmail)
+export const fetchTags = (cwd) => exclusive(cwd, async () => {
+  await $({cwd})`git fetch origin --tags --force`
+  clearTagsCache()
+})
 
-  const target = sha ? [sha] : []
-  await $({cwd})`git tag -m ${tag} ${tag} ${target}`
-  await $({cwd})`git push origin ${tag}`
+export const deepen = (cwd, depth) => exclusive(cwd, () =>
+  $({cwd})`git fetch origin --deepen=${depth}`
+)
+
+export const isAncestor = async (cwd, ancestor, descendant) => {
+  const res = await $({cwd, nothrow: true})`git merge-base --is-ancestor ${ancestor} ${descendant}`
+  if (res.exitCode !== 0 && res.exitCode !== 1) throw res
+  return res.exitCode === 0
 }
 
-// Memoize prevents .git/config lock
-// https://github.com/qiwi/packasso/actions/runs/4539987310/jobs/8000403413#step:7:282
-export const setUserConfig = memoizeBy(async(cwd, gitCommitterName, gitCommitterEmail) => $({cwd})`
-  git config user.name ${gitCommitterName} &&
-  git config user.email ${gitCommitterEmail}
-`)
+export const pushTag = ({cwd, tag, sha, gitCommitterName, gitCommitterEmail}) => exclusive(cwd, async () => {
+  const _$ = $({cwd, env: identity(gitCommitterName, gitCommitterEmail)})
+  const target = sha ? [sha] : []
+  await _$`git tag -m ${tag} ${tag} ${target}`
+  await _$`git push origin ${tag}`
+})
 
-export const unsetUserConfig = async(cwd) => $({cwd, nothrow: true})`
-  git config --unset user.name &&
-  git config --unset user.email`
-
-export const getRemoteTagSha = async (cwd, tag) =>
-  (await $({cwd, nothrow: true})`git ls-remote --tags origin refs/tags/${tag}`)
-    .toString().split('\t')[0]?.trim() || null
+// The commit a remote tag points to (peeled), or null if the tag is absent or the remote is unreachable.
+export const getRemoteTagCommit = async (cwd, tag) => {
+  const ref = `refs/tags/${tag}`
+  const refs = Object.fromEntries((await $({cwd, nothrow: true})`git ls-remote origin ${ref} ${ref}^{}`)
+    .toString().split('\n').filter(Boolean).map(line => line.split('\t').reverse()))
+  return refs[`${ref}^{}`] || refs[ref] || null
+}
 
 export const deleteRemoteTag = async (cwd, tag) =>
   $({cwd, nothrow: true})`git push origin :refs/tags/${tag}`
 
-export const pushAnnotatedTag = async (cwd, tag, message) => {
-  await $({cwd})`git tag -a ${tag} -m ${message}`
-  await $({cwd})`git push origin ${tag}`
-}
+export const pushAnnotatedTag = (cwd, tag, message) => exclusive(cwd, async () => {
+  const _$ = $({cwd, env: identity()})
+  const empty = (await $({cwd, nothrow: true})`git rev-parse --verify -q HEAD`).exitCode !== 0
+  if (empty) await _$`git commit --allow-empty -m init` // a fresh delivery repo has no commits yet
+  await _$`git tag -a ${tag} -m ${message}`
+  await _$`git push origin ${tag}`
+})
 
 export const clearTagsCache = () => { $.memo?.delete?.(getTags) }

@@ -1,4 +1,3 @@
-import {$} from 'zx-extra'
 import {api} from '../api/index.js'
 import {log} from '../log.js'
 import {formatTag} from './generators/tag.js'
@@ -8,30 +7,26 @@ export const preflight = async (pkg, ctx) => {
   if (!pkg.tag) return 'ok'
 
   const cwd = ctx.git.root
-  const remoteSha = await api.git.getRemoteTagSha(cwd, pkg.tag)
-  if (!remoteSha) return 'ok'
+  const commit = await api.git.getRemoteTagCommit(cwd, pkg.tag)
+  if (!commit) return 'ok'
 
   // tag exists on remote
-  if (remoteSha === ctx.git.sha) {
+  if (commit === ctx.git.sha) {
     log.info(`preflight: ${pkg.tag} already exists for our commit, skipping`)
     return 'skip'
   }
 
-  // need history for merge-base
-  await $({cwd, nothrow: true})`git fetch --deepen=100`
+  // bring the tagged commit and enough history for merge-base
+  await api.git.fetchTags(cwd)
+  await api.git.deepen(cwd, 100)
 
-  const isOursOlder = await $({cwd, nothrow: true})`git merge-base --is-ancestor ${ctx.git.sha} ${remoteSha}`
-  if (isOursOlder.exitCode === 0) {
+  if (await api.git.isAncestor(cwd, ctx.git.sha, commit)) {
     log.info(`preflight: ${pkg.tag} — we are older, skipping`)
     return 'skip'
   }
 
-  const isRemoteOlder = await $({cwd, nothrow: true})`git merge-base --is-ancestor ${remoteSha} ${ctx.git.sha}`
-  if (isRemoteOlder.exitCode === 0) {
+  if (await api.git.isAncestor(cwd, commit, ctx.git.sha)) {
     log.info(`preflight: ${pkg.tag} — we are newer, re-resolving version`)
-    await $({cwd})`git fetch origin --tags --force`
-    api.git.clearTagsCache()
-
     const pre = ctx.flags.snapshot ? `-snap.${ctx.git.sha.slice(0, 7)}` : undefined
     // re-resolve: the fetched tags will give us a new latest version
     const latestVersion = pkg.latest.tag?.version || pkg.manifest.version

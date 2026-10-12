@@ -115,7 +115,7 @@ describe('steps.misc', () => {
     })
   })
 
-  test('clean calls unsetUserConfig', async () => {
+  test('clean leaves git config alone', async () => {
     await within(async () => {
       const mock = setup()
       const {clean} = await import(/* @vite-ignore */ `../../main/js/post/depot/steps/clean.js?t=${Date.now()}`)
@@ -123,7 +123,7 @@ describe('steps.misc', () => {
       const pkg = makePkg({extra: {skipped: true}})
       await clean({cwd: '/tmp/fakerepo', packages: {[pkg.name]: pkg}})
 
-      expect(has(mock.calls, 'git config --unset')).toBeTruthy()
+      expect(has(mock.calls, 'git config')).toBeFalsy()
     })
   })
 
