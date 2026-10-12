@@ -1,6 +1,7 @@
 import {describe, test, expect} from 'vitest'
-import {fetchManifest, fetchPkg, getNpmrc} from '../../main/js/post/api/npm.js'
-import {tempy, fs} from 'zx-extra'
+import {fetchManifest, fetchPkg, getNpmrc, npmPublished} from '../../main/js/post/api/npm.js'
+import {$, within, tempy, fs} from 'zx-extra'
+import {createSpawnMock} from './utils/mock.js'
 import {parseEnv} from '../../main/js/config.js'
 
 describe('api.npm', () => {
@@ -74,4 +75,17 @@ describe('api.npm', () => {
     expect(npmrc).toBe(customPath)
   })
 
+  test('npmPublished() asks the registry the way publish reaches it, the parcel\'s name after --', () => within(async () => {
+    const mock = createSpawnMock([['npm view', '1.0.0']])
+    $.spawn = mock.spawn
+    $.quiet = true
+    const npmrc = tempy.temporaryFile({name: '.npmrc'})
+
+    expect(await npmPublished({name: '@scope/pkg', version: '1.0.0', config: {npmRegistry: 'https://r.example', npmConfig: npmrc}})).toBe(true)
+    expect(await npmPublished({name: '@scope/pkg', version: '1.0.1', config: {npmRegistry: 'https://r.example', npmOidc: true}})).toBe(false)
+
+    const views = mock.calls.filter(c => c.includes('npm view'))
+    expect(views[0]).toContain(`npm view --registry=https://r.example --userconfig=${npmrc} -- @scope/pkg@1.0.0 version`)
+    expect(views[1]).toContain('npm view --registry=https://r.example -- @scope/pkg@1.0.1 version')
+  }))
 })

@@ -101,6 +101,3 @@ export const keyedQueue = () => {
     return queues.get(key)(task)
   }
 }
-
-export const pool = async (tasks, concurrency, fn) =>
-  Promise.all(tasks.map(queuefy(fn, concurrency)))

@@ -50,7 +50,7 @@ describe('parcel.directive', () => {
     expect(manifest.packages['pkg-a'].deliver.length > 0).toBeTruthy()
   })
 
-  test('buildDirective splits git and non-git channels into separate deliver steps', async () => {
+  test('buildDirective writes the stages as deliver steps, for 3.x couriers', async () => {
     const dir = tempy.temporaryDirectory()
     const sha = 'abc1234567890abcdef'
 
@@ -66,13 +66,8 @@ describe('parcel.directive', () => {
     const tarPath = await buildDirective({}, packedPkgs, dir)
     const manifest = await parseDirective(tarPath)
 
-    const steps = manifest.packages.pkg.deliver
-    // git channels in one step, non-git in another
-    expect(steps.length).toBe(2)
-    expect(steps[0].includes('git-tag')).toBeTruthy()
-    expect(steps[0].includes('meta')).toBeTruthy()
-    expect(steps[0].includes('gh-release')).toBeTruthy()
-    expect(steps[1].includes('npm')).toBeTruthy()
+    // claim, then publish, then the announcements
+    expect(manifest.packages.pkg.deliver).toEqual([['git-tag'], ['npm'], ['meta', 'gh-release']])
   })
 
   test('parseDirective returns null for released marker', async () => {

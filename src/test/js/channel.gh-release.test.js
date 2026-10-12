@@ -61,13 +61,22 @@ describe('channel.gh-release', () => {
     })
   })
 
-  test('run skips when no ghToken', async () => {
+  test('a release without a token is held by the courier, before run', () => {
+    expect(ghRelease.requires).toEqual(['token', 'repoName'])
+  })
+
+  test('run fails on validation errors other than an existing release', async () => {
     await within(async () => {
       setup()
-      const pkg = makePkg({config: {ghToken: '', ghApiUrl: gh.url}})
-      const result = await ghRelease.run(makeData(pkg))
-      expect(result).toBe(null)
-      expect(gh.requests.length).toBe(0)
+      gh.setRoutes({
+        'POST /repos/test-org/test-repo/releases': (req, res) => {
+          res.writeHead(422, {'Content-Type': 'application/json'})
+          res.end(JSON.stringify({message: 'Validation Failed', errors: [{code: 'invalid', field: 'tag_name'}]}))
+        }
+      })
+
+      const pkg = makePkg({config: {ghToken: 'tok', ghApiUrl: gh.url, ghBasicAuth: 'x:tok'}})
+      await expect(ghRelease.run(makeData(pkg))).rejects.toThrow(/invalid/)
     })
   })
 

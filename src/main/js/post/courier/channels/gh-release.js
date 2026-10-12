@@ -2,12 +2,11 @@ import {fs, path} from 'zx-extra'
 import {log} from '../../log.js'
 import {api} from '../../api/index.js'
 
-const isDuplicate = (e) =>
-  /already_exists|Validation Failed|422/i.test(e?.message || e?.stderr || '')
+// Only a release that already exists for the tag is a duplicate; any other validation error is a failure.
+const isDuplicate = (e) => /already_exists/.test(e?.message || '')
 
 const run = async (manifest, dir) => {
   const {tag, token, apiUrl, repoName, releaseNotes, assets} = manifest
-  if (!token) return null
 
   log.info('create gh release')
   const now = Date.now()
@@ -39,6 +38,7 @@ const run = async (manifest, dir) => {
 
 export default {
   name: 'gh-release',
+  stage: 'announce',
   requires: ['token', 'repoName'],
   when: (pkg) => !!pkg.config.ghToken,
   run,

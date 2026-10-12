@@ -159,7 +159,7 @@ describe('courier.deliver', () => {
       const dir = tempy.temporaryDirectory()
       const tarPath = path.join(dir, 'test.changelog.tar')
       await packTar(tarPath, {
-        channel: 'changelog', releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
+        channel: 'changelog', name: 'pkg', version: '1.0.0', releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
         msg: 'chore: update', repoHost: 'github.com', repoName: 'org/repo',
         originUrl: 'https://github.com/org/repo.git',
         gitCommitterEmail: 'b@b.com', gitCommitterName: 'Bot',
@@ -181,7 +181,7 @@ describe('courier.deliver', () => {
       const dir = tempy.temporaryDirectory()
       const tarPath = path.join(dir, 'test.changelog.tar')
       await packTar(tarPath, {
-        channel: 'changelog', releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
+        channel: 'changelog', name: 'pkg', version: '1.0.0', releaseNotes: '# notes', branch: 'changelog', file: 'CHANGELOG.md',
         msg: 'chore: update', originUrl: '/tmp/bare-repo',
         gitCommitterEmail: 'b@b.com', gitCommitterName: 'Bot',
       })
@@ -201,8 +201,9 @@ describe('courier.deliver', () => {
       await setup()
       const dir = tempy.temporaryDirectory()
       const tarPath = path.join(dir, 'test.unknown.tar')
-      await packTar(tarPath, {channel: 'unknown', foo: 'bar'})
-      await deliver([tarPath], {PATH: process.env.PATH})
+      await packTar(tarPath, {channel: 'unknown', name: 'pkg', version: '1.0.0', foo: 'bar'})
+      const result = await deliver([tarPath], {PATH: process.env.PATH})
+      expect(result.skipped).toBe(1)
     })
   })
 
@@ -211,8 +212,28 @@ describe('courier.deliver', () => {
       await setup()
       const dir = tempy.temporaryDirectory()
       const tarPath = path.join(dir, 'test.tar')
-      await packTar(tarPath, {foo: 'bar'})
-      await deliver([tarPath], {PATH: process.env.PATH})
+      await packTar(tarPath, {name: 'pkg', version: '1.0.0', foo: 'bar'})
+      const result = await deliver([tarPath], {PATH: process.env.PATH})
+      expect(result.skipped).toBe(1)
+    })
+  })
+
+  test('deliver without a directive delivers nothing if a parcel names no package', async () => {
+    await within(async () => {
+      await setup()
+      const dir = tempy.temporaryDirectory()
+      const named = path.join(dir, 'named.npm.tar')
+      const nameless = path.join(dir, 'nameless.npm.tar')
+      await packTar(named, {channel: 'npm', name: 'pkg', version: '1.0.0', token: '${{NPM_TOKEN}}'}, [{name: 'package.tgz', source: await writeTmpFile('fake')}])
+      await packTar(nameless, {channel: 'npm', version: '1.0.0', token: '${{NPM_TOKEN}}'}, [{name: 'package.tgz', source: await writeTmpFile('fake')}])
+
+      const ran = []
+      const origRun = channels.npm.run
+      channels.npm.run = async () => ran.push('npm')
+      await expect(deliver([named, nameless], {NPM_TOKEN: 'tok', PATH: process.env.PATH})).rejects.toThrow(/nameless\.npm\.tar/)
+      channels.npm.run = origRun
+
+      expect(ran).toEqual([])
     })
   })
 
@@ -582,7 +603,7 @@ describe('courier.deliver', () => {
       await packTar(npmTar, {channel: 'npm', name: 'pkg', version: '1.0.0', token: '${{NPM_TOKEN}}'},
         [{name: 'package.tgz', source: await writeTmpFile('fake')}])
       const clTar = path.join(dir, 'cl.tar')
-      await packTar(clTar, {channel: 'changelog', releaseNotes: '#', branch: 'cl', file: 'CL.md', msg: 'up',
+      await packTar(clTar, {channel: 'changelog', name: 'pkg', version: '1.0.0', releaseNotes: '#', branch: 'cl', file: 'CL.md', msg: 'up',
         gitCommitterEmail: 'b@b.com', gitCommitterName: 'Bot'})
 
       const ran = []
@@ -639,13 +660,12 @@ describe('courier.deliver', () => {
       const tarPath = path.join(dir, parcelName)
       const fakePkg = await writeTmpFile('fake-content')
       const files = channel === 'npm' ? [{name: 'package.tgz', source: fakePkg}] : []
-      const pkgName = parcelName.replace(/\.tar$/, '').split('.')[3]
-      const pkgVersion = parcelName.replace(/\.tar$/, '').split('.')[4]
+      const [pkgName, {version: pkgVersion, tag}] = Object.entries(packages).find(([, p]) => p.parcels.includes(parcelName))
       await packTar(tarPath, {
         channel,
         name: pkgName,
         version: pkgVersion,
-        tag: `v${pkgVersion}-${pkgName}`,
+        tag,
         sha: sha,
         registry: channel === 'npm' ? '${{NPM_REGISTRY}}' : undefined,
         token: '${{GH_TOKEN}}',

@@ -78,19 +78,11 @@ export const npmRestore = async (pkg) => {
 }
 
 export const npmPublish = async (pkg) => {
-  const {name, version, manifest, config: {npmPublish, npmRegistry, npmToken, npmConfig, npmProvenance, npmOidc}} = pkg
+  const {name, version, manifest, config: {npmPublish, npmRegistry, npmProvenance, npmOidc}} = pkg
 
   if (manifest.private || npmPublish === false) return
 
   log.info(`publishing npm package ${name} ${version} to ${npmRegistry}`)
-
-  const npmTag = pkg.preversion ? 'snapshot' : 'latest'
-  const npmFlags = [
-    '--no-workspaces',
-    '--no-git-tag-version',
-    `--tag=${npmTag}`,
-    npmRegistry && `--registry=${npmRegistry}`,
-  ]
 
   // OIDC trusted publishing: no auth token must be present for npm to use OIDC flow.
   // https://docs.npmjs.com/trusted-publishers/
@@ -99,17 +91,31 @@ export const npmPublish = async (pkg) => {
       throw new Error(`npm OIDC trusted publishing requires npm >= ${NPM_OIDC_VER}, got ${NPM_VER}`)
     }
     log.info('npm publish: OIDC trusted publishing enabled')
-    npmFlags.push('--provenance')
-  } else {
-    const npmrc = await getNpmrc({npmConfig, npmToken, npmRegistry})
-    npmFlags.push(`--userconfig=${npmrc}`)
-    if (npmProvenance) npmFlags.push('--provenance')
   }
+
+  const npmTag = pkg.preversion ? 'snapshot' : 'latest'
+  const npmFlags = [
+    '--no-workspaces',
+    '--no-git-tag-version',
+    `--tag=${npmTag}`,
+    ...await registryFlags(pkg.config),
+    (npmOidc || npmProvenance) && '--provenance',
+  ]
 
   // Publish from pre-built tarball (courier mode) or project dir (legacy).
   const target = pkg.npmTarball || pkg.absPath
   await $`npm publish ${target} ${npmFlags.filter(Boolean)}`
 }
+
+// Whether the registry has this version, read the way publish reaches it: same registry, same npmrc,
+// so scopes and auth resolve alike. The name comes from a parcel, so it goes after `--`.
+export const npmPublished = async ({name, version, config}) =>
+  (await $({nothrow: true})`npm view ${await registryFlags(config)} -- ${name}@${version} version`).toString() === version
+
+const registryFlags = async ({npmRegistry, npmToken, npmConfig, npmOidc}) => [
+  npmRegistry && `--registry=${npmRegistry}`,
+  !npmOidc && `--userconfig=${await getNpmrc({npmConfig, npmToken, npmRegistry})}`,
+].filter(Boolean)
 
 export const getNpmrc = memoizeBy(async ({npmConfig, npmToken, npmRegistry}) => {
   if (npmConfig) return npmConfig
