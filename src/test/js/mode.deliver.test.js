@@ -60,7 +60,7 @@ describe('modes.deliver', () => {
       })})
 
       await expect(runDeliver({env: {NPM_TOKEN: 'tok', NPM_REGISTRY: 'https://r.com', PATH: process.env.PATH}, flags: {deliver: dir}}))
-        .rejects.toThrow('populate rules: 1 parcel(s) not delivered')
+        .rejects.toThrow('1 invalid parcel(s) not delivered')
       expect(await fs.readFile(tarOf('a'), 'utf8')).toBe('released')
       expect((await readManifest(tarOf('b'))).name).toBe('b')
     })

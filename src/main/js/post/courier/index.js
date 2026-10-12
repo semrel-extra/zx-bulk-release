@@ -1,7 +1,7 @@
 import {path, fs} from 'zx-extra'
 import {log} from '../log.js'
 import {api} from '../api/index.js'
-import {scanDirectives, invalidateOrphans} from '../parcel/directive.js'
+import {scanDirectives, invalidateOrphans, parcelChannel} from '../parcel/directive.js'
 import {tryLock, unlock, signalRebuild} from './semaphore.js'
 import {channels, defaultOrder} from './channels/index.js'
 import {ghAuth, openAll, planOf, looseOf, warnSkipped} from './plan.js'
@@ -40,7 +40,8 @@ export const deliver = async (tars, env = process.env, {dryRun = false, cwd} = {
 
   const results = []
   for (const directive of directives) results.push(await deliverDirective(directive, ctx))
-  if (!directives.length) results.push(await deliverLoose(ctx))
+  // Parcels of a directive that is marked done or lost wait for nothing: they never go out loose.
+  if (!directives.length && !tars.some(t => parcelChannel(path.basename(t)) === 'directive')) results.push(await deliverLoose(ctx))
   return summary(tars.length, results.filter(Boolean))
 }
 
@@ -73,17 +74,32 @@ const underLock = async (directive, ctx) => {
 const planDirective = async (directive, ctx) => {
   const listed = new Set(Object.values(directive.packages || {}).flatMap(p => p.parcels || []))
   const opened = await openAll(ctx.tars.filter(t => listed.has(path.basename(t))), ctx.env)
-  return warnSkipped(planOf(directive, opened))
+  const plan = planOf(directive, opened)
+  await confirmClaims(plan, directive, ctx)
+  return warnSkipped(plan)
+}
+
+// A marker on a claim says where to look, the remote says what it is: our tag means released, another
+// commit's means a conflict, no tag means the marker lies. So no marker from a pack opens or shuts a gate.
+const confirmClaims = async (plan, directive, {gitRoot}) => {
+  for (const [name, parcels] of Object.entries(plan.packages)) {
+    const markers = parcels.filter(p => p.stage === 'claim' && (p.state === 'released' || p.state === 'conflict'))
+    if (!markers.length) continue
+    const tag = directive.packages[name].tag
+    const commit = await api.git.getRemoteTagCommit(gitRoot, tag)
+    const state = commit === directive.sha ? 'released' : commit ? 'conflict' : 'invalid'
+    for (const p of markers) Object.assign(p, {state, ...state === 'invalid' && {reason: `marked ${p.state}, yet ${tag} is not on the remote`}})
+  }
 }
 
 // Without a directive a parcel that names no package can't be gated by any claim, so nothing goes out.
 // Nobody rebuilds such a delivery, so a lost claim fails the run. Up to 4 packages at a time, as in 3.x.
 const deliverLoose = async (ctx) => {
   const opened = await openAll(ctx.tars, ctx.env)
-  const loose = looseOf(opened)
-  if (loose.unowned.length) throw new Error(`parcels of no package (unreadable, or no name@version): ${loose.unowned.join(', ')}`)
+  const plan = looseOf(opened)
+  if (plan.unowned.length) throw new Error(`parcels of no package (unreadable, or no name@version): ${plan.unowned.join(', ')}`)
 
-  const plan = warnSkipped(planOf(loose, opened))
+  warnSkipped(plan)
   if (ctx.dryRun) return rehearse(plan, ctx)
 
   const errors = await execute(plan, {...ctx, concurrency: 4})

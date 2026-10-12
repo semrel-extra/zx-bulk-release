@@ -19,11 +19,12 @@ describe('parcel.verify', () => {
     const tars = [
       `/dir/parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`,
       `/dir/parcel.${sha7}.git-tag.pkg.1.0.1.bbb222.tar`,
+      `/dir/parcel.${sha7}.directive.1700000000.tar`,
     ]
 
     const {verified, errors} = verifyParcels(tars, ctx)
     expect(errors.length).toBe(0)
-    expect(verified.length).toBe(2)
+    expect(verified.length).toBe(3)
   })
 
   test('rejects parcels with wrong sha', () => {
@@ -76,11 +77,11 @@ describe('parcel.verify', () => {
       '@scope/my-pkg': {version: '1.0.1', channels: ['npm']},
     })
     // @scope/my-pkg → scope__my-pkg
-    const tars = [`/dir/parcel.${sha7}.npm.scope__my-pkg.1.0.1.aaa111.tar`]
+    const tars = [`/dir/parcel.${sha7}.npm.scope__my-pkg.1.0.1.aaa111.tar`, `/dir/parcel.${sha7}.directive.1700000000.tar`]
 
     const {verified, errors} = verifyParcels(tars, ctx)
     expect(errors.length).toBe(0)
-    expect(verified.length).toBe(1)
+    expect(verified.length).toBe(2)
   })
 
   test('reads the parcel name by position, not by substring', () => {
@@ -89,9 +90,9 @@ describe('parcel.verify', () => {
       x: {version: '1.0.0-y.a.1.0.0', channels: ['npm']},
     }}
     // contains `.a.1.0.0.`, yet it is x's npm parcel
-    const {verified, errors} = verifyParcels([`/dir/parcel.${sha7}.npm.x.1.0.0-y.a.1.0.0.abc123.tar`], context)
+    const {verified, errors} = verifyParcels([`/dir/parcel.${sha7}.npm.x.1.0.0-y.a.1.0.0.abc123.tar`, `/dir/parcel.${sha7}.directive.1700000000.tar`], context)
     expect(errors).toEqual([])
-    expect(verified.length).toBe(1)
+    expect(verified.length).toBe(2)
   })
 
   test('collects multiple errors', () => {
@@ -115,4 +116,16 @@ describe('parcel.verify', () => {
     expect(verified.length).toBe(0)
   })
 
+  test('wants exactly one directive, named for the commit time, and names pack could have written', () => {
+    const ctx = {...makeContext(sha, {pkg: {version: '1.0.1', channels: ['npm']}}), timestamp: 1700000000}
+    const npm = `/dir/parcel.${sha7}.npm.pkg.1.0.1.aaa111.tar`
+    const errorsOf = (...names) => verifyParcels([npm, ...names.map(n => `/dir/${n}`)], ctx).errors
+
+    expect(errorsOf(`parcel.${sha7}.directive.1700000000.tar`)).toEqual([])
+    expect(errorsOf()).toEqual(['expected one directive among the parcels, found 0'])
+    expect(errorsOf(`parcel.${sha7}.directive.1700000000.tar`, `parcel.${sha7}.directive.1700000000.0.tar`)).toEqual(['expected one directive among the parcels, found 2'])
+    expect(errorsOf(`parcel.${sha7}.directive.1600000000.tar`)).toEqual([`directive is not named for the commit time: parcel.${sha7}.directive.1600000000.tar`])
+    expect(errorsOf(`parcel.${sha7}.directive.1700000000.tar`, `parcel.${sha7}.npm.pkg.1.0.1.\n::warning::x.tar`))
+      .toEqual([`malformed name: ${JSON.stringify(`parcel.${sha7}.npm.pkg.1.0.1.\n::warning::x.tar`)}`])
+  })
 })

@@ -2,6 +2,7 @@
 // Nothing here touches a remote; the plan is all a dry run does.
 
 import {path, semver} from 'zx-extra'
+import {topoOrder} from '../../util.js'
 import {readManifest, readMarker} from '../tar.js'
 import {log} from '../log.js'
 import {parcelChannel} from '../parcel/directive.js'
@@ -72,7 +73,7 @@ export const openParcel = async (tarPath, env) => {
 
 // Whether this env can deliver the parcel, and whether the parcel keeps its own rules.
 const checkParcel = (ch, manifest, resolved) => {
-  if (!ch) return {state: 'held', reason: `unknown channel '${resolved.channel || '<none>'}'`}
+  if (!ch) return {state: 'held', reason: `unknown channel ${JSON.stringify(resolved.channel ?? null)}`}
 
   const missing = missingRequires(ch, resolved)
   if (missing.length) return {state: 'held', reason: `missing credentials — ${missing.join(', ')}`}
@@ -86,25 +87,30 @@ export const openAll = async (tars, env) =>
 
 // A listed parcel must be there and belong to its package, so no parcel rides on another package's claim.
 // A foreign parcel is reported, never marked: it is not this package's to mark.
-const parcelOf = (file, name, {version}, opened) => {
+const parcelOf = (file, name, version, opened) => {
   const p = opened.get(file)
   if (!p) return {file, state: 'held', reason: 'missing', stage: stageOf(parcelChannel(file))}
-  if (version !== undefined && p.resolved && (p.resolved.name !== name || p.resolved.version !== version))
-    return {file, stage: p.stage, state: 'invalid', reason: `belongs to ${p.resolved.name}@${p.resolved.version}, not ${name}@${version}`}
+  if (p.resolved && (p.resolved.name !== name || p.resolved.version !== version))
+    return {file, stage: p.stage, state: 'invalid', reason: `belongs to ${JSON.stringify(`${p.resolved.name}@${p.resolved.version}`)}, not ${name}@${version}`}
   return p
 }
 
 // Plan: {queue, prev, deps: Map<key, key[]>, packages: {[key]: Parcel[]}}
 //   prev orders the queue, deps are what a package waits on: in a directive they are the same.
-export const planOf = ({queue, prev = {}, deps = prev, packages}, opened) => ({
-  queue,
-  prev: new Map(Object.entries(prev)),
-  deps: new Map(Object.entries(deps)),
-  packages: Object.fromEntries(queue.map(key => {
-    const pkg = packages[key] || {}
-    return [key, (pkg.parcels || []).map(file => parcelOf(file, pkg.name ?? key, pkg, opened))]
-  })),
-})
+//   The queue follows prev wherever a package stands in it: the order is the graph's, not the list's.
+export const planOf = ({queue, prev = {}, packages}, opened) => {
+  const deps = new Map(Object.entries(prev))
+  return {
+    queue: topoOrder(queue, deps),
+    prev: deps,
+    deps,
+    packages: Object.fromEntries(queue.map(key => {
+      const {version, parcels = []} = packages[key] || {}
+      return [key, parcels.map(file => parcelOf(file, key, version, opened))]
+    })),
+  }
+}
+
 
 // Without a directive a parcel belongs to the name@version its manifest names, and that package's claim gates it.
 // Versions of a name go in ascending order, one at a time, yet none waits on another's outcome: they are
@@ -112,21 +118,24 @@ export const planOf = ({queue, prev = {}, deps = prev, packages}, opened) => ({
 // Markers carry no manifest and nothing to deliver.
 export const looseOf = (opened) => {
   const packages = {}
+  const ids = {}
   const unowned = []
-  for (const {file, state, resolved} of opened.values()) {
-    if (!resolved && state !== 'invalid') continue
-    const {name, version} = resolved || {}
+  for (const p of opened.values()) {
+    if (!p.resolved && p.state !== 'invalid') continue
+    const {name, version} = p.resolved || {}
     if (!name || !version) {
-      unowned.push(file)
+      unowned.push(p.file)
       continue
     }
-    const pkg = packages[`${name}@${version}`] ??= {name, version, parcels: []}
-    pkg.parcels.push(file)
+    const key = `${name}@${version}`
+    ids[key] = {name, version}
+    const parcels = packages[key] ??= []
+    parcels.push(p)
   }
-  const queue = Object.keys(packages).sort((a, b) => byVersion(packages[a], packages[b]))
-  const prev = {}
-  queue.forEach((key, i) => { if (i && packages[queue[i - 1]].name === packages[key].name) prev[key] = [queue[i - 1]] })
-  return {queue, prev, deps: {}, packages, unowned}
+  const queue = Object.keys(packages).sort((a, b) => byVersion(ids[a], ids[b]))
+  const prev = new Map()
+  queue.forEach((key, i) => { if (i && ids[queue[i - 1]].name === ids[key].name) prev.set(key, [queue[i - 1]]) })
+  return {queue, prev, deps: new Map(), packages, unowned}
 }
 
 const byVersion = (a, b) =>

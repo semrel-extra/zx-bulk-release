@@ -23,7 +23,7 @@ export const runVerify = async ({cwd, flags}) => {
   }
 
   const {verified, errors} = verifyParcels(tars, context)
-  errors.push(...await verifyManifests(verified, context))
+  errors.push(...await linkErrors(tars), ...await strangerErrors(inputDir, outputDir, verified), ...await verifyManifests(verified, context))
 
   if (errors.length) {
     for (const e of errors) log.error(`verify: ${e}`)
@@ -33,10 +33,25 @@ export const runVerify = async ({cwd, flags}) => {
   if (path.resolve(inputDir) !== outputDir) {
     await fs.ensureDir(outputDir)
     for (const tarPath of verified) {
-      await fs.copy(tarPath, path.join(outputDir, path.basename(tarPath)))
+      await fs.copyFile(tarPath, path.join(outputDir, path.basename(tarPath)))
     }
     log.info(`${verified.length} parcel(s) verified and copied to ${outputDir}`)
   } else {
     log.info(`${verified.length} parcel(s) verified in place`)
   }
+}
+
+// A link could point verify and the courier at different files.
+const linkErrors = async (tars) => {
+  const links = []
+  for (const tarPath of tars) if (!(await fs.lstat(tarPath)).isFile()) links.push(tarPath)
+  return links.map(t => `not a regular file: ${JSON.stringify(path.basename(t))}`)
+}
+
+// Whatever already lies in the output dir would go out with the verified parcels, unverified.
+const strangerErrors = async (inputDir, outputDir, verified) => {
+  if (path.resolve(inputDir) === outputDir) return []
+  const names = new Set(verified.map(t => path.basename(t)))
+  const present = await glob(path.join(outputDir, 'parcel.*.tar'))
+  return present.filter(t => !names.has(path.basename(t))).map(t => `unverified parcel in ${outputDir}: ${JSON.stringify(path.basename(t))}`)
 }

@@ -144,7 +144,8 @@ describe('parcel.directive', () => {
 
     await invalidateOrphans(dir, {
       sha: sha7 + '567890abcdef',
-      parcels: [owned],
+      parcels: [], // a top-level list that lies changes nothing
+      packages: {pkg: {parcels: [owned]}},
     })
 
     expect(await fs.readFile(path.join(dir, owned), 'utf8')).toBe('data')
@@ -161,7 +162,7 @@ describe('parcel.directive', () => {
 
     await invalidateOrphans(dir, {
       sha: sha7 + '567890abcdef',
-      parcels: [p1],
+      packages: {pkg: {parcels: [p1]}},
     })
 
     expect(await fs.readFile(path.join(dir, p1), 'utf8')).toBe('data')

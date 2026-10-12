@@ -93,6 +93,19 @@ export const queuefy = (fn, concurrency = 1) => {
   })
 }
 
+// Keys ordered so that each comes after what it depends on (only keys among `keys` count); throws on a cycle.
+export const topoOrder = (keys, deps) => {
+  const order = []
+  const visit = (key, path) => {
+    if (order.includes(key)) return
+    if (path.includes(key)) throw new Error(`dependency cycle: ${[...path, key].join(' → ')}`)
+    for (const dep of deps.get(key) || []) if (keys.includes(dep)) visit(dep, [...path, key])
+    order.push(key)
+  }
+  for (const key of keys) visit(key, [])
+  return order
+}
+
 // Runs tasks one at a time per key: lock(key, task).
 export const keyedQueue = () => {
   const queues = new Map()

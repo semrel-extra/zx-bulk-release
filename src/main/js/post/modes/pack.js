@@ -11,7 +11,7 @@ import {clean} from '../depot/steps/clean.js'
 import {test} from '../depot/steps/test.js'
 import {preflight} from '../depot/reconcile.js'
 import {CONTEXT_FILE, readContext} from '../depot/context.js'
-import {buildDirective, PARCELS_DIR} from '../parcel/index.js'
+import {buildDirective, parcelsDir} from '../parcel/index.js'
 
 export const runPack = async ({cwd, env, flags}, ctx) => {
   const {report, packages, queue, prev} = ctx
@@ -74,8 +74,7 @@ export const runPack = async ({cwd, env, flags}, ctx) => {
     })
 
     if (flags.pack && packed.length) {
-      const outputDir = path.resolve(ctx.cwd, typeof flags.pack === 'string' ? flags.pack : PARCELS_DIR)
-      await buildDirective(ctx, packed, outputDir)
+      await buildDirective(ctx, packed, parcelsDir(packed[0].ctx.git.root, flags))
     }
   } catch (e) {
     report.error(e).set('error', e).setStatus('failure')
