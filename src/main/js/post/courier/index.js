@@ -1,6 +1,7 @@
 import {$, tempy, within, path, semver, fs} from 'zx-extra'
 import {unpackTar, readManifest} from '../tar.js'
 import {log} from '../log.js'
+import {api} from '../api/index.js'
 import {pool} from '../../util.js'
 import {traverseQueue} from '../depot/deps.js'
 import {scanDirectives, invalidateOrphans} from '../parcel/directive.js'
@@ -30,6 +31,21 @@ export const prepare = async (names, pkg) => {
 
 export const runChannel = async (name, ...args) => channels[name]?.run(...args)
 
+const ghAuth = (env) => {
+  const token = env.GH_TOKEN || env.GITHUB_TOKEN
+  const user = env.GH_USER || env.GH_USERNAME || env.GITHUB_USER || env.GITHUB_USERNAME || 'x-access-token'
+  return token ? `${user}:${token}` : ''
+}
+
+// Where deliver pushes when it runs without a checkout.
+const deliveryOrigin = (env) => {
+  const server = env.GITHUB_SERVER_URL || 'https://github.com'
+  const auth = ghAuth(env)
+  return auth
+    ? `https://${auth}@${new URL(server).host}/${env.GITHUB_REPOSITORY}.git`
+    : `${server}/${env.GITHUB_REPOSITORY}.git`
+}
+
 export const resolveManifest = (manifest, env = process.env) => {
   // Credentials-bearing fields are derived below, never taken from the parcel.
   const {repoAuthedUrl, ghBasicAuth, ...fields} = manifest
@@ -38,12 +54,11 @@ export const resolveManifest = (manifest, env = process.env) => {
     [k, typeof v === 'string' ? v.replace(PLACEHOLDER, (_, n) => env[n] || '') : v]))
 
   const {repoHost, repoName, originUrl} = resolved
-  const token = env.GH_TOKEN || env.GITHUB_TOKEN || ''
-  const user = env.GH_USER || env.GH_USERNAME || env.GITHUB_USER || env.GITHUB_USERNAME || 'x-access-token'
+  const auth = ghAuth(env)
 
-  if (repoHost && repoName && token) {
-    resolved.repoAuthedUrl = `https://${user}:${token}@${repoHost}/${repoName}.git`
-    resolved.ghBasicAuth = `${user}:${token}`
+  if (repoHost && repoName && auth) {
+    resolved.repoAuthedUrl = `https://${auth}@${repoHost}/${repoName}.git`
+    resolved.ghBasicAuth = auth
   } else if (originUrl) {
     resolved.repoAuthedUrl = originUrl
   }
@@ -60,19 +75,18 @@ const MARKERS = new Set(['released', 'skip', 'conflict', 'orphan'])
 const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key)
 
 // The manifest as the channel will get it — shared by the populate check and the delivery itself.
-const resolveForChannel = (manifest, env, cwd) => {
+const resolveForChannel = (manifest, env) => {
   const resolved = resolveManifest(manifest, env)
-  if (cwd) resolved.cwd = cwd
   return {resolved, ch: own(channels, resolved.channel) ? channels[resolved.channel] : undefined}
 }
 
-const openParcel = async (tarPath, env, {cwd} = {}) => {
+const openParcel = async (tarPath, env) => {
   const content = await fs.readFile(tarPath, 'utf8').catch(() => null)
   if (MARKERS.has(content)) return null
 
   const destDir = tempy.temporaryDirectory()
   const {manifest} = await unpackTar(tarPath, destDir)
-  const {resolved, ch} = resolveForChannel(manifest, env, cwd)
+  const {resolved, ch} = resolveForChannel(manifest, env)
 
   if (!ch) return {warn: `unknown channel '${resolved.channel || '<none>'}'`}
 
@@ -84,14 +98,14 @@ const openParcel = async (tarPath, env, {cwd} = {}) => {
 
 // Parcels this env would deliver, but whose resolved manifest breaks the populate rules
 // embedded by pack. Checked before delivery starts; such parcels are left intact.
-const checkParcels = async (tars, env, {cwd} = {}) => {
+const checkParcels = async (tars, env) => {
   const invalid = new Map()
 
   for (const tarPath of tars) {
     const manifest = await readManifest(tarPath).catch(() => null)
     if (!manifest || typeof manifest !== 'object') continue
 
-    const {resolved, ch} = resolveForChannel(manifest, env, cwd)
+    const {resolved, ch} = resolveForChannel(manifest, env)
     if (!ch || missingRequires(ch, resolved).length) continue
 
     const errors = own(manifest, '__proto__') ? ['__proto__: is not allowed'] : []
@@ -113,14 +127,14 @@ const reportInvalid = (invalid) => [...invalid].map(([tarPath, errors]) => {
   return {file, errors}
 })
 
-export const inspect = async (tars, env = process.env, {cwd} = {}) => {
+export const inspect = async (tars, env = process.env) => {
   const parcels = []
   const skipped = []
 
   for (const tarPath of tars) {
     const fname = path.basename(tarPath)
     try {
-      const p = await openParcel(tarPath, env, {cwd})
+      const p = await openParcel(tarPath, env)
       if (!p) continue
       if (p.warn) {
         skipped.push({file: fname, reason: p.warn, tarPath: p.tarPath})
@@ -146,8 +160,8 @@ export const inspect = async (tars, env = process.env, {cwd} = {}) => {
 
 // --- Legacy deliver (no directive) ---
 
-const deliverLegacy = async (tars, env, {concurrency, dryRun, cwd}) => {
-  const {groups, skipped, total, pending} = await inspect(tars, env, {cwd})
+const deliverLegacy = async (tars, env, {concurrency, dryRun, gitRoot}) => {
+  const {groups, skipped, total, pending} = await inspect(tars, env)
 
   for (const {file, reason, tarPath} of skipped) {
     log.warn(`skipping ${file}: ${reason}`)
@@ -168,7 +182,7 @@ const deliverLegacy = async (tars, env, {concurrency, dryRun, cwd}) => {
     for (const {ch, resolved, destDir, tarPath} of group) {
       await within(async () => {
         $.scope = resolved.name || resolved.channel
-        await ch.run(resolved, destDir)
+        await ch.run(resolved, destDir, {gitRoot})
         log.info(`${resolved.channel} ${resolved.version}`)
       })
       await fs.writeFile(tarPath, 'released')
@@ -181,8 +195,8 @@ const deliverLegacy = async (tars, env, {concurrency, dryRun, cwd}) => {
 
 // --- Directive-aware deliver ---
 
-const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRun, cwd}) => {
-  const p = await openParcel(tarPath, env, {cwd})
+const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRun, gitRoot}) => {
+  const p = await openParcel(tarPath, env)
   if (!p) return 'already'
   if (p.warn) {
     log.warn(`skipping ${p.warn}`)
@@ -194,7 +208,7 @@ const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRu
   const {ch, resolved, destDir} = p
   const res = await within(async () => {
     $.scope = pkgName
-    const r = await ch.run(resolved, destDir)
+    const r = await ch.run(resolved, destDir, {gitRoot})
     log.info(`${channelName} ${version}`)
     return r
   })
@@ -205,7 +219,7 @@ const deliverParcel = async (tarPath, channelName, pkgName, version, env, {dryRu
   return res === 'duplicate' ? 'duplicate' : 'ok'
 }
 
-const deliverPkg = async (pkgName, pkg, tarMap, env, {dryRun, cwd, invalid}) => {
+const deliverPkg = async (pkgName, pkg, tarMap, env, {dryRun, gitRoot, invalid}) => {
   const entries = []
   const conflicts = []
   const skipped = []
@@ -221,7 +235,7 @@ const deliverPkg = async (pkgName, pkg, tarMap, env, {dryRun, cwd, invalid}) => 
       if (!tarPath) return 'missing'
       if (invalid.has(tarPath)) return 'invalid'
 
-      return deliverParcel(tarPath, channelName, pkgName, pkg.version, env, {dryRun, cwd})
+      return deliverParcel(tarPath, channelName, pkgName, pkg.version, env, {dryRun, gitRoot})
     }))
 
     for (let i = 0; i < step.length; i++) {
@@ -245,7 +259,7 @@ const deliverPkg = async (pkgName, pkg, tarMap, env, {dryRun, cwd, invalid}) => 
   return {entries, conflicts, skipped}
 }
 
-const deliverDirective = async (directive, tarMap, env, {dryRun, cwd, invalid}) => {
+const deliverDirective = async (directive, tarMap, env, {dryRun, gitRoot, invalid}) => {
   const entries = []
   const conflicts = []
   const skipped = []
@@ -255,7 +269,7 @@ const deliverDirective = async (directive, tarMap, env, {dryRun, cwd, invalid}) 
   await traverseQueue({queue: directive.queue, prev, cb: async (pkgName) => {
     const pkg = directive.packages[pkgName]
     if (!pkg) return
-    const r = await deliverPkg(pkgName, pkg, tarMap, env, {dryRun, cwd, invalid})
+    const r = await deliverPkg(pkgName, pkg, tarMap, env, {dryRun, gitRoot, invalid})
     entries.push(...r.entries)
     conflicts.push(...r.conflicts)
     skipped.push(...r.skipped)
@@ -268,14 +282,16 @@ const deliverDirective = async (directive, tarMap, env, {dryRun, cwd, invalid}) 
 
 // Parcels that break the populate rules are not delivered and reported in `invalid`.
 // The rest goes on as usual; failing the run is up to the caller.
+// cwd: where to look for the repo to tag in; without a checkout deliver makes one bound to GITHUB_REPOSITORY.
 export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun = false, cwd} = {}) => {
   const dir = tars.length ? path.dirname(tars[0]) : null
   const directives = dir ? await scanDirectives(dir) : []
+  const gitRoot = await api.git.openRepo(cwd, deliveryOrigin(env))
 
   if (!directives.length) {
-    const invalid = await checkParcels(tars, env, {cwd})
+    const invalid = await checkParcels(tars, env)
     const report = reportInvalid(invalid) // logged before delivery: a failing channel must not hide it
-    const result = await deliverLegacy(tars.filter(t => !invalid.has(t)), env, {concurrency, dryRun, cwd})
+    const result = await deliverLegacy(tars.filter(t => !invalid.has(t)), env, {concurrency, dryRun, gitRoot})
     return {...result, total: tars.length, skipped: result.skipped + invalid.size, invalid: report}
   }
 
@@ -286,9 +302,8 @@ export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun 
   const allInvalid = []
 
   for (const directive of directives) {
-    const gitRoot = cwd || dir
     const listed = new Set([directive.parcels, ...Object.values(directive.packages || {}).map(p => p.parcels)].flat())
-    const invalid = await checkParcels([...listed].map(p => tarMap.get(p)).filter(Boolean), env, {cwd: gitRoot})
+    const invalid = await checkParcels([...listed].map(p => tarMap.get(p)).filter(Boolean), env)
 
     if (!await tryLock(gitRoot, directive)) {
       log.info(`directive ${directive.sha.slice(0, 7)} locked, skipping`)
@@ -298,7 +313,7 @@ export const deliver = async (tars, env = process.env, {concurrency = 4, dryRun 
 
     try {
       await invalidateOrphans(dir, directive)
-      const {entries, conflicts, skipped} = await deliverDirective(directive, tarMap, env, {dryRun, cwd: gitRoot, invalid})
+      const {entries, conflicts, skipped} = await deliverDirective(directive, tarMap, env, {dryRun, gitRoot, invalid})
       allEntries.push(...entries)
       allConflicts.push(...conflicts)
       allSkipped.push(...skipped)

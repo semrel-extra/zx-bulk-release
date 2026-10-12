@@ -3,11 +3,11 @@ import {log} from '../../log.js'
 import {api} from '../../api/index.js'
 import {hasHigherVersion} from '../seniority.js'
 
-const run = async (manifest, dir) => {
+const run = async (manifest, dir, {gitRoot}) => {
   const {name, version, branch, to, msg, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
   const docsDir = path.join(dir, 'docs')
 
-  if (await hasHigherVersion(docsDir, name, version)) {
+  if (await hasHigherVersion(gitRoot, name, version)) {
     log.warn(`skipping gh-pages for ${name}@${version}: higher version already released`)
     return 'ok'
   }

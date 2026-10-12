@@ -1,19 +1,9 @@
-import {$, semver} from 'zx-extra'
+import {semver} from 'zx-extra'
+import {api} from '../api/index.js'
 import {parseTag} from '../depot/generators/tag.js'
 
-export const hasHigherVersion = async (cwd, name, version) => {
-  const output = (await $({cwd, nothrow: true})`git ls-remote --tags origin`).toString()
-  if (!output) return false
-
-  for (const line of output.split('\n')) {
-    const ref = line.split('\t')[1]?.replace('refs/tags/', '')
-    if (!ref) continue
-    const parsed = parseTag(ref)
-    if (!parsed || parsed.name !== name) continue
-    try {
-      if (semver.gt(parsed.version, version)) return true
-    } catch { /* unparseable version, skip */ }
-  }
-
-  return false
-}
+export const hasHigherVersion = async (cwd, name, version) =>
+  (await api.git.listRemoteTags(cwd)).some(ref => {
+    const tag = parseTag(ref)
+    return tag?.name === name && !!semver.valid(tag.version) && semver.gt(tag.version, version)
+  })

@@ -3,11 +3,11 @@ import {api} from '../../api/index.js'
 import {getArtifactPath, isAssetMode, prepareMeta} from '../../depot/generators/meta.js'
 import {hasHigherVersion} from '../seniority.js'
 
-const pushMetaBranch = async (manifest, dir) => {
+const pushMetaBranch = async (manifest, dir, {gitRoot}) => {
   const {name, version, tag, type, data: meta, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
   if (type === null || isAssetMode(type)) return 'ok'
 
-  if (await hasHigherVersion(dir, name, version)) {
+  if (await hasHigherVersion(gitRoot, name, version)) {
     log.warn(`skipping meta for ${name}@${version}: higher version already released`)
     return 'ok'
   }

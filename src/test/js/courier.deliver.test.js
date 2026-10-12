@@ -805,9 +805,10 @@ describe('courier.deliver', () => {
 
   test('deliver with directive: skips locked directive', async () => {
     await within(async () => {
-      const mock = await setup([
-        // Make tryLock's pushAnnotatedTag fail (simulating lock held by another process)
-        [/git tag -a/, '', 1],
+      await setup([
+        // the lock tag is already on the remote: another process holds it
+        [/git push origin refs\/tags\/zbr-deliver/, '', 1],
+        [/git ls-remote origin refs\/tags\/zbr-deliver/, 'abc1234567890\trefs/tags/zbr-deliver.abc1234'],
       ])
       const dir = tempy.temporaryDirectory()
       const parcelName = 'parcel.abc1234.npm.pkg-a.1.0.1.aaa111.tar'

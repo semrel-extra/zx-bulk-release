@@ -1,35 +1,14 @@
-import {$} from 'zx-extra'
 import {api} from '../../api/index.js'
-import {DEFAULT_GIT_COMMITTER_NAME, DEFAULT_GIT_COMMITTER_EMAIL} from '../../api/git.js'
 
-export const isTagConflict = (e) =>
-  /already exists|updates were rejected|failed to push/i.test(e?.message || e?.stderr || '')
-
-const ensureSha = async (cwd, sha) => {
-  if (!sha) return
-  const check = await $({cwd, nothrow: true, quiet: true})`git cat-file -e ${sha}`
-  if (check.exitCode !== 0) {
-    await $({cwd, quiet: true})`git fetch origin --depth 1`
-  }
-}
-
-const run = async (manifest, dir) => {
-  const {tag, sha, cwd} = manifest
-  const gitCommitterName  = manifest.gitCommitterName  || DEFAULT_GIT_COMMITTER_NAME
-  const gitCommitterEmail = manifest.gitCommitterEmail || DEFAULT_GIT_COMMITTER_EMAIL
-  try {
-    await ensureSha(cwd, sha)
-    await api.git.pushTag({cwd, tag, sha, gitCommitterName, gitCommitterEmail})
-    return 'ok'
-  } catch (e) {
-    if (isTagConflict(e)) return 'conflict'
-    throw e
-  }
+// The claim: whoever owns the tag owns the version. A tag at our commit is ours already (a re-run).
+const run = async ({tag, sha, gitCommitterName, gitCommitterEmail}, dir, {gitRoot}) => {
+  const {pushed, commit} = await api.git.pushTag({cwd: gitRoot, tag, sha, gitCommitterName, gitCommitterEmail})
+  return pushed ? 'ok' : commit === sha ? 'duplicate' : 'conflict'
 }
 
 export default {
   name: 'git-tag',
-  requires: ['tag', 'cwd'],
+  requires: ['tag', 'sha'],
   when: (pkg) => !pkg.ctx?.flags?.snapshot,
   run,
 }

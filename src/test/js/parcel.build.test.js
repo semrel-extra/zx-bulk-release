@@ -45,13 +45,14 @@ describe('parcel.build', () => {
     expect(parcels[2].channel).toBe('meta')
   })
 
-  test('git-tag manifest has tag, cwd, and env placeholders', () => {
+  test('git-tag manifest has tag, sha and env placeholders, but no local path', () => {
     const pkg = makePkg()
     const ctx = makeCtx()
     const [parcel] = buildParcels(pkg, ctx, {channels: ['git-tag'], ...makeArtifacts()})
 
     expect(parcel.manifest.tag).toBe(pkg.tag)
-    expect(parcel.manifest.cwd).toBe(ctx.git.root)
+    expect(parcel.manifest.sha).toBe(ctx.git.sha)
+    expect(parcel.manifest.cwd).toBeUndefined()
     expect(parcel.manifest.gitCommitterName).toBe('${{GIT_COMMITTER_NAME}}')
     expect(parcel.files).toEqual([])
   })
