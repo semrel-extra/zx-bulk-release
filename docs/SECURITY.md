@@ -45,9 +45,8 @@ The pipeline is split into phases with strict trust boundaries:
 |                                                     |
 |  1. download context      <- trusted (pre-deps)     |
 |  2. download parcels      <- untrusted              |
-|  3. zbr --deliver                                   |
-|     verify parcels against trusted context          |
-|     then deliver          <- GH_TOKEN, NPM_TOKEN    |
+|  3. zbr --verify          <- parcels vs context     |
+|  4. zbr --deliver         <- GH_TOKEN, NPM_TOKEN    |
 +-----------------------------------------------------+
 ```
 
@@ -61,21 +60,24 @@ Build and deliver run on separate CI runners. They share nothing except explicit
 
 **Trust boundary 3: verification.**
 The deliver job receives two artifacts from different trust levels:
-- **Context** (trusted) — uploaded before deps, contains the commit time and expected packages, versions, tags, channels and `populate` rules.
+- **Context** (trusted) — uploaded before deps, contains the commit, its time, whether npm publishes a snapshot, and the expected packages with their versions, tags, channels, `populate` rules and dependencies.
 - **Parcels** (untrusted) — produced in compromised environment.
 
-`zbr --verify parcels-unverified/` validates untrusted parcels against the trusted context and copies only verified parcels to `parcels/`. Deliver then reads only from `parcels/`. Verification checks:
-- sha7 prefix matches the context
+`zbr --verify parcels-unverified/:parcels/` validates untrusted parcels against the trusted context and copies only verified parcels to `parcels/`. Deliver then reads only from `parcels/`. Verification checks:
+- sha7 prefix matches the context; file names hold only the characters pack writes (no log injection), and links are refused
 - Each parcel's channel is expected for its package
-- Each parcel's tag belongs to a known package
-- No injected parcels (files not matching any expected package are rejected)
-- Directive sha matches the context
+- No injected parcels (files not matching any expected package are rejected), and nothing unverified already waits in `parcels/`
 - Each manifest's `channel` matches the parcel name
-- Each manifest keeps the package name and version of its parcel, and the `populate` rules and the release `tag` from the context
-- The npm tarball inside a parcel (`package.tgz`) is the package the parcel is named for: npm publishes under the name and version from its `package.json`, so they must match too
-- The directive keeps the commit time from the context (deliveries are ordered by it)
+- Each manifest keeps the package name and version of its parcel, the commit (`sha`), the `populate` rules and the release `tag` from the context
+- The npm tarball inside a parcel (`package.tgz`) is the package the parcel is named for: npm publishes under the name and version from its `package.json`, read the way npm reads it — a second, differently spelled `package.json` makes the tarball ambiguous and rejected
+- The npm dist-tag matches the context: a snapshot can't go out as `latest`
+- There is one directive, named for the commit time, with the commit and time of the context (deliveries are ordered by it)
+- The directive lists only context packages with their versions and tags, one verified parcel of the package per context channel, every dependency the context knows and no cycles. It may hold packages back (phases run with different flags); verify names them
+- Markers are only where a courier leaves them: a directive marked delivered has no parcels left, a listed parcel is never an orphan, and nothing of a package is marked delivered before its claim
 
 Verification needs no credentials. The courier checks the resolved manifests against their `populate` rules right before delivery (see [Populate rules](../README.md#populate-rules)).
+
+**What the courier enforces itself.** Whatever the parcels: nothing of a package goes out until its claim — the `git-tag` parcel, which every release but a snapshot has — is ours (claim before act), and who owns a tag is read from the remote. With a directive, a marker on a claim counts only for what the remote says. Parcels are unpacked as plain files inside a fresh directory: links and paths leading out of it are refused. Deliver needs push access for tags and service branches (`GH_TOKEN` with `contents: write`).
 
 ### Credential flow
 
@@ -114,7 +116,7 @@ zbr supports three pipeline modes with increasing security guarantees:
 | Two-phase | `--pack` + `--deliver` | Build vs delivery | None | Partial |
 | Four-phase | `--receive` + `--pack` + `--verify` + `--deliver` | Full | Yes | Full |
 
-The **two-phase** mode isolates credentials (pack has no secrets), but third-party code runs in the same environment as analysis. A compromised dep could influence version resolution or inject parcels.
+The **two-phase** mode isolates credentials (pack has no secrets), but third-party code runs in the same environment as analysis. A compromised dep could influence version resolution or inject parcels. Without verify nothing binds the parcels to a trusted context: the pack decides which commit a claim points at and which parcels a directive lists. The courier still claims before it acts, but the pack picks the claims, and can leave them out.
 
 The **four-phase** mode adds two boundaries: `--receive` runs before deps install (safe analysis), and `--verify` validates parcels against the trusted context on a clean runner.
 
@@ -195,5 +197,8 @@ jobs:
 | Directive tampering | Context uploaded before deps; parcels verified against it |
 | Context mutation | Uploaded as artifact before `yarn install` |
 | Concurrent delivery races | Git-tag-based semaphores (atomic push = ownership) |
+| Version races | Claim before act; who owns a tag is read from the remote |
 | Version conflicts | Self-resolving via rebuild signal + preflight re-resolution |
-| Zombie locks | CI job timeout + timestamp-based stale lock detection |
+| Lying markers | With a directive, claim markers are confirmed on the remote; verify accepts markers only where a courier leaves them |
+| Hostile tar entries | Plain files only, unpacked inside a fresh directory |
+| Zombie locks | Removed by hand (or by a cleanup step you add); until then deliver skips that commit |

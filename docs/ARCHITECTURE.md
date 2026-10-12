@@ -8,9 +8,9 @@ A monorepo release is like sending packages through a post office:
 
 1. **Depot** inspects the goods (commits), decides what needs shipping (versions), builds and labels each item.
 2. Each item is sealed into a **parcel** — a self-contained tar with a manifest and everything needed for delivery. No secrets inside, only `${{ PLACEHOLDER }}` stubs.
-3. A **directive** is a shipping list: which parcels go where, in what order, grouped by destination type.
+3. A **directive** is a shipping list: which parcels belong to which package, and which package waits for which.
 4. The **courier** picks up parcels, resolves credentials from the environment, and delivers them through **channels** — npm, git tags, GitHub releases, docs branches, etc.
-5. A **semaphore** prevents two couriers from delivering the same commit simultaneously: one claims the delivery tag, the other backs off and signals a rebuild.
+5. A **semaphore** prevents two couriers from delivering the same commit simultaneously: one claims the delivery tag, the other backs off. A courier that finds its version claimed by another commit signals a rebuild.
 
 ```
 depot                    parcel                   courier
@@ -41,7 +41,7 @@ queue: [[a, c], [b], [d]]
          ^^^^ parallel
 ```
 
-`a` and `c` have no mutual dependencies — they run in parallel. `b` waits for both, `d` waits for `b`. The traversal (`traverseQueue`) walks the graph level by level, running independent packages concurrently within each level.
+`a` and `c` have no mutual dependencies — they run in parallel. `b` waits for both, `d` waits for `b`. The traversal (`traverseQueue`) starts each package as soon as the packages it depends on are done, so independent ones run concurrently.
 
 If `a` bumps from 1.0.0 to 1.1.0, `b` re-resolves its dep on `a`, updates its manifest, and may get a cascading patch. `d` then re-resolves its dep on `b`, and so on.
 
@@ -69,7 +69,7 @@ Supporting modules:
 
 - **deps** — topological sort, workspace protocol resolution (`workspace:*`), intra-monorepo version propagation. When a dependency bumps, all dependents re-resolve.
 - **context** — `zbr-context.json`: a trusted snapshot of release decisions. Written by `receive` mode, consumed by `pack` and `verify`.
-- **reconcile** — preflight: checks remote tags before committing to a release. Detects same-sha (skip), ancestor (proceed), diverged (abort).
+- **reconcile** — preflight: reads the commit a remote release tag points to before committing to a release. Same commit → skip; ours is newer → re-resolve the version; older or diverged → skip.
 - **generators** — tag formatting (4 formats: `lerna`, `pure`, `f0`, `f1`), metadata payloads, markdown release notes.
 
 ## Parcel
@@ -85,13 +85,12 @@ Credentials are stored as templates: `${{ NPM_TOKEN }}`, `${{ GH_TOKEN }}`. The 
 
 A **directive** is a special meta-parcel — the shipping list for a commit:
 
-- Authoritative list of all parcel filenames
-- Package queue in dependency order
-- Channel split: git-local channels first (serial), then external channels (parallel)
+- The parcels of each package
+- The packages and the dependencies between them
 
-The directive enables coordinated delivery: the courier processes parcels in the right order, handles conflicts per-package, and marks orphaned parcels from stale builds.
+The courier doesn't take the channel order from it: the stages are its own. The directive enables coordinated delivery: the courier delivers packages in dependency order, handles conflicts per package, and marks orphaned parcels from stale builds.
 
-**verify** validates parcels against the trusted context — checks sha, package names, versions and channel assignments (including the package inside the npm tarball), and that pack kept the release tags, the `populate` rules and the commit time.
+**verify** validates parcels against the trusted context — sha, package names, versions and channel assignments (including the package inside the npm tarball, read the way npm reads it), the npm dist-tag, and that pack kept the release tags, the `populate` rules, the commit and its time. The directive may list only context packages, each with one verified parcel per channel and every dependency.
 
 ## Courier
 
@@ -100,40 +99,44 @@ The directive enables coordinated delivery: the courier processes parcels in the
 The courier takes parcels and pushes them through channels:
 
 1. Resolve `${{ VAR }}` templates in manifests from `process.env`
-2. Validate required credentials per channel
-3. Execute channels in order: transport (git) first, then external (npm, gh)
+2. Check each parcel: required credentials, `populate` rules, that it belongs to its package
+3. Deliver package by package in dependency order, channel by stage: claim → publish → announce
 4. Report results: delivered / skipped / duplicate / conflict
 
 ### Channels
 
-Each channel is `{ requires, when, prepare?, run, snapshot?, transport? }`:
+Each channel is `{ name, stage?, requires, when, prepare?, run(manifest, dir, {gitRoot}), snapshot?, transport? }` (no stage means `publish`). `gitRoot` is the delivery repo: the checkout deliver runs in, or a fresh repo bound to `GITHUB_REPOSITORY`.
 
-| Channel     | Destination             | Git transport | Notes |
-|-------------|-------------------------|---------------|-------|
-| git-tag     | Annotated git tag       | yes           | Runs first. `conflict` → abort package, signal rebuild |
-| npm         | npm registry            | no            | `duplicate` on 409 / EPUBLISHCONFLICT |
-| gh-release  | GitHub release + assets | no            | REST API, not git push. `duplicate` on `already_exists` |
-| gh-pages    | Docs branch             | yes           | Configurable branch and subdirectory |
-| changelog   | Changelog branch        | yes           | Prepends release notes |
-| meta        | Metadata branch/asset   | yes           | Three modes: commit, asset, tag |
-| cmd         | Shell command           | no            | Runs in snapshot mode too |
+| Channel     | Destination             | Stage    | Notes |
+|-------------|-------------------------|----------|-------|
+| git-tag     | Annotated git tag       | claim    | The remote decides: the tag is ours (`ok`, `duplicate`) or another commit's (`conflict`) |
+| npm         | npm registry            | publish  | `duplicate` on a known republish error, or when the registry has the version |
+| gh-release  | GitHub release + assets | announce | REST API. `duplicate` on `already_exists` only |
+| gh-pages    | Docs branch             | announce | Configurable branch and subdirectory |
+| changelog   | Changelog branch        | announce | Prepends release notes, once |
+| meta        | Metadata branch/asset   | announce | Three modes: commit, asset, tag |
+| cmd         | Shell command           | —        | `publishCmd`: all-in-one only, after the package's delivery |
 
-**Git transport** channels deliver via `git push` (tags, branches). They run first and serially — a failed tag push means the commit is already claimed, so there's no point publishing to npm. **External** channels (npm, gh-release, cmd) use HTTP APIs and can run in parallel.
+**Claim before act.** Nothing else of a package goes out until its claim is released — the release tag, which every release but a snapshot has, is ours. That is what makes the version ours. npm follows right after the claim; the announcements describe what has been published and run in parallel. Each stage waits for all its parcels. A conflict sends the package and the packages depending on it to the rebuild; a failure stops the package; a parcel this env can't deliver (missing credentials) is held without blocking the rest.
 
-Channels return `'ok'`, `'duplicate'`, or `'conflict'`. A conflict on `git-tag` aborts all subsequent channels for that package.
+Channels return `'ok'`, `'duplicate'`, or `'conflict'`; anything else is thrown. Errors don't race ahead: the courier lets everything in flight settle, releases the lock, and reports the errors together.
 
 ### Semaphore
 
-Distributed lock via git tags. Prevents concurrent delivery of the same commit.
+Distributed lock via git tags at the release commit. Prevents concurrent delivery of the same commit.
 
-- `tryLock` — push `zbr-deliver.{sha7}`. Atomic push = ownership.
-- `unlock` — delete the lock tag after delivery.
-- `signalRebuild` — push `zbr-rebuild.{sha7}` so CI re-runs with fresh state.
+- `tryLock` — push `zbr-deliver.{sha7}`. Atomic push = ownership. A push that fails while the tag is absent is an error, never "locked".
+- `unlock` — delete the lock tag once everything has settled.
+- `signalRebuild` — push `zbr-rebuild.{sha7}` after unlocking, so CI re-runs with fresh state.
 - `consumeRebuildSignal` — delete the signal at the start of the next run.
 
 ### Seniority
 
-Prevents version downgrades. Before delivering, checks remote tags for a higher version of the same package. If found — skip.
+Prevents version downgrades. Before committing docs, changelog or meta, checks the delivery repo's remote tags for a higher version of the same package. If found — skip.
+
+### Git workspaces
+
+`api/git.js` is the only module that runs git. Commands that write a repo's `.git` go one at a time per repo, so parallel packages never race on its locks. Commits and tags carry the release identity in `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env: zbr never writes git config. A claim fetches the release commit by sha, tags it and reads the outcome from the remote. A branch commit (meta, changelog, gh-pages) is a fresh read-modify-write on the remote tip at every attempt, so a rejected push leaves nothing half-done behind.
 
 ## API
 
@@ -141,7 +144,7 @@ Low-level adapters. No business logic — just transport.
 
 | Adapter | Scope |
 |---------|-------|
-| git     | clone, push, tag, fetch, commit, remote parsing, authenticated URLs |
+| git     | the only module that runs git: claims, branch commits, remote tags, per-repo lock, identity via env |
 | gh      | GitHub REST: releases, assets, fetch with API headers |
 | npm     | Registry fetch/publish, OIDC auth, npmrc management |
 
@@ -190,6 +193,8 @@ Two kinds of context flow through the pipeline:
   "sha": "abc1234...",
   "sha7": "abc1234",
   "timestamp": 1718000000,
+  "snapshot": false,
+  "prev": {"@scope/app": ["@scope/pkg"]},
   "packages": {
     "@scope/pkg": {
       "version": "2.1.0",
@@ -201,7 +206,7 @@ Two kinds of context flow through the pipeline:
 }
 ```
 
-Versions, tags, channel lists, `populate` rules and the commit time — no paths, no manifests, no secrets. This is the minimum needed to verify that parcels produced later are legitimate.
+Versions, tags, channel lists, `populate` rules, the commit time, the dependencies between the released packages and whether npm publishes them as snapshots — no paths, no manifests, no secrets. This is the minimum needed to verify that parcels produced later are legitimate.
 
 **Flow between modes:**
 
@@ -228,23 +233,25 @@ All tars live in `parcels/` and are uploaded as a single CI artifact.
 
 `--verify input:output` reads parcels from `input/`, validates each against the trusted context:
 
-1. sha7 prefix must match the context
+1. sha7 prefix must match the context; file names hold only what pack writes, and links are refused
 2. Channel must be in the package's expected channel list
 3. Package name and version must match a context entry
 4. No extra parcels — files that don't match any expected package are rejected
-5. Each manifest's channel, package and version match its file name, and its release tag and `populate` rules match the context
-6. The npm tarball's `package.json` names the same package and version — npm publishes under those
-7. The directive's commit time (body and file name) matches the context — directives are delivered oldest first
+5. Each manifest's channel, package and version match its file name; its release tag, commit and `populate` rules match the context
+6. The npm tarball's `package.json`, read the way npm reads it, names the same package and version; the npm dist-tag (snapshot or not) matches the context
+7. There is one directive, named for the commit time; its commit and time match the context — directives are delivered oldest first
+8. The directive lists only context packages, with their versions and tags, one verified parcel per context channel and every dependency the context knows. It may hold packages back (phases run with different flags): verify names them
+9. Markers (what a delivery leaves behind) are only where a courier leaves them
 
-Only verified tars are copied to `output/`. Rejected parcels produce hard errors — the pipeline stops. If input and output are the same directory, verification happens in place.
+Only verified tars are copied to `output/`, and parcels already lying there that verify didn't pass are an error. Rejected parcels produce hard errors — the pipeline stops. If input and output are the same directory, verification happens in place.
 
 **Deliver (clean runner):**
 
 The courier reads from the verified directory. `scanDirectives()` finds directive tars sorted by timestamp (oldest first — stale builds are processed before fresh ones). For each directive:
 
-1. `invalidateOrphans()` — any parcel in the directory matching this commit's sha7 but **not** listed in the directive's `parcels` array is overwritten with the string `'orphan'`. This neutralizes tars injected by a compromised build or leftover from a previous run.
-2. Parcels marked as `released`, `skip`, `conflict`, or `orphan` are skipped.
-3. Remaining parcels are unpacked, credentials resolved from env, and delivered through channels.
+1. `invalidateOrphans()` — any parcel in the directory matching this commit's sha7 but listed by none of the directive's packages is overwritten with the string `'orphan'`. This neutralizes tars injected by a compromised build or leftover from a previous run.
+2. Parcels marked as `released`, `conflict`, or `orphan` (or `skip`, written by 3.x) are settled; a marker on a claim counts for what the remote says about the tag.
+3. Remaining parcels are unpacked, credentials resolved from env, and delivered stage by stage.
 
 ```
 build job                        deliver job

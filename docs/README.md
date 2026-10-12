@@ -18,7 +18,7 @@
 * **Coordinated delivery**: multiple release agents can safely serve the same monorepo concurrently via git-tag-based semaphores.
 
 > [!NOTE]
-> **[Migration guide v2 → v3](./docs/MIGRATION_V2_V3.md)** | **[Delivery specification](./docs/DELIVER_SPEC.md)** | **[Security model](./docs/SECURITY.md)** | **[Architecture](./docs/ARCHITECTURE.md)**
+> **[Upgrading v3 → v4](./docs/MIGRATION_V3_V4.md)** | **[Migration guide v2 → v3](./docs/MIGRATION_V2_V3.md)** | **[Delivery specification](./docs/DELIVER_SPEC.md)** | **[Security model](./docs/SECURITY.md)** | **[Architecture](./docs/ARCHITECTURE.md)**
 
 ## Roadmap
 * [x] Store release metrics to `meta`.
@@ -192,9 +192,9 @@ jobs:
           GIT_COMMITTER_EMAIL: semrel-extra-bot@hotmail.com
 ```
 
-After delivery, each tar is replaced with a marker (`released`, `skip`, `conflict`, or `orphan`). In the four-phase mode, parcels are verified against the trusted context (uploaded before deps install) before any delivery begins.
+After delivery, each settled tar is replaced with a marker (`released`, `conflict`, or `orphan`); a parcel the deliver env can't deliver (missing credentials) stays a valid tarball for one that can. In the four-phase mode, parcels are verified against the trusted context (uploaded before deps install) before any delivery begins.
 
-**Recovery** is simply re-running the deliver job. Only undelivered tars (not yet replaced with markers) will be processed. No rebuild required.
+**Recovery** is simply re-running the deliver job. What already went out comes back as a duplicate — the release tag is at our commit, the version is in the registry — and the rest is delivered. No rebuild required.
 
 ### JS API
 ```js
@@ -420,7 +420,7 @@ all-in-one: topo -> contextify -> analyze -> preflight -> build -> test -> pack 
 
 By default, packages marked as `private` are omitted. Override with `--include-private`.
 
-**Preflight** runs between `analyze` and `build`. It checks tag availability on git remote and eliminates version conflicts before wasting build/test time. If a tag is already taken by a newer commit, preflight re-resolves the version. If taken by the same or an older commit, the package is skipped.
+**Preflight** runs between `analyze` and `build`. It checks tag availability on git remote and eliminates version conflicts before wasting build/test time. If a tag is already taken by an older commit, preflight re-resolves the version. If taken by the same or a newer commit, the package is skipped.
 
 ### Steps
 Each step has a uniform signature `(pkg, ctx)`:
@@ -429,9 +429,9 @@ Each step has a uniform signature `(pkg, ctx)`:
 - **`preflight`** — checks tag availability on remote, re-resolves version on conflict, skips duplicates.
 - **`build`** — runs `buildCmd` (with dep traversal and optional npm artifact fetch).
 - **`test`** — runs `testCmd`.
-- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). A directive meta-parcel is also generated, listing all parcels and their delivery steps. After this step, everything the courier needs is outside the project dir.
+- **`pack`** — stages delivery artifacts into self-describing tar containers (`npm pack`, docs copy, assets, release notes). Each tar is named `parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar` and contains a `manifest.json` with channel name, delivery instructions, and template credentials (`${{ENV_VAR}}`). A directive meta-parcel is also generated, listing each package's parcels and the dependencies between packages. After this step, everything the courier needs is outside the project dir.
 - **`publish`** — hands tars to courier's `deliver()`, runs `cmd` channel separately. Tag push is handled by the `git-tag` channel.
-- **`clean`** — restores `package.json` files and unsets git user config.
+- **`clean`** — restores `package.json` files.
 
 Set `config.releaseRules` to override the default rules preset:
 ```js
@@ -451,34 +451,35 @@ parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
   assets/          — (gh-release channel) release assets
   docs/            — (gh-pages channel) documentation files
 ```
-The `sha7` prefix groups all parcels of one commit. `name` is the sanitized package name (`@scope/pkg` → `scope-pkg`). The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash.
+The `sha7` prefix groups all parcels of one commit. `name` is the package name encoded for a file name: `[a-z0-9-]` stay as is, `@scope/pkg` becomes `scope__pkg`, any other character is escaped as `_xx` (UTF-8 bytes) — different packages never share a parcel name. The `hash6` suffix is a content hash for deduplication — two builds of the same commit producing identical content yield the same filename (last-writer-wins), while different content gets a different hash. Like the rest of the parcel format, names assume that all phases of a pipeline run the same zbr version.
 
-A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels. It contains the complete delivery map: package queue, per-package channel steps, and an authoritative list of parcel filenames. The directive enables coordinated delivery — see [DELIVER_SPEC.md](./docs/DELIVER_SPEC.md).
+A **directive** meta-parcel (`parcel.{sha7}.directive.{ts}.tar`) is generated alongside regular parcels. It contains the complete delivery map: the packages, the dependencies between them, and each package's parcels. The directive enables coordinated delivery — see [DELIVER_SPEC.md](./docs/DELIVER_SPEC.md).
 
 The manifest contains `${{ENV_VAR}}` placeholders that are resolved by the courier at delivery time via `resolveManifest()`. This ensures credentials never touch the build phase.
 
 ### Channels
-Delivery channels are a registry of `{name, when, prepare?, run, requires?, snapshot?, transport?}` objects:
-- **git-tag** — pushes the release tag to git remote. Runs before other channels. Returns `conflict` if the tag already exists. Skipped in snapshot mode.
+Delivery channels are a registry of `{name, stage?, when, prepare?, run(manifest, dir, {gitRoot}), requires?, snapshot?, transport?}` objects. A package's channels go in stages: **claim** (`git-tag`) → **publish** (`npm`) → **announce** (`gh-release`, `meta`, `changelog`, `gh-pages`); a channel without a stage publishes. Nothing else of a package goes out until its claim is released — the release tag is ours. Snapshots have no claim.
+- **git-tag** — pushes the release tag at the release commit. The remote decides the outcome: `ok` if pushed, `duplicate` if the tag is already at our commit (a re-run), `conflict` if it is at another commit; a rejected push that leaves no tag is an error. Skipped in snapshot mode.
 - **meta** — pushes release metadata to the `meta` branch (or as a GH release asset). Checks docs seniority before committing.
-- **npm** — publishes to the npm registry. Returns `duplicate` on `EPUBLISHCONFLICT` / 403.
-- **gh-release** — creates a GitHub release with optional file assets (requires tag to exist). Returns `duplicate` on 422.
+- **npm** — publishes to the npm registry. Returns `duplicate` on `EPUBLISHCONFLICT` / "cannot publish over", or when the registry already has the version.
+- **gh-release** — creates a GitHub release with optional file assets (after the claim, so the tag exists). Returns `duplicate` when the release `already_exists`.
 - **gh-pages** — pushes docs to a `gh-pages` branch. Checks docs seniority before committing.
-- **changelog** — pushes a changelog entry to a `changelog` branch. Checks docs seniority before committing.
-- **cmd** — runs a custom `publishCmd` (depot-side, not through courier; `transport: false`).
+- **changelog** — pushes a changelog entry to a `changelog` branch, once per release. Checks docs seniority before committing.
+- **cmd** — runs a custom `publishCmd` (depot-side, not through courier; `transport: false`). Its env carries the release identity in `GIT_AUTHOR_*`/`GIT_COMMITTER_*` (`GIT_COMMITTER_NAME`/`GIT_COMMITTER_EMAIL`, or the default bot), unless your env sets them; not in snapshot mode.
 
-Each channel declares `requires` — a list of manifest fields that must be present after credential resolution. Courier validates before delivery; missing credentials produce a warning and `skip` marker.
+Each channel declares `requires` — a list of manifest fields that must be present after credential resolution. Courier validates before delivery; a parcel with missing credentials is held: a warning, and the tar stays valid for an env that has them.
 
-Channels return one of: `ok` (success), `duplicate` (already published, goal achieved), or `conflict` (version collision, needs rebuild). Unrecoverable errors are thrown.
+Channels return one of: `ok` (success), `duplicate` (already published, goal achieved), or `conflict` (version collision, needs rebuild). Unrecoverable errors are thrown — after everything in flight has settled, together.
 
 ### Coordinated delivery
 When multiple zbr processes target the same monorepo concurrently, delivery is coordinated via git-tag-based semaphores:
 
-1. **Directive** — each build produces a meta-parcel listing all packages and their delivery steps.
-2. **Semaphore lock** — before delivering, a process pushes `zbr-deliver.{sha7}` as an annotated tag. Atomic push = ownership. Failure = another process is working.
-3. **Orphan cleanup** — the directive invalidates parcels not in its authoritative list (stale artifacts from previous builds).
-4. **Conflict resolution** — if `git-tag` returns `conflict`, all parcels of that package are marked, and a `zbr-rebuild.{sha7}` tag signals CI to rebuild with fresh versions.
-5. **Partial delivery** — skipped parcels (missing credentials) remain valid tarballs. Another process with the right credentials can pick them up later.
+1. **Directive** — each build produces a meta-parcel listing its packages, their dependencies and parcels.
+2. **Semaphore lock** — before delivering, a process pushes `zbr-deliver.{sha7}` at the release commit. Atomic push = ownership. A tag already there = another process is working.
+3. **Orphan cleanup** — the directive invalidates parcels none of its packages lists (stale artifacts from previous builds).
+4. **Claim before act** — a package's channels go out only once its release tag is ours (snapshots have none).
+5. **Conflict resolution** — if `git-tag` returns `conflict`, the parcels of that package and of the packages depending on it are marked, and a `zbr-rebuild.{sha7}` tag signals CI to rebuild with fresh versions.
+6. **Partial delivery** — held parcels (missing credentials) remain valid tarballs. Another process with the right credentials can pick them up later.
 
 See [DELIVER_SPEC.md](./docs/DELIVER_SPEC.md) for the full protocol specification.
 
@@ -488,7 +489,7 @@ depot (build phase)                          courier (deliver phase)
   manifest: { token: '${{NPM_TOKEN}}' }  ->   resolveManifest(manifest, env)
                                                  -> { token: 'actual-secret' }
 ```
-Template credentials (`${{ENV_VAR}}`) are written into manifests at pack time. Courier resolves them from `process.env` at delivery time. This means the build phase never sees real secrets — including git push credentials (`GH_TOKEN`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`) which are now resolved by the `git-tag` channel at delivery time.
+Template credentials (`${{ENV_VAR}}`) are written into manifests at pack time. Courier resolves them from `process.env` at delivery time. This means the build phase never sees real secrets — including git push credentials (`GH_TOKEN`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`) which are resolved by the `git-tag` channel at delivery time. zbr never writes git config: the identity goes with each git command it runs.
 
 ### Tags
 [Lerna](https://github.com/lerna/lerna) tags (like `@pkg/name@v1.0.0-beta.0`) are suitable for monorepos, but they don't follow [semver spec](https://semver.org/). Therefore, we propose another contract:

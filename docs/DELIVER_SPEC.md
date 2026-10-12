@@ -11,11 +11,13 @@ Multiple zbr processes may concurrently build and deliver artifacts for overlapp
 ## Principles
 
 1. **Credential isolation.** The pack phase has zero secrets. All credentials (`GH_TOKEN`, `NPM_TOKEN`, `GIT_COMMITTER_*`) exist only in deliver. Manifests contain `${{ENV_VAR}}` placeholders resolved at delivery time. Tars can be stored, transferred, and inspected without leak risk.
-2. **Git tag push as the sole coordination primitive.** Atomic, cross-platform, requires no external services. Push success = ownership, `already exists` = rejection.
+2. **The remote decides who owns a version.** A git tag push is the sole coordination primitive: atomic, cross-platform, no external services. The outcome is read from the remote, never from error text: a pushed tag is ours; a tag already at our commit is ours too (a re-run); a tag at another commit is a conflict; a rejected push that leaves no tag is an error.
 3. **Annotated tag body as data envelope.** Mutex and payload in one mechanism.
-4. **Build as transactional unit.** All parcels of one build are delivered by a single process. Splitting across processes breaks integrity guarantees.
-5. **Parcels are preserved until resolved.** Skipped parcels (missing credentials) remain valid tarballs for later re-delivery. Delivered and conflicted parcels are overwritten with a status marker.
-6. **Conflicts are self-resolving.** Each rebuild sees fresh tags and gets a new version. Infinite loops are impossible.
+4. **Claim before act.** Nothing else of a package goes out until its claim — the release tag, which every release but a snapshot has — is ours. Channels run in stages: claim → publish → announce.
+5. **Settle before deciding.** Every stage waits for all its parcels. The lock is released, the rebuild signalled and the markers written only after everything has settled. Errors are reported together.
+6. **Build as transactional unit.** All parcels of one build are delivered by a single process at a time. Splitting across processes breaks integrity guarantees.
+7. **Markers are a cache, not the source of truth.** Delivered and conflicted parcels are overwritten with a status marker, so a re-run skips them. With a directive, a marker on a claim counts only for what the remote says. Parcels this env can't deliver (missing credentials) stay intact for one that can.
+8. **Conflicts are self-resolving.** A lost claim sends its package and the packages that depend on it to the rebuild. Each rebuild sees fresh tags and gets a new version, so loops are impossible.
 
 ## Artifacts
 
@@ -33,11 +35,11 @@ parcel.{sha7}.{channel}.{name}.{version}.{hash6}.tar
 - `version` — semver version
 - `hash6` — 6-character SHA-1 of tar contents (content-addressable dedup)
 
-The manifest inside the tar contains `${{ENV_VAR}}` placeholders resolved at delivery time via `resolveManifest()`.
+The manifest inside the tar contains `${{ENV_VAR}}` placeholders resolved at delivery time via `resolveManifest()`. A parcel holds plain files only: the courier refuses entries that are links or would land outside the directory it unpacks into.
 
 ### Directive
 
-A meta-parcel describing the complete delivery map of one build.
+A meta-parcel describing the complete delivery map of one build. Pack writes it next to the parcels.
 
 ```
 parcel.{sha7}.directive.{ts}.tar
@@ -65,10 +67,7 @@ Manifest:
     "a": {
       "version": "1.0.1",
       "tag": "2026.4.12-a.1.0.1-f0",
-      "deliver": [
-        ["git-tag", "gh-release", "changelog", "gh-pages", "meta"],
-        ["npm"]
-      ],
+      "deliver": [["git-tag"], ["npm"]],
       "parcels": [
         "parcel.abc1234.git-tag.a.1.0.1.a1b2c3.tar",
         "parcel.abc1234.npm.a.1.0.1.f0e1d2.tar"
@@ -82,36 +81,36 @@ Manifest:
 |-------|-------------|
 | `sha` | Full commit SHA of the build |
 | `timestamp` | Epoch timestamp of the commit (seconds) |
-| `queue` | Packages in topo-sorted dependency order |
-| `prev` | Dependency graph: `{name: [deps]}`. Used by `traverseQueue` for parallel delivery |
-| `parcels` | Complete list of parcel filenames owned by this directive |
-| `packages[name].deliver` | Array of steps. Channels within a step run in parallel. Steps run sequentially |
-| `packages[name].parcels` | Parcel filenames belonging to this package |
+| `queue` | Packages of the build |
+| `prev` | Dependency graph: `{name: [deps]}`. The courier orders packages by it, wherever they stand in `queue`, and runs independent ones in parallel |
+| `parcels` | All parcel filenames of the build (informational) |
+| `packages[name].parcels` | The parcels the courier delivers for this package, and the ones orphan invalidation keeps |
+| `packages[name].deliver` | The stages as steps, written for 3.x couriers. A 4.x courier ignores it: delivery order is courier policy, not pack-phase data |
 
-#### Channel ordering within steps
+#### Stages
 
-**Step 1** — everything targeting git remote (single token, single remote):
-- `git-tag` — always first, acts as the version gate/lock
-- `gh-release` — depends on the tag
-- `changelog`, `gh-pages`, `meta` — commits to service branches
+| Stage | Channels | Rule |
+|-------|----------|------|
+| claim | `git-tag` | Nothing else of the package goes out until the claim is released: pushed now, already at our commit, or delivered earlier |
+| publish | `npm` | Right after the claim. In all-in-one a re-run skips a package whose tag is already ours, so the package can't wait behind the announcements |
+| announce | `gh-release`, `meta`, `changelog`, `gh-pages` | Describe what is published; run in parallel |
 
-**Step 2** — external registries (different credentials, different infra):
-- `npm`, `jsr`, `cmd`
-
-Pack builds steps based on the package configuration. `defaultOrder` in code is the fallback for builds without a directive.
+A channel without a stage runs in `publish`. `cmd` (`publishCmd`) is not a parcel: in all-in-one mode it runs after the package's delivery.
 
 #### Orphan invalidation
 
-The directive holds the authoritative `parcels[]` list. On delivery, all files matching `parcel.{sha7}.*.tar` that are NOT in this list are overwritten with `orphan`. This cleans up stale parcels from previous non-deterministic builds of the same commit (different content hash → different filename → both exist, but only the directive's set is valid).
+On delivery, every file matching `parcel.{sha7}.*.tar` that no `packages[*].parcels` list names is overwritten with `orphan`. This cleans up stale parcels from previous non-deterministic builds of the same commit (different content hash → different filename → both exist, but only the directive's set is valid).
 
 ## Semaphores
 
-Two tag types:
+Two tag types, both annotated and both pointing at the release commit, the one the directive delivers:
 
-| Tag | Type | Purpose | Lifetime |
-|-----|------|---------|----------|
-| `zbr-deliver.{sha7}` | annotated | Lock build delivery to one process | Duration of delivery |
-| `zbr-rebuild.{sha7}` | annotated | Signal CI to rebuild | Until rebuild process starts |
+| Tag | Purpose | Lifetime |
+|-----|---------|----------|
+| `zbr-deliver.{sha7}` | Lock build delivery to one process | Duration of delivery |
+| `zbr-rebuild.{sha7}` | Signal CI to rebuild | Until a rebuild process consumes it |
+
+Both are pushed through the same claim primitive as release tags: push; if the push is rejected, read the tag from the remote. There → someone else holds it. Not there → the push itself failed (no access, a hook, a ruleset, the network), which is an error, never "locked".
 
 ### Delivery lock
 
@@ -125,17 +124,20 @@ Annotated tag body:
 {
   "ts": 1718000000,
   "sha": "abc1234567890",
-  "packages": ["a", "b", "c"]
+  "packages": ["a", "b", "c"],
+  "holder": "6f1c…"
 }
 ```
 
-- **Acquire:** `git tag -a zbr-deliver.{sha7} -m <body> && git push origin zbr-deliver.{sha7}` — atomic
-- **Release:** `git push origin :refs/tags/zbr-deliver.{sha7}` — in `finally`, on any outcome
+The holder makes every lock tag object unique: two runners creating identical tag objects within the same second would otherwise both see their push succeed.
+
+- **Acquire:** create the tag at the release commit and push it — atomic
+- **Release:** `git push origin :refs/tags/zbr-deliver.{sha7}`, in `finally`, once everything has settled. A failed release is logged: the lock is left for manual removal
 - **Check:** `git ls-remote --tags origin 'zbr-deliver.*'`
 
 ### Zombie lock
 
-Process crashed without releasing the lock. Protection: CI job timeout + `post:` step in workflow that releases the lock. Additionally, deliver on startup can check stale locks by timestamp and force-delete them.
+Process crashed or was killed without releasing the lock. zbr doesn't break locks: remove the tag by hand (or add a cleanup step to the workflow). Until then every delivery of that commit skips it as locked.
 
 ### Rebuild signal
 
@@ -143,7 +145,7 @@ Process crashed without releasing the lock. Protection: CI job timeout + `post:`
 zbr-rebuild.{sha7}
 ```
 
-CI trigger:
+Pushed after the lock is released, so the rebuild's own delivery doesn't find the lock. A tag that already exists means the rebuild is already signalled. CI trigger:
 
 ```yaml
 on:
@@ -160,105 +162,85 @@ The new zbr process on startup:
 ### deliver — main loop
 
 ```
-deliver(parcelsDir, env):
-  directives = scanDirectives(parcelsDir)
-                  .sort(by timestamp asc)        // oldest first
-
-  tarMap = Map(basename → fullPath)              // all tars in dir
+deliver(tars, env, {cwd, dryRun}):
+  gitRoot = openRepo(cwd)       // the checkout around cwd, or a fresh repo bound to GITHUB_REPOSITORY
+  directives = unmarked directives among the tars, oldest first
 
   for directive of directives:
-    invalid = parcels of the directive this env would deliver, whose resolved
-              manifest breaks their populate rules   // checked before the lock
-    locked = tryLock(zbr-deliver.{sha7})
-    if !locked → continue                        // another process is working
+    if dryRun:
+      plan and rehearse it      // no lock, no remote mutation, no markers
+      continue
+    if !tryLock(directive) → continue           // another process delivers it
 
     try:
-      invalidateOrphans(dir, directive)           // mark stale parcels
-      conflicts = []
-
-      // traverseQueue: packages run in parallel respecting topo order
-      // (b waits for a if b depends on a, but independent packages overlap)
-      await traverseQueue(directive.queue, directive.prev, pkgName =>
-        pkg = directive.packages[pkgName]
-
-        for step of pkg.deliver:                 // steps sequentially
-          results = await parallel(step, ch =>   // channels in step parallel
-            deliverParcel(tarMap, pkg, ch, env)
-          )
-
-          if results.has('conflict'):
-            markConflict(pkg.parcels)             // all package parcels → "conflict"
-            conflicts.push(pkgName)
-            break                                 // remaining steps skipped
-      )
-
+      invalidateOrphans(dir, directive)
+      plan = planOf(directive)  // listed parcels only; claim markers confirmed on the remote
+      errors = execute(plan)    // everything settles
     finally:
-      unlock(zbr-deliver.{sha7})                 // release lock
+      unlock(directive)
 
-      if conflicts.length:
-        pushTag(zbr-rebuild.{sha7})              // signal CI
-        markDirective(directive, 'conflict')
-      else if allDelivered(directive):
-        markDirective(directive, 'released')
-      // otherwise — skips remain, directive stays valid
+    if any package lost its claim → signalRebuild(sha)   // a failed signal is one more error
+    write parcel markers
+    mark the directive: errors → none (a re-run retries), conflict → 'conflict',
+                        everything delivered → 'released', else none (parcels are held)
+    throw the errors, one as is, several as one AggregateError
+
+  if the tars hold no directive at all:           // all-in-one, or a dir without one
+    plan = looseOf(tars)        // every name@version is a package; versions of a name in ascending order
+    errors = execute(plan, {concurrency: 4})
+    write parcel markers
+    throw the errors and the lost claims: nobody rebuilds a delivery without a directive
 ```
 
-### deliverParcel — single channel delivery
+A directive marked `released` or `conflict` is done: its leftover parcels never go out without it.
+
+### execute — the rules
 
 ```
-deliverParcel(tarMap, pkg, channelName, env):
-  parcelName = pkg.parcels.find(includes channelName)
-  tarPath = tarMap.get(parcelName)
-  if !tarPath → return 'missing'
-  if tarPath in invalid → return 'skip'          // breaks its populate rules, parcel untouched
-
-  content = read(tarPath)
-  if content in {released, skip, conflict, orphan} → return 'already'
-
-  manifest = unpackAndResolve(tarPath, env)
-  channel  = channels[channelName]
-
-  missing = channel.requires.filter(f → !manifest[f])
-  if missing.length → return 'skip'               // parcel untouched
-
-  result = await channel.run(manifest, destDir)
-
-  if result == 'conflict' → return 'conflict'      // handled at package level
-  if result == 'duplicate':
-    write(tarPath, 'released')                     // goal achieved by another path
-    return 'duplicate'
-
-  write(tarPath, 'released')
-  return 'ok'
+execute(plan):
+  walk the packages by their dependencies, independent ones in parallel
+  for each package:
+    a dependency lost its claim                       → conflict: wait for the rebuild
+    a dependency is held, or an error happened anywhere → hold: wait for a re-run
+    for stage of [claim, publish, announce]:
+      settle every parcel of the stage                 // never throws; errors are kept
+      a parcel lost its claim  → mark every unsettled parcel of the package 'conflict', stop
+      a parcel failed          → hold the rest, stop
+      the claim isn't released → hold the rest, stop  // held, invalid, missing, dropped
 ```
 
-### Parcel markers
+Without a directive, versions of one package only follow each other: a lost claim of `a@1.0.0` doesn't hold `a@1.0.1`, which claims its own tag.
 
-| State | Tar file | Action |
-|-------|----------|--------|
-| Delivered | Overwritten with `released` | Subsequent deliver skips |
-| Conflict | Overwritten with `conflict` | Will be rebuilt |
-| Skipped (no creds) | Untouched | Valid tarball, delivered later |
-| Duplicate (`already exists` in registry) | Overwritten with `released` | Goal achieved by another path |
-| Orphan (not in directive) | Overwritten with `orphan` | Stale parcel from previous build |
+### Parcel states
 
-### Channel error classification
+| State | Comes from | What happens |
+|-------|------------|--------------|
+| ready | a tar this env can deliver | Delivered in its stage |
+| released | a `released` marker | Done. With a directive, a claim counts only if the tag is at the release commit on the remote |
+| conflict | a `conflict` marker | The package waits for the rebuild. With a directive, a claim counts only if the tag is at another commit |
+| held | missing credentials, unknown channel, missing from the dir | Stays intact for an env that can deliver it, unless its package goes to the rebuild. A held claim holds its package |
+| invalid | breaks its populate rules, unreadable, belongs to another package, a claim marker the remote denies | Stays intact unless its package goes to the rebuild; is reported and fails the run at the end |
 
-| Channel | `already exists` | Semantics |
-|---------|-------------------|-----------|
-| `git-tag` | `conflict` | Possible version conflict, needs reconcile |
-| `npm` | `duplicate` | Someone delivered first, goal achieved |
-| `gh-release` | `duplicate` | Same |
-| `gh-pages` | No delta → no commit | OK, docs are current |
-| `changelog` | No delta → no commit | OK |
-| `meta` | No delta → no commit | OK |
+Without a directive a marker carries no manifest, so it can't be tied to a package: there, markers only say what not to deliver again.
+| dropped | an `orphan` marker, or a 3.x `skip` marker | Nothing to deliver |
+
+The courier writes `released`, `conflict` and `orphan`. It no longer writes `skip`: a held parcel stays a valid tarball.
+
+### Channel outcomes
+
+| Channel | Outcome |
+|---------|---------|
+| `git-tag` | Read from the remote: pushed → `ok`; tag at our commit → `duplicate`; tag elsewhere → `conflict`; push rejected and no tag → error |
+| `npm` | `EPUBLISHCONFLICT` or "cannot publish over" → `duplicate`. Any other failure: if the registry has the version (read the way publish reaches it) → `duplicate`, else the error stands. The claim already proves the version is ours |
+| `gh-release` | `already_exists` → `duplicate`; any other validation error is an error |
+| `gh-pages`, `changelog`, `meta` | Every attempt rebuilds the commit on the remote tip; no delta → no commit, `ok` |
 
 ### Docs seniority protection
 
-Channels `gh-pages`, `changelog`, and `meta` check before committing: does a remote tag for a higher version of the same package exist? If so, skip — our docs are outdated.
+Channels `gh-pages`, `changelog`, and `meta` check before committing: does a remote tag for a higher version of the same package exist? If so, skip — our docs are outdated. The check reads the delivery repo's remote; a failed read is an error.
 
 ```
-remoteTags = git ls-remote --tags origin
+remoteTags = git ls-remote --tags --refs origin
 higherExists = remoteTags.has(tag for same pkg with version > ours)
 if higherExists → skip (do not commit)
 ```
@@ -271,8 +253,8 @@ if higherExists → skip (do not commit)
 zbr pack → directive + parcels
 zbr deliver:
   lock directive → success
-  a: git-tag → ok, gh-release → ok, npm → ok
-  b: git-tag → ok, npm → ok
+  a: git-tag → ok, then npm → ok, then gh-release, changelog → ok
+  b: git-tag → ok, then npm → ok
   unlock
   directive → "released"
 ```
@@ -289,30 +271,31 @@ process 2: lock sha=bbb → ok → deliver b → unlock
 
 ```
 process 1: lock sha=aaa → ok
-           a: git-tag a@1.0.1 → success → deliver rest
+           a: git-tag a@1.0.1 → ok → deliver the rest
            unlock
 
 process 2: lock sha=bbb → ok
-           a: git-tag a@1.0.1 → conflict!
-           → all parcels of a → "conflict"
-           b: git-tag b@2.0.0 → success → deliver rest
+           a: git-tag a@1.0.1 → the tag is at aaa → conflict
+           → a's parcels → "conflict"
+           → c depends on a → c's parcels → "conflict", c's tag is never pushed
+           b: git-tag b@2.0.0 → ok → deliver the rest
            unlock
            push zbr-rebuild.bbb → CI triggers
 
 process 3 (rebuild):
            delete zbr-rebuild.bbb
-           pack: preflight → a@1.0.1 tag taken → re-resolve → a@1.0.2
-           deliver: a@1.0.2 → success
+           pack: preflight → a@1.0.1 tag taken → re-resolve → a@1.0.2, c re-resolves too
+           deliver: a@1.0.2, c → ok
 ```
 
 ### 4. Two processes, same commit
 
 ```
 process 1: lock sha=aaa → ok → deliver → unlock
-process 2: lock sha=aaa → fail (tag exists) → skip
+process 2: lock sha=aaa → the lock tag is on the remote → skip
 
            if process 1 finishes first, process 2 sees "released" markers
-           if process 1 crashes, zombie lock cleanup lets process 2 retry
+           if process 1 crashes, a removed zombie lock lets process 2 retry
 ```
 
 ### 5. Partial delivery (missing credentials)
@@ -320,14 +303,15 @@ process 2: lock sha=aaa → fail (tag exists) → skip
 ```
 process 1 (GH_TOKEN only):
   lock directive → ok
-  a: git-tag → ok, gh-release → ok
-  a: npm → skip (no NPM_TOKEN), parcel untouched
+  a: git-tag → ok
+  a: npm → held (no NPM_TOKEN), parcel untouched
+  a: gh-release → ok
   unlock
-  directive stays valid (has skips)
+  directive stays valid
 
-process 2 (NPM_TOKEN):
+process 2 (NPM_TOKEN), same parcels dir:
   lock directive → ok (lock was released)
-  a: git-tag → "released" → skip
+  a: git-tag → "released" marker → the remote has the tag at the release commit → released
   a: npm → deliver → ok
   unlock
   directive → "released"
@@ -356,9 +340,42 @@ build 2: produces parcel.abc1234.npm.pkg.1.0.1.bbb222.tar
          overwrites directive (same filename, last-writer-wins)
 
 deliver:
-  reads directive → parcels list has bbb222
-  invalidateOrphans → aaa111 not in list → marked "orphan"
+  reads directive → packages list bbb222
+  invalidateOrphans → aaa111 is listed nowhere → marked "orphan"
   delivers only bbb222
+```
+
+### 8. Re-run with fresh copies of the parcels
+
+```
+deliver job fails halfway; CI re-runs it, downloading the parcels again (no markers):
+  lock directive → ok
+  a: git-tag → the tag is at our commit → duplicate
+  a: npm → "cannot publish over" → duplicate
+  a: changelog, meta → no delta → ok
+  b: whatever the first run didn't finish → ok
+  unlock
+  directive → "released"
+```
+
+### 9. A tag created by GitHub
+
+```
+someone creates a GitHub release for a@1.0.1 by hand before zbr claims the tag:
+  GitHub creates a lightweight tag a@1.0.1 at the default branch tip
+deliver:
+  a: git-tag → the tag is at another commit → conflict → rebuild
+```
+
+zbr's own gh-release never creates a tag this way: it runs only after the claim has put the tag at the release commit.
+
+### 10. Delivery without a directive (all-in-one)
+
+```
+publish(a) → deliver(a's parcels):
+  no lock (one process, one package)
+  a: git-tag → ok, npm → ok, announcements → ok
+  a lost claim fails the run: there is no rebuild signal for a delivery without a directive
 ```
 
 ## Preflight
@@ -367,20 +384,17 @@ Between `analyze` and `build` — checks tag availability on remote. Eliminates 
 
 ```
 preflight(pkg):
-  tag = pkg.tag
-  remoteSha = git ls-remote --tags origin refs/tags/{tag}
+  commit = the commit the remote tag points to (peeled, annotated or lightweight)
 
-  if !remoteSha → ok, tag is free
+  if !commit → ok, tag is free
 
-  if remoteSha == ctx.git.sha → skip (duplicate, this commit already processed)
+  if commit == ctx.git.sha → skip (duplicate, this commit already processed)
 
-  git fetch --deepen=100 (if shallow)
+  git fetch origin --tags --force                // the tagged commit
+  git fetch origin --deepen=100                  // history for merge-base
 
   if ours is ancestor of remote → skip (we are older)
-  if remote is ancestor of ours → re-resolve:
-    git fetch origin --tags --force
-    clearTagsCache()
-    resolvePkgVersion() → new version, new tag
+  if remote is ancestor of ours → re-resolve: new version, new tag
   if diverged → skip (anomaly)
 ```
 
@@ -521,11 +535,16 @@ jobs:
 | `src/main/js/post/modes/verify.js` | Verify mode: validate parcels against trusted context |
 | `src/main/js/post/modes/deliver.js` | Deliver mode: deliver parcels through channels |
 | `src/main/js/post/modes/pack.js` | Build, test, pack tars (+ all-in-one publish) |
-| `src/main/js/post/courier/directive.js` | Directive build, parse, scan, orphan invalidation |
+| `src/main/js/post/parcel/directive.js` | Directive build, parse, scan, orphan invalidation |
+| `src/main/js/post/parcel/verify.js`, `verify-directive.js` | Parcel and directive verification |
+| `src/main/js/post/courier/index.js` | Deliver: repo, lock, plan, execute, signal, markers |
+| `src/main/js/post/courier/plan.js` | Parcel states and delivery plans, with or without a directive |
+| `src/main/js/post/courier/execute.js` | The delivery rules: stages, claim before act, settle before deciding |
+| `src/main/js/post/courier/channels/index.js` | Channel registry and stages |
 | `src/main/js/post/courier/semaphore.js` | Lock/unlock via tags, rebuild signaling |
 | `src/main/js/post/courier/seniority.js` | Docs version protection via remote tag check |
-| `src/main/js/post/courier/index.js` | Deliver loop: directive-aware with fallback |
 | `src/main/js/post/depot/reconcile.js` | Preflight, re-resolve, tag conflict detection |
 | `src/main/js/post/depot/context.js` | Context read/write/build for receive phase |
-| `src/main/js/post/depot/steps/pack.js` | Tar packing, directive generation |
-| `src/main/js/post/api/git.js` | Git primitives: annotated tags, remote tag ops, cache |
+| `src/main/js/post/depot/steps/pack.js` | Tar packing |
+| `src/main/js/post/tar.js` | Tar pack/unpack, markers, reading manifests and npm tarballs |
+| `src/main/js/post/api/git.js` | Git: the only module that runs it; per-repo lock, identity via env, the claim primitive |
