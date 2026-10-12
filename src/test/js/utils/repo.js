@@ -5,19 +5,25 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export const fixtures = path.resolve(__dirname, '../../fixtures')
 
 export const createNpmRegistry = () => {
-  let p
+  let p, exited
 
   return {
     address: $.env.NPM_REGISTRY || 'http://localhost:4873',
     async start() {
       fs.removeSync(path.resolve(__dirname, '../../../../storage'))
       const config = path.resolve(__dirname, '../../../../verdaccio.config.yaml')
-      p = $({preferLocal: true})`verdaccio --config ${config}`
+      exited = false
+      p = $({preferLocal: true, nothrow: true})`verdaccio --config ${config}`
+      p.then(() => { exited = true })
 
-      return sleep(1000)
+      await sleep(1000)
+      // e.g. the port is still taken by a registry from another run
+      if (exited) throw new Error(`verdaccio exited: ${await p}`)
     },
     async stop() {
-      p.nothrow().kill()
+      if (exited) return
+      await p.kill() // signals the whole process tree, verdaccio included
+      await p
     }
   }
 }

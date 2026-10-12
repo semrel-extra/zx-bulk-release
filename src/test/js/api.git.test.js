@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'vitest'
 import {$, within, fs, path, tempy} from 'zx-extra'
 
-import {pushTag, pushCommit, fetchRepo, getRemoteTagCommit, isAncestor} from '../../main/js/post/api/git.js'
+import {identity, pushTag, pushCommit, fetchRepo, getRemoteTagCommit, isAncestor, openRepo, listRemoteTags} from '../../main/js/post/api/git.js'
 import {createFakeRepo, addCommits} from './utils/repo.js'
 
 describe('api.git', () => {
@@ -22,40 +22,80 @@ describe('api.git', () => {
     return origin
   }
 
+  // The developer's own GIT_AUTHOR_*/GIT_COMMITTER_* would win over the identity a test passes.
+  const withoutIdentity = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^GIT_(AUTHOR|COMMITTER)_/.test(k)))
+
   const show = async (origin, ref, format) =>
     (await $`git --git-dir=${origin} log --format=${format} ${ref}`).toString().trim().split('\n')
 
-  test('pushTag() pushes a tag to remote', async () => {
+  const headOf = async (cwd) => (await $({cwd})`git rev-parse HEAD`).toString()
+
+  test('pushTag() claims a tag at the given commit', async () => {
     const cwd = await setupRepo()
+    const sha = await headOf(cwd)
 
-    await pushTag({cwd, tag: '1.0.0-test', gitCommitterName: 'Test', gitCommitterEmail: 'test@test.com'})
-
-    const remoteTags = (await $({cwd})`git ls-remote --tags origin`).toString()
-    expect(remoteTags.includes('1.0.0-test')).toBeTruthy()
+    expect(await pushTag({cwd, tag: '1.0.0-test', sha})).toEqual({pushed: true, commit: sha})
+    expect(await getRemoteTagCommit(cwd, '1.0.0-test')).toBe(sha)
   })
 
-  test('pushTag() throws when tag already exists in remote', async () => {
+  test('pushTag() reports where an existing tag points instead of throwing', async () => {
     const cwd = await setupRepo()
+    const first = await headOf(cwd)
+    await addCommits({cwd, commits: [{msg: 'fix: next', files: [{relpath: 'next.txt', contents: 'next'}]}]})
+    const second = await headOf(cwd)
 
-    await pushTag({cwd, tag: '1.0.0-dup', gitCommitterName: 'Test', gitCommitterEmail: 'test@test.com'})
-
-    try {
-      await pushTag({cwd, tag: '1.0.0-dup', gitCommitterName: 'Test', gitCommitterEmail: 'test@test.com'})
-      expect.unreachable('should have thrown')
-    } catch (e) {
-      expect(e.message.includes('already exists') || e.exitCode === 1).toBeTruthy()
-    }
+    await pushTag({cwd, tag: '1.0.0-dup', sha: first})
+    expect(await pushTag({cwd, tag: '1.0.0-dup', sha: second})).toEqual({pushed: false, commit: first})
   })
 
-  test('pushTag() tags as the given identity and keeps repo config', async () => {
+  test('pushTag() tags as the given identity and keeps repo config', () => within(async () => {
+    $.env = withoutIdentity()
     const cwd = await setupRepo()
 
-    await pushTag({cwd, tag: '1.0.0-who', gitCommitterName: 'Tagger', gitCommitterEmail: 'tagger@test.com'})
+    await pushTag({cwd, tag: '1.0.0-who', sha: await headOf(cwd), gitCommitterName: 'Tagger', gitCommitterEmail: 'tagger@test.com'})
 
     const format = '--format=%(taggername)/%(taggeremail)'
     const tagger = (await $({cwd})`git for-each-ref ${format} refs/tags/1.0.0-who`).toString().trim()
     expect(tagger).toBe('Tagger/<tagger@test.com>')
     expect((await $({cwd})`git config --local --get user.name`).toString().trim()).toBe('Semrel-extra Bot')
+  }))
+
+  test('identity() fills in the release identity, identity vars of the env win', () => within(() => {
+    $.env = {}
+    expect(identity()).toEqual({
+      GIT_AUTHOR_NAME: 'Semrel Extra Bot', GIT_AUTHOR_EMAIL: 'semrel-extra-bot@hotmail.com',
+      GIT_COMMITTER_NAME: 'Semrel Extra Bot', GIT_COMMITTER_EMAIL: 'semrel-extra-bot@hotmail.com',
+    })
+    expect(identity('Bot', 'bot@test.com')).toMatchObject({GIT_AUTHOR_NAME: 'Bot', GIT_AUTHOR_EMAIL: 'bot@test.com', GIT_COMMITTER_NAME: 'Bot'})
+
+    $.env = {GIT_COMMITTER_NAME: 'Env', GIT_COMMITTER_EMAIL: 'env@test.com'}
+    expect(identity()).toMatchObject({GIT_AUTHOR_NAME: 'Env', GIT_AUTHOR_EMAIL: 'env@test.com', GIT_COMMITTER_NAME: 'Env'})
+
+    $.env = {GIT_AUTHOR_NAME: 'Author'}
+    expect(identity('Bot')).toMatchObject({GIT_AUTHOR_NAME: 'Author', GIT_COMMITTER_NAME: 'Bot'})
+  }))
+
+  test('openRepo() finds the checkout around cwd, or makes a fresh repo bound to origin', async () => {
+    const cwd = await setupRepo()
+    const root = (await $({cwd})`git rev-parse --show-toplevel`).toString()
+    const origin = (await $({cwd})`git remote get-url origin`).toString()
+    await fs.ensureDir(path.join(cwd, 'sub'))
+
+    expect(await openRepo(path.join(cwd, 'sub'), 'unused')).toBe(root)
+
+    const fresh = await openRepo(tempy.temporaryDirectory(), origin)
+    expect(fresh).not.toBe(root)
+    expect((await $({cwd: fresh})`git remote get-url origin`).toString()).toBe(origin)
+    expect(await listRemoteTags(fresh)).toEqual([])
+  })
+
+  test('listRemoteTags() lists tag names without peeled entries', async () => {
+    const cwd = await setupRepo()
+    await $({cwd})`git tag -a -m a 1.0.0-a`
+    await $({cwd})`git tag 1.0.0-b`
+    await $({cwd})`git push origin 1.0.0-a 1.0.0-b`
+
+    expect((await listRemoteTags(cwd)).sort()).toEqual(['1.0.0-a', '1.0.0-b'])
   })
 
   test('pushCommit() lands concurrent commits to one branch', async () => {
@@ -76,6 +116,7 @@ describe('api.git', () => {
   test('pushCommit() commits as the given identity and writes no repo config', async () => {
     await within(async () => {
       $.memo = new Map()
+      $.env = withoutIdentity()
       const origin = await setupOrigin()
 
       await pushCommit({

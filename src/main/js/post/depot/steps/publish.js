@@ -9,7 +9,7 @@ export const publish = memoizeBy(async (pkg, ctx = pkg.ctx) => {
   const {run = exec, channels: channelNames = [], flags} = ctx
   const {tars = []} = pkg
 
-  const {invalid} = await deliver(tars, ctx.env)
+  const {invalid} = await deliver(tars, ctx.env, {cwd: ctx.git.root})
   if (invalid.length) throw new Error(`populate rules: ${invalid.length} parcel(s) of ${pkg.name} not delivered`)
 
   const cmd = channels.cmd

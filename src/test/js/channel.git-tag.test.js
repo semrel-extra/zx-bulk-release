@@ -1,129 +1,62 @@
 import {describe, test, expect} from 'vitest'
-import {$, within} from 'zx-extra'
-import {createSpawnMock, has} from './utils/mock.js'
-import gitTag, {isTagConflict} from '../../main/js/post/courier/channels/git-tag.js'
+import {$, within, fs, path, tempy} from 'zx-extra'
+import gitTag from '../../main/js/post/courier/channels/git-tag.js'
+import {openRepo, getRemoteTagCommit} from '../../main/js/post/api/git.js'
+import {createFakeRepo} from './utils/repo.js'
 
 describe('channel.git-tag', () => {
-  test('isTagConflict detects already exists', () => {
-    expect(isTagConflict({message: 'error: tag already exists'})).toBe(true)
-    expect(isTagConflict({stderr: 'updates were rejected'})).toBe(true)
-    expect(isTagConflict({message: 'failed to push some refs'})).toBe(true)
-    expect(isTagConflict({message: 'something else'})).toBe(false)
-    expect(isTagConflict(null)).toBe(false)
-    expect(isTagConflict(undefined)).toBe(false)
+  // Origin with three commits; deliver runs from a fresh repo, as on a runner without a checkout.
+  const setup = async () => {
+    const cwd = await createFakeRepo({commits: ['1', '2', '3'].map(i => ({msg: `fix: ${i}`, files: [{relpath: `${i}.txt`, contents: i}]}))})
+    await $({cwd})`git push origin HEAD:master`
+    const origin = (await $({cwd})`git remote get-url origin`).toString()
+    const [c3, c2, c1] = (await $({cwd})`git rev-list HEAD`).toString().split('\n')
+    const fresh = () => openRepo(tempy.temporaryDirectory(), origin)
+    return {cwd, origin, fresh, gitRoot: await fresh(), c1, c2, c3}
+  }
+
+  const claim = (gitRoot, tag, sha, who = 'Bot') =>
+    gitTag.run({tag, sha, gitCommitterName: who, gitCommitterEmail: 'bot@test.com'}, null, {gitRoot})
+
+  test('claims a free tag at the release commit, even if master has moved on', async () => {
+    const {gitRoot, c1} = await setup()
+
+    expect(await claim(gitRoot, 'v1', c1)).toBe('ok')
+    expect(await getRemoteTagCommit(gitRoot, 'v1')).toBe(c1)
   })
 
-  test('run returns ok on successful push', async () => {
-    await within(async () => {
-      const mock = createSpawnMock([
-        ['git cat-file -e', '', 0],
-        [/git tag -m/, ''],
-        ['git push origin', ''],
-      ])
-      $.spawn = mock.spawn
-      $.quiet = true
-      $.verbose = false
+  test('a tag at our commit is a duplicate, so a re-run passes', () => within(async () => {
+    // another tagger makes another tag object; the developer's GIT_COMMITTER_* would override it
+    $.env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^GIT_(AUTHOR|COMMITTER)_/.test(k)))
+    const {gitRoot, fresh, c1} = await setup()
 
-      const result = await gitTag.run({
-        tag: 'v1.0.0',
-        sha: 'abc123',
-        cwd: '/tmp/repo',
-        gitCommitterName: 'Bot',
-        gitCommitterEmail: 'bot@test.com',
-      })
+    expect(await claim(gitRoot, 'v1', c1)).toBe('ok')
+    expect(await claim(await fresh(), 'v1', c1, 'Rerun Bot')).toBe('duplicate')
+  }))
 
-      expect(result).toBe('ok')
-    })
+  test('a tag at another commit is a conflict, lightweight or annotated', async () => {
+    const {cwd, gitRoot, c1, c2, c3} = await setup()
+    await $({cwd})`git tag lightweight ${c3}`
+    await $({cwd})`git tag -a -m annotated annotated ${c2}`
+    await $({cwd})`git push origin lightweight annotated`
+
+    expect(await claim(gitRoot, 'lightweight', c1)).toBe('conflict')
+    expect(await claim(gitRoot, 'annotated', c1)).toBe('conflict')
   })
 
-  test('run returns conflict when pushTag throws already exists', async () => {
-    await within(async () => {
-      const mock = createSpawnMock([
-        ['git cat-file -e', '', 0],
-      ])
-      $.spawn = mock.spawn
-      $.quiet = true
-      $.verbose = false
+  test('a rejected push leaves no tag and throws', async () => {
+    const {origin, gitRoot, c1} = await setup()
+    await fs.outputFile(path.join(origin, 'hooks/pre-receive'), '#!/bin/sh\necho "tags are protected" >&2\nexit 1\n', {mode: 0o755})
 
-      const {api} = await import('../../main/js/post/api/index.js')
-      const origGit = api.git
-      api.git = {...origGit, pushTag: async () => { throw new Error('error: tag already exists') }}
-
-      try {
-        const result = await gitTag.run({
-          tag: 'v1.0.0', sha: 'abc123', cwd: '/tmp/repo',
-        })
-        expect(result).toBe('conflict')
-      } finally {
-        api.git = origGit
-      }
-    })
+    await expect(claim(gitRoot, 'v1', c1)).rejects.toThrow(/tags are protected/)
   })
 
-  test('run rethrows non-conflict errors', async () => {
-    await within(async () => {
-      const mock = createSpawnMock([
-        ['git cat-file -e', '', 0],
-      ])
-      $.spawn = mock.spawn
-      $.quiet = true
-      $.verbose = false
+  test('parallel claims in one repo all land', async () => {
+    const {gitRoot, c1} = await setup()
+    const tags = Array.from({length: 10}, (_, i) => `pkg-${i}@1.0.0`)
 
-      const {api} = await import('../../main/js/post/api/index.js')
-      const origGit = api.git
-      api.git = {...origGit, pushTag: async () => { throw new Error('network timeout') }}
-
-      try {
-        await gitTag.run({
-          tag: 'v1.0.0', sha: 'abc123', cwd: '/tmp/repo',
-        })
-        expect.unreachable('should throw')
-      } catch (e) {
-        expect(e.message.includes('network timeout')).toBeTruthy()
-      } finally {
-        api.git = origGit
-      }
-    })
-  })
-
-  test('ensureSha fetches when cat-file fails', async () => {
-    await within(async () => {
-      const mock = createSpawnMock([
-        ['git cat-file -e', '', 1],  // sha not found locally
-        ['git fetch origin --depth 1', ''],
-        [/git tag -m/, ''],
-        ['git push origin', ''],
-      ])
-      $.spawn = mock.spawn
-      $.quiet = true
-      $.verbose = false
-
-      const result = await gitTag.run({
-        tag: 'v1.0.0', sha: 'abc123', cwd: '/tmp/repo',
-      })
-
-      expect(result).toBe('ok')
-      expect(has(mock.calls, 'git fetch origin --depth 1')).toBeTruthy()
-    })
-  })
-
-  test('ensureSha skips fetch when no sha provided', async () => {
-    await within(async () => {
-      const mock = createSpawnMock([
-        [/git tag -m/, ''],
-        ['git push origin', ''],
-      ])
-      $.spawn = mock.spawn
-      $.quiet = true
-      $.verbose = false
-
-      const result = await gitTag.run({
-        tag: 'v1.0.0', cwd: '/tmp/repo',
-      })
-
-      expect(result).toBe('ok')
-      expect(has(mock.calls, 'git cat-file')).toBeFalsy()
-    })
+    expect(await Promise.all(tags.map(tag => claim(gitRoot, tag, c1)))).toEqual(tags.map(() => 'ok'))
+    for (const tag of tags) expect(await getRemoteTagCommit(gitRoot, tag)).toBe(c1)
   })
 
   test('when checks snapshot flag', () => {
@@ -132,5 +65,4 @@ describe('channel.git-tag', () => {
     expect(gitTag.when({ctx: {}})).toBe(true)
     expect(gitTag.when({})).toBe(true)
   })
-
 })

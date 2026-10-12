@@ -55,4 +55,11 @@ describe('depot.exec', () => {
     })
   })
 
+  test('exec passes the env as is: build and test commands get no identity', () => within(async () => {
+    $.env = {PATH: process.env.PATH}
+    const {exec} = await import(/* @vite-ignore */ `../../main/js/post/depot/exec.js?t=${Date.now()}`)
+    const pkg = {name: 'p', absPath: process.cwd(), config: {}, ctx: {flags: {testCmd: 'node -p process.env.GIT_AUTHOR_NAME'}}}
+
+    expect((await exec(pkg, 'testCmd')).toString()).toBe('undefined')
+  }))
 })

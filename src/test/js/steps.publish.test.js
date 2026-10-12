@@ -91,7 +91,7 @@ describe('steps.publish', () => {
       expect(pkg.published).toBeTruthy()
       expect(ran.includes('test-pub')).toBeTruthy()
       // git-tag channel pushes the tag via deliver
-      expect(has(mock.calls, 'git tag -m')).toBeTruthy()
+      expect(has(mock.calls, 'git tag -f -a -m')).toBeTruthy()
       expect(has(mock.calls, 'git push')).toBeTruthy()
 
       cleanup()

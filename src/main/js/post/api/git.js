@@ -10,11 +10,12 @@ export const DEFAULT_GIT_COMMITTER_EMAIL = 'semrel-extra-bot@hotmail.com'
 const lock = keyedQueue()
 const exclusive = async (cwd, fn) => lock(await getRoot(cwd), fn)
 
-// Identity goes with each command, so zbr never writes repo config.
-const identity = (_name, _email) => {
+// The release identity as env, so zbr never writes repo config. Identity vars the env already sets win,
+// as they did over the repo config zbr used to write.
+export const identity = (_name, _email) => {
   const name  = _name  || $.env.GIT_COMMITTER_NAME  || DEFAULT_GIT_COMMITTER_NAME
   const email = _email || $.env.GIT_COMMITTER_EMAIL || DEFAULT_GIT_COMMITTER_EMAIL
-  return {...$.env, GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email, GIT_COMMITTER_NAME: name, GIT_COMMITTER_EMAIL: email}
+  return {GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email, GIT_COMMITTER_NAME: name, GIT_COMMITTER_EMAIL: email, ...$.env}
 }
 
 export const fetchRepo = memoizeBy(async ({cwd: _cwd, branch, origin: _origin, basicAuth}) => {
@@ -69,6 +70,17 @@ const resetBranch = async (cwd, branch) => {
 }
 
 export const getRoot = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse --show-toplevel`).toString().trim())
+
+// The repo around cwd, or a fresh one bound to origin when there is no checkout.
+export const openRepo = async (cwd, origin) => {
+  const found = await $({cwd, quiet: true, nothrow: true})`git rev-parse --show-toplevel`
+  if (found.exitCode === 0) return found.toString().trim()
+
+  const dir = tempy.temporaryDirectory()
+  await $({cwd: dir})`git init -q && git remote add origin ${origin}`
+  log.info('no checkout: delivering from a fresh repo')
+  return dir
+}
 
 export const getSha = memoizeBy(async (cwd) => (await $({cwd})`git rev-parse HEAD`).toString().trim(), getRoot)
 
@@ -137,12 +149,28 @@ export const isAncestor = async (cwd, ancestor, descendant) => {
   return res.exitCode === 0
 }
 
-export const pushTag = ({cwd, tag, sha, gitCommitterName, gitCommitterEmail}) => exclusive(cwd, async () => {
-  const _$ = $({cwd, env: identity(gitCommitterName, gitCommitterEmail)})
-  const target = sha ? [sha] : []
-  await _$`git tag -m ${tag} ${tag} ${target}`
-  await _$`git push origin ${tag}`
+// Claims a tag for a commit. The outcome is read from the remote, not from the error text:
+// {pushed: true} — the tag is ours now; {pushed: false, commit} — it already exists and points to `commit`.
+export const pushTag = ({cwd, tag, sha, message = tag, gitCommitterName, gitCommitterEmail}) => exclusive(cwd, async () => {
+  await ensureCommit(cwd, sha)
+  await $({cwd, env: identity(gitCommitterName, gitCommitterEmail)})`git tag -f -a -m ${message} ${tag} ${sha}`
+  const push = await $({cwd, nothrow: true})`git push origin refs/tags/${tag}`
+  if (push.exitCode === 0) return {pushed: true, commit: sha}
+
+  const commit = await getRemoteTagCommit(cwd, tag)
+  if (!commit) throw push // rejected by a hook or a ruleset, no access, no network
+  return {pushed: false, commit}
 })
+
+// A tag target must be local: fetch the commit itself, not whatever the branch tips are now.
+const ensureCommit = async (cwd, sha) => {
+  if ((await $({cwd, nothrow: true, quiet: true})`git cat-file -e ${sha}^{commit}`).exitCode === 0) return
+  await $({cwd})`git fetch --depth=1 origin ${sha}`
+}
+
+export const listRemoteTags = async (cwd) =>
+  (await $({cwd})`git ls-remote --tags --refs origin`).toString()
+    .split('\n').filter(Boolean).map(line => line.split('\t')[1].slice('refs/tags/'.length))
 
 // The commit a remote tag points to (peeled), or null if the tag is absent or the remote is unreachable.
 export const getRemoteTagCommit = async (cwd, tag) => {
@@ -154,13 +182,5 @@ export const getRemoteTagCommit = async (cwd, tag) => {
 
 export const deleteRemoteTag = async (cwd, tag) =>
   $({cwd, nothrow: true})`git push origin :refs/tags/${tag}`
-
-export const pushAnnotatedTag = (cwd, tag, message) => exclusive(cwd, async () => {
-  const _$ = $({cwd, env: identity()})
-  const empty = (await $({cwd, nothrow: true})`git rev-parse --verify -q HEAD`).exitCode !== 0
-  if (empty) await _$`git commit --allow-empty -m init` // a fresh delivery repo has no commits yet
-  await _$`git tag -a ${tag} -m ${message}`
-  await _$`git push origin ${tag}`
-})
 
 export const clearTagsCache = () => { $.memo?.delete?.(getTags) }

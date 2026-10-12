@@ -2,10 +2,10 @@ import {api} from '../../api/index.js'
 import {log} from '../../log.js'
 import {hasHigherVersion} from '../seniority.js'
 
-const run = async (manifest, dir) => {
+const run = async (manifest, dir, {gitRoot}) => {
   const {name, version, releaseNotes, branch, file, msg, repoAuthedUrl, gitCommitterEmail, gitCommitterName, ghBasicAuth} = manifest
 
-  if (await hasHigherVersion(dir, name, version)) {
+  if (await hasHigherVersion(gitRoot, name, version)) {
     log.warn(`skipping changelog for ${name}@${version}: higher version already released`)
     return 'ok'
   }
