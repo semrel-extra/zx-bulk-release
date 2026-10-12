@@ -1,8 +1,9 @@
 import {describe, test, expect} from 'vitest'
 import {$, within, fs, path, tempy} from 'zx-extra'
 
-import {identity, pushTag, pushCommit, fetchRepo, getRemoteTagCommit, isAncestor, openRepo, listRemoteTags} from '../../main/js/post/api/git.js'
+import {identity, pushTag, pushCommit, fetchRepo, getRemoteTagCommit, isAncestor, openRepo, listRemoteTags, deepen} from '../../main/js/post/api/git.js'
 import {createFakeRepo, addCommits} from './utils/repo.js'
+import {createSpawnMock} from './utils/mock.js'
 
 describe('api.git', () => {
   const setupRepo = async () => {
@@ -210,4 +211,15 @@ describe('api.git', () => {
     expect(await isAncestor(cwd, second, first)).toBe(false)
     await expect(isAncestor(cwd, 'f'.repeat(40), second)).rejects.toThrow()
   })
+
+  test('deepen() fetches once per run and repo', () => within(async () => {
+    const mock = createSpawnMock([['git rev-parse --show-toplevel', '/repo']])
+    $.spawn = mock.spawn
+    $.quiet = true
+    $.memo = new Map()
+
+    await Promise.all([deepen('/repo', 100), deepen('/repo/sub', 100)])
+    await deepen('/repo', 100)
+    expect(mock.calls.filter(c => c.includes('--deepen'))).toHaveLength(1)
+  }))
 })

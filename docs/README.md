@@ -420,7 +420,7 @@ all-in-one: topo -> contextify -> analyze -> preflight -> build -> test -> pack 
 
 By default, packages marked as `private` are omitted. Override with `--include-private`.
 
-**Preflight** runs between `analyze` and `build`. It checks tag availability on git remote and eliminates version conflicts before wasting build/test time. If a tag is already taken by an older commit, preflight re-resolves the version. If taken by the same or a newer commit, the package is skipped.
+**Preflight** runs between `analyze` and `build`. It checks tag availability on git remote and eliminates version conflicts before wasting build/test time. If a tag is already taken by an older commit, preflight analyzes the package again from that release: a new version, or no release if nothing changed since. If taken by the same or a newer commit, the package is skipped.
 
 ### Steps
 Each step has a uniform signature `(pkg, ctx)`:

@@ -1,8 +1,7 @@
-import {$, within, path} from 'zx-extra'
+import {path} from 'zx-extra'
 
 import {log} from '../log.js'
-import {traverseQueue} from '../depot/deps.js'
-import {contextify} from '../depot/steps/contextify.js'
+import {forEachPkg} from '../depot/steps/contextify.js'
 import {analyze} from '../depot/steps/analyze.js'
 import {build} from '../depot/steps/build.js'
 import {pack} from '../depot/steps/pack.js'
@@ -14,24 +13,18 @@ import {CONTEXT_FILE, readContext} from '../depot/context.js'
 import {buildDirective, parcelsDir} from '../parcel/index.js'
 
 export const runPack = async ({cwd, env, flags}, ctx) => {
-  const {report, packages, queue, prev} = ctx
+  const {report, queue} = ctx
 
   // When running in split pipeline (receive → pack → deliver),
   // the context file is the source of truth for what to release.
   const contextFilter = await loadContextFilter(cwd, flags)
-
-  const forEachPkg = (cb) => traverseQueue({queue, prev, cb: (name) => within(async () => {
-    $.scope = name
-    await contextify(packages[name], ctx)
-    return cb(packages[name])
-  })})
 
   report
     .log('queue:', queue)
     .log('graphs', ctx.graphs)
 
   try {
-    await forEachPkg(async (pkg) => {
+    await forEachPkg(ctx, async (pkg) => {
       report.setStatus('analyzing', pkg.name)
       await analyze(pkg)
       report.set({
@@ -46,7 +39,7 @@ export const runPack = async ({cwd, env, flags}, ctx) => {
     report.setStatus('pending')
 
     const packed = []
-    await forEachPkg(async (pkg) => {
+    await forEachPkg(ctx, async (pkg) => {
       if (contextFilter) {
         // Split pipeline: context is the source of truth
         const ctxPkg = contextFilter[pkg.name]

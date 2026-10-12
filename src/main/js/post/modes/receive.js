@@ -1,9 +1,6 @@
-import {$, within} from 'zx-extra'
-
 import {api} from '../api/index.js'
 import {log} from '../log.js'
-import {traverseQueue} from '../depot/deps.js'
-import {contextify} from '../depot/steps/contextify.js'
+import {forEachPkg} from '../depot/steps/contextify.js'
 import {analyze} from '../depot/steps/analyze.js'
 import {clean} from '../depot/steps/clean.js'
 import {preflight} from '../depot/reconcile.js'
@@ -30,22 +27,16 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
     log.info(`consumed rebuild signal for ${sha7}`)
   }
 
-  const forEachPkg = (cb) => traverseQueue({queue, prev, cb: (name) => within(async () => {
-    $.scope = name
-    await contextify(packages[name], ctx)
-    return cb(packages[name])
-  })})
-
   try {
     // Phase 1: analyze all packages
-    await forEachPkg(async (pkg) => {
+    await forEachPkg(ctx, async (pkg) => {
       report.setStatus('analyzing', pkg.name)
       await analyze(pkg)
     })
 
     // Phase 2: preflight — may fetch remote tags and re-resolve versions
     let tagsFetched = false
-    await forEachPkg(async (pkg) => {
+    await forEachPkg(ctx, async (pkg) => {
       if (!pkg.releaseType) { pkg.skipped = true; return }
       const result = await preflight(pkg, pkg.ctx)
       if (result === 'skip') { pkg.skipped = true; return }
@@ -62,7 +53,7 @@ export const runReceive = async ({cwd, env, flags}, ctx) => {
         pkg.latest = await getLatest(pkg)
       }
 
-      await forEachPkg(async (pkg) => {
+      await forEachPkg(ctx, async (pkg) => {
         if (pkg.releaseType) return
         pkg.skipped = false
         report.setStatus('re-analyzing', pkg.name)

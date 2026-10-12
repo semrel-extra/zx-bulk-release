@@ -1,6 +1,8 @@
+import {$, within} from 'zx-extra'
 import {getPkgConfig} from '../../../config.js'
 import {api} from '../../api/index.js'
 import {getLatest} from '../generators/meta.js'
+import {settleQueue} from '../deps.js'
 
 /**
  * Global release context — one per `run()` invocation.
@@ -48,3 +50,10 @@ export const contextify = async (pkg, ctx) => {
     },
   }
 }
+
+// Runs cb for each package in dependency order, in the package's own scope and context, and settles.
+export const forEachPkg = (ctx, cb) => settleQueue({queue: ctx.queue, prev: ctx.prev, cb: (name) => within(async () => {
+  $.scope = name
+  await contextify(ctx.packages[name], ctx)
+  return cb(ctx.packages[name])
+})})

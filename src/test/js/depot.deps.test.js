@@ -1,7 +1,9 @@
 import {describe, test, expect} from 'vitest'
 import {fileURLToPath} from 'node:url'
 import path from 'node:path'
-import {resolveNextVersion, subsWorkspace, updateDeps, topo} from '../../main/js/post/depot/deps.js'
+import {$, sleep} from 'zx-extra'
+import {resolveNextVersion, subsWorkspace, updateDeps, topo, settleQueue} from '../../main/js/post/depot/deps.js'
+import {forEachPkg} from '../../main/js/post/depot/steps/contextify.js'
 
 describe('depot.deps', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -95,4 +97,41 @@ describe('depot.deps', () => {
     expect(sources).toEqual(['a'])
   })
 
+
+  // a fails at once; b, running alongside, still finishes; c (after a) and d (after b, done after the failure) never start
+  const graph = {queue: ['a', 'b', 'c', 'd'], prev: new Map([['c', ['a']], ['d', ['b']]])}
+
+  test('settleQueue lets running packages finish and starts none after an error', async () => {
+    const log = []
+    const cb = async (name) => {
+      log.push(`+${name}`)
+      if (name === 'a') throw new Error('a failed')
+      await sleep(20)
+      log.push(`-${name}`)
+    }
+
+    await expect(settleQueue({...graph, cb})).rejects.toThrow('a failed')
+    expect(log).toEqual(['+a', '+b', '-b'])
+  })
+
+  test('settleQueue reports all errors together', async () => {
+    const cb = async (name) => { if (name === 'a' || name === 'b') throw new Error(`${name} failed`) }
+    const error = await settleQueue({...graph, cb}).catch(e => e)
+
+    expect(error).toBeInstanceOf(AggregateError)
+    expect(error.errors.map(e => e.message)).toEqual(['a failed', 'b failed'])
+  })
+
+  test('forEachPkg runs each package in its own scope, and settles', async () => {
+    const packages = Object.fromEntries(graph.queue.map(name => [name, {name, ctx: {}}])) // contextified already
+    const seen = []
+    const cb = async (pkg) => {
+      if (pkg.name === 'a') throw new Error('a failed')
+      await sleep(20)
+      seen.push(`${pkg.name}:${$.scope}`)
+    }
+
+    await expect(forEachPkg({...graph, packages}, cb)).rejects.toThrow('a failed')
+    expect(seen).toEqual(['b:b'])
+  })
 })

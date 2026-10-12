@@ -139,9 +139,10 @@ export const fetchTags = (cwd) => exclusive(cwd, async () => {
   clearTagsCache()
 })
 
-export const deepen = (cwd, depth) => exclusive(cwd, () =>
+// Once per run and repo: every preflight compares against the same commit, so one deepening serves them all.
+export const deepen = memoizeBy((cwd, depth) => exclusive(cwd, () =>
   $({cwd})`git fetch origin --deepen=${depth}`
-)
+), async (cwd, depth) => `${await getRoot(cwd)}:${depth}`)
 
 export const isAncestor = async (cwd, ancestor, descendant) => {
   const res = await $({cwd, nothrow: true})`git merge-base --is-ancestor ${ancestor} ${descendant}`

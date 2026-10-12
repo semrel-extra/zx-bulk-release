@@ -62,6 +62,15 @@ describe('api.npm', () => {
     expect(content.includes('//registry.npmjs.org/:_authToken=test-token-123')).toBeTruthy()
   })
 
+  test('getNpmrc() keys the token by the default registry when none is set, as npm looks it up', async () => {
+    for (const npmRegistry of ['', undefined]) {
+      const npmrc = await getNpmrc({npmToken: `t-${npmRegistry}`, npmRegistry})
+      expect(await fs.readFile(npmrc, 'utf-8')).toBe(`//registry.npmjs.org/:_authToken=t-${npmRegistry}`)
+    }
+    const slashed = await getNpmrc({npmToken: 't', npmRegistry: 'https://r.example/npm/'})
+    expect(await fs.readFile(slashed, 'utf-8')).toBe('//r.example/npm/:_authToken=t')
+  })
+
   test('getNpmrc() returns npmConfig path when provided', async () => {
     const customPath = tempy.temporaryFile({name: '.npmrc'})
     await fs.writeFile(customPath, '//custom/:_authToken=foo')
