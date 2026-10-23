@@ -197,7 +197,7 @@ jobs:
           npx ggcp lcov.info "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git/coverage/${{ github.sha }}" --cwd=${{ runner.temp }}/coverage --message='chore: push coverage'
 
       - name: Upload coverage to Qlty
-        uses: qltysh/qlty-action/coverage@c9b09987143d1e4ac955f4803c7bea742102feb5 # v2.4.0
+        uses: qltysh/qlty-action/coverage@ebcd284bf32e36a030afe15f1e136c7be08b9506 # v2.5.0
         with:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
           files: ${{ runner.temp }}/coverage/lcov.info
