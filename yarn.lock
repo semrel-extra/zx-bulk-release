@@ -601,10 +601,10 @@
     gunzip-maybe "1.4.2"
     tar-stream "3.2.2"
 
-"@verdaccio/ui-theme@9.0.0-next-9.40":
-  version "9.0.0-next-9.40"
-  resolved "https://registry.yarnpkg.com/@verdaccio/ui-theme/-/ui-theme-9.0.0-next-9.40.tgz#a1c91b0c7dcc176483a8fd5c4c1ec5c6cd7ce5cc"
-  integrity sha512-5DSirvMmeIIgKGlvCM2JH3OJqYcbuAuafLepin1Xskpx3plLq7vargX3RdQSP/WlHr+jtRcy4g2OZni3tK15MA==
+"@verdaccio/ui-theme@9.0.0-next-9.45":
+  version "9.0.0-next-9.45"
+  resolved "https://registry.yarnpkg.com/@verdaccio/ui-theme/-/ui-theme-9.0.0-next-9.45.tgz#5b7661b472903adc24621e94c974e890de7c30a7"
+  integrity sha512-u/jorpvHrYs+k1HuQWEfPqjzGOzemKyJrqtMdYPb5v1Xvlger+wMILOMA4XEsxfMBYd3H7PbM+mLo5tQSms4lw==
   dependencies:
     debug "4.4.3"
 
@@ -3158,10 +3158,10 @@ verdaccio-htpasswd@13.1.7:
     http-errors "2.0.1"
     unix-crypt-td-js "1.1.4"
 
-verdaccio@6.11.1:
-  version "6.11.1"
-  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.11.1.tgz#6588ba02480e46c4f4049d838e088822aa0357b3"
-  integrity sha512-tI3uiviWmMPYq0FRHnXYWN0ZU/QYMdts8kMNf8BwpPLI7aXh2cmy+uyiYeNfskh3EMM6gJ2NpXr81lkmgFr+0A==
+verdaccio@6.11.2:
+  version "6.11.2"
+  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.11.2.tgz#2012624c2026d055a29740132737a67762e91131"
+  integrity sha512-nCzOtMyBGI+y0TcbVPiapoyyS34a0areUTnKL5li7DWWfD7WIEVO1gwPsaGb/Pn4laEEhRxVWAbWZoK7Ss7o1A==
   dependencies:
     "@cypress/request" "4.0.1"
     "@verdaccio/auth" "8.1.7"
@@ -3177,7 +3177,7 @@ verdaccio@6.11.1:
     "@verdaccio/signature" "8.1.7"
     "@verdaccio/streams" "10.3.0"
     "@verdaccio/tarball" "13.1.7"
-    "@verdaccio/ui-theme" "9.0.0-next-9.40"
+    "@verdaccio/ui-theme" "9.0.0-next-9.45"
     "@verdaccio/url" "13.1.7"
     JSONStream "1.3.5"
     async "3.2.6"
