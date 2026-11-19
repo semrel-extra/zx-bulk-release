@@ -544,10 +544,10 @@
     "@verdaccio/logger-commons" "8.1.7"
     pino "9.14.0"
 
-"@verdaccio/middleware@8.2.0":
-  version "8.2.0"
-  resolved "https://registry.yarnpkg.com/@verdaccio/middleware/-/middleware-8.2.0.tgz#f28285cdf586c8851ff844504eb45edc02675409"
-  integrity sha512-fqCL19pdX6F5rGocYIhhEISGK33/sNJ8QxKWn8SBWdgP0Cj8MDcZq2h1y3SJWX6Pib2aXptK8zP3xFCSSKb3SA==
+"@verdaccio/middleware@8.2.1":
+  version "8.2.1"
+  resolved "https://registry.yarnpkg.com/@verdaccio/middleware/-/middleware-8.2.1.tgz#e2c8ed5a05fbed5ad3e8a50d4b2b0f40a724bacd"
+  integrity sha512-CvrKS9NT+Xv7a+kdNyWehZkkkBkgkWZH5HEy6Ry4PmyQnKCqSbycZjCc0FRqV2chJUXXH+Fc7yqCu54KzmkkmA==
   dependencies:
     "@verdaccio/config" "8.4.0"
     "@verdaccio/core" "8.4.0"
@@ -601,10 +601,10 @@
     gunzip-maybe "1.4.2"
     tar-stream "3.2.2"
 
-"@verdaccio/ui-theme@9.0.0-next-9.45":
-  version "9.0.0-next-9.45"
-  resolved "https://registry.yarnpkg.com/@verdaccio/ui-theme/-/ui-theme-9.0.0-next-9.45.tgz#5b7661b472903adc24621e94c974e890de7c30a7"
-  integrity sha512-u/jorpvHrYs+k1HuQWEfPqjzGOzemKyJrqtMdYPb5v1Xvlger+wMILOMA4XEsxfMBYd3H7PbM+mLo5tQSms4lw==
+"@verdaccio/ui-theme@9.0.0-next-9.46":
+  version "9.0.0-next-9.46"
+  resolved "https://registry.yarnpkg.com/@verdaccio/ui-theme/-/ui-theme-9.0.0-next-9.46.tgz#7ba4d986b17bb90b208c3f172956504002974fa5"
+  integrity sha512-hGKvreQeFjU7JhzrFI7pimhiSQcOnydEMSwNQO7YhFfceUIIpw1shaL7rykS/lqxoqOFO1CJN2gzsHA/6C61qw==
   dependencies:
     debug "4.4.3"
 
@@ -3158,10 +3158,10 @@ verdaccio-htpasswd@13.1.7:
     http-errors "2.0.1"
     unix-crypt-td-js "1.1.4"
 
-verdaccio@6.11.2:
-  version "6.11.2"
-  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.11.2.tgz#2012624c2026d055a29740132737a67762e91131"
-  integrity sha512-nCzOtMyBGI+y0TcbVPiapoyyS34a0areUTnKL5li7DWWfD7WIEVO1gwPsaGb/Pn4laEEhRxVWAbWZoK7Ss7o1A==
+verdaccio@6.11.3:
+  version "6.11.3"
+  resolved "https://registry.yarnpkg.com/verdaccio/-/verdaccio-6.11.3.tgz#5281bee54fa05715a51fab4603588183326e09e6"
+  integrity sha512-nCeCWBAZ9ab/Ux2Okyci5kMzfMG06oYIdd2q8xF1gch44tQDm80oNJv7jbYH404kCQZvtVGtHyjC7VBXAtniog==
   dependencies:
     "@cypress/request" "4.0.1"
     "@verdaccio/auth" "8.1.7"
@@ -3171,13 +3171,13 @@ verdaccio@6.11.2:
     "@verdaccio/loaders" "8.1.7"
     "@verdaccio/local-storage-legacy" "11.4.7"
     "@verdaccio/logger" "8.1.7"
-    "@verdaccio/middleware" "8.2.0"
+    "@verdaccio/middleware" "8.2.1"
     "@verdaccio/package-filter" "13.2.5"
     "@verdaccio/search-indexer" "8.1.0"
     "@verdaccio/signature" "8.1.7"
     "@verdaccio/streams" "10.3.0"
     "@verdaccio/tarball" "13.1.7"
-    "@verdaccio/ui-theme" "9.0.0-next-9.45"
+    "@verdaccio/ui-theme" "9.0.0-next-9.46"
     "@verdaccio/url" "13.1.7"
     JSONStream "1.3.5"
     async "3.2.6"
